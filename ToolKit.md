@@ -86,7 +86,6 @@ Do NOT put any static libraries or include files apart from the ones that come w
 
 To differentiate SAS/C makefiles from other makefiles, ToolKit projects will always name them _smakefile_
 
-
 ### VBCC
 
 The VBCC compiler is a great alternative to SAS/C with better support for C standards, and a universal configuration for both native and cross compilation, as well as support for all Amiga-like platforms.
@@ -100,13 +99,13 @@ Get both the compiler archive (http://phoenix.owl.de/vbcc/current/vbcc_bin_amiga
 Unpack them both and run the installaer, making sure that your User-Startup or SDK-Startup is correctly set up to point to your installation location e.g. _SDK:vbcc_
 ```
 ;BEGIN vbcc
-;Assign >NIL: vbcc: SDK:vbcc
-;Path >NIL: vbcc:bin ADD
-;SetEnv VBCC vbcc:
+Assign >NIL: vbcc: SDK:vbcc
+Path >NIL: vbcc:bin ADD
+SetEnv VBCC vbcc:
 ;BEGIN vbcc-m68k-amigaos
-;Assign >NIL: vincludeos3: vbcc:targets/m68k-amigaos/include
-;Assign >NIL: vincludeos3: "include:" ADD
-;Assign >NIL: vlibos3: vbcc:targets/m68k-amigaos/lib
+Assign >NIL: vincludeos3: vbcc:targets/m68k-amigaos/include
+Assign >NIL: vincludeos3: "include:" ADD
+Assign >NIL: vlibos3: vbcc:targets/m68k-amigaos/lib
 ;END vbcc-m68k-amigaos
 ;END vbcc
 ```
@@ -126,11 +125,11 @@ make -f vmakefile
 
 For now, it is enough to install the _Amiga Development Environment_ or _ADE_ (a project similar to and one of the inspirations for _ToolKit_), following these instructions:
 
-Step 1) Unpack the archive (https://www.aminet.net/dev/gcc/ADE.lha) to a suitable location e.g. SDK:ADE/
-Step 2) Unpack the archive (https://www.aminet.net/dev/gcc/ADE-repack.lha) over the top of the same location (the repack release is missing some crucial empty directories needed by ADE-startup)
-Step 3) Set the ADE-Startup script to run in your User-Startup or add it to your ToolKit SDK-Startup. N.B. do not run it more than once per session.
-Step 4) TODO: Instructions on configuring ADE to use the NDK3.2 os-include folder instead of the ones it comes with
-Step 5) TODO: Instructions for setting up ADE to use latest libnix and clib2 builds
+1) Unpack the archive (https://www.aminet.net/dev/gcc/ADE.lha) to a suitable location e.g. SDK:ADE/
+2) Unpack the archive (https://www.aminet.net/dev/gcc/ADE-repack.lha) over the top of the same location (the repack release is missing some crucial empty directories needed by ADE-startup)
+3) Set the ADE-Startup script to run in your User-Startup or add it to your ToolKit SDK-Startup. N.B. do not run it more than once per session.
+4) TODO: Instructions on configuring ADE to use the NDK3.2 os-include folder instead of the ones it comes with
+5) TODO: Instructions for setting up ADE to use latest libnix and clib2 builds
 
 Where a project uses GCC, the makefile will be called simply _makefile_ and the driver will be the same SDK:C/make used with VBCC
 
@@ -154,10 +153,10 @@ ToolKit currently consists of the following command line tools, found in SDK:C/
 
 The following third party tools should be downloaded and installed 
 - Copy the following tools from the NDK:Tools directory to SDK:C
--- CatComp - the localization catalog compiler 
--- Autodoc - the automated API documentation maker
+- CatComp - the localization catalog compiler 
+- Autodoc - the automated API documentation maker
 - LibDescConverter to generate shared library prototypes and pragmas from an .sfd file, also placed in SDK:C
--- currently only available from https://gitlab.com/boemann/libdescconverter
+- currently only available from https://gitlab.com/boemann/libdescconverter
 - TODO: ToolKit assumes you have LhA somewhere in your path. If you don't, get it  and install to SDK:C/
 
 ToolKit also includes the following static and shared libraries, found in SDK:lib and SDK:Libs respectively:
@@ -214,7 +213,7 @@ ToolKit is universal developer experience produced by the _amigazen project_, wh
 
 When inheriting legacy software the first question any professional software developer needs to know is _Does it build?_ and with long since abandoned Amiga projects the answer is often 'no it needs a bunch of missing dependencies, specific versions of include files, a bespoke configuration of compiler only found on the original developer's hard disk (currently in a landfill somewhere), and a bunch of hardcoded device volume and directory names. 
 
-amigazen project created ToolKit as a common standard for all projects to follow so that developers can be sure that if their development environment 
+amigazen project created ToolKit as a common standard for all projects to follow so that developers can be sure that if their development environment is setup for ToolKit, then other developers can eaasily build and contribute to their projects.
 
 ## Haiku
 
