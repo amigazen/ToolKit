@@ -1,0 +1,207 @@
+GENIN(1)                    Gen - ToolKit extension                   GENIN(1)
+
+NAME
+       GenIn - Amiga Metadata/Icon Generator Command Line Tool
+
+SYNOPSIS
+       GenIn [SPECFILE=file] [TYPE=type] [STACK=size] [TARGET=name] [IMAGE=file] [DEFICON=name] [TOOLTYPE=key=value] [FORCE] [HELP]
+
+       GenIn SPECFILE=filename [FORCE] [HELP]
+
+DESCRIPTION
+       GenIn is a command line tool for Amiga that generates native Metadata/Icon
+       .info files from specification files or command-line parameters. 
+
+       The tool can operate in two modes:
+       1. Using a specification file (SPECFILE mode)
+       2. Using direct command-line parameters (direct mode)
+
+       Either SPECFILE or TARGET must be provided. All parameters available in
+       spec files can also be used directly on the command line.
+
+PARAMETERS
+       SPECFILE=file
+              Specification file containing icon definitions. The file uses a
+              simple "parameter = value" format with one parameter per line.
+
+       TYPE=type
+              Icon type (mandatory). Valid types are:
+              - disk: Disk icon
+              - drawer: Drawer icon  
+              - tool: Tool/executable icon
+              - project: Project icon
+              - trash: Trash icon (also accepts 'garbage' as a valid type)
+              - device: Device icon
+              - kick: Kickstart icon
+
+       TARGET=name
+              Target filename for the .info file (mandatory). The .info
+              extension is automatically added. Paths can be relative (resolved
+              against spec file location) or absolute.
+
+       STACK=size
+              Stack size in bytes for tools (default: 4096).
+
+       IMAGE=file
+              Path to custom image file. Supported formats include PNG, IFF,
+              JPEG, GIF, and BMP. Images must be 128x128 pixels or smaller.
+
+       DEFICON=name
+              Custom default icon name. The tool searches for DefIcons in:
+              1. ENVARC:Sys/def_* (primary search)
+              2. Standard Workbench icons using TYPE as fallback
+
+       TOOLTYPE=key=value
+              ToolType entry (can be specified multiple times). Keys must be
+              unique within each icon definition. Values can be quoted if they
+              contain spaces.
+
+       FORCE  Overwrite existing .info files without prompting.
+
+       HELP   Display usage information and exit.
+
+SPECIFICATION FILE FORMAT
+       Each icon definition consists of parameter assignments, one per line.
+       Multiple icon definitions can be separated by blank lines.
+
+       Parameter format:
+              PARAMETER=value
+
+       Comments start with semicolon (;) and continue to end of line.
+       Whitespace around equals signs and at line ends is ignored.
+
+       Example specification file:
+              ; First icon: A tool with custom deficons
+              TYPE=tool
+              TARGET=myapp
+              STACK=8192
+              TOOLTYPE=CX_POPUP=YES
+              TOOLTYPE=CX_HOTKEY="RAMIGA I"
+              DEFICON=tool
+
+              ; Second icon: A project with standard deficons
+              TYPE=project
+              TARGET=myproject
+              DEFICON=src
+
+              ; Third icon: A drawer with custom image
+              TYPE=drawer
+              TARGET=mydrawer
+              IMAGE=drawer_icon.iff
+              TOOLTYPE=WINDOW=myapp
+
+EXAMPLES
+       Create a tool icon using standard Workbench icon:
+              GenIn TYPE=tool TARGET=myprogram STACK=8192
+
+       Create a drawer icon with custom default:
+              GenIn TYPE=drawer TARGET=mydrawer DEFICON=src
+
+       Create multiple icons from spec file:
+              GenIn SPECFILE=myicons.txt
+
+       Create icon with custom image:
+              GenIn TYPE=tool TARGET=myapp IMAGE=myicon.png
+
+       Force overwrite existing file:
+              GenIn TYPE=tool TARGET=myprogram FORCE
+
+       Using command line parameters with multiple tooltypes:
+              GenIn TYPE=project TARGET=myproject TOOLTYPE=WINDOW=myapp TOOLTYPE=REQUIRES=graphics.library
+
+RETURN CODES
+       0 (RETURN_OK)     Success
+       5 (RETURN_WARN)   Warning (e.g., file exists, not overwritten)
+       10 (RETURN_ERROR) Error (invalid arguments, file not found)
+       20 (RETURN_FAIL)  Severe error
+
+FEATURES
+       - Generate .info files from simple text specifications
+       - Support for multiple icon definitions in a single file
+       - Command-line parameter support (no spec file required)
+       - Automatic default icon (DefIcons) loading from ENVARC:Sys/def_*
+       - Fallback to standard Workbench icons
+       - Path resolution relative to spec file location
+       - Whitespace-tolerant parsing with comment support
+       - Filename validation according to Amiga standards
+       - Stack size configuration for tools
+       - ToolType support with duplicate key detection
+       - Automatic validation of created .info files
+
+ERROR HANDLING
+       The tool provides clear error messages for:
+       - Missing mandatory parameters
+       - Invalid parameter values
+       - Duplicate TOOLTYPE keys
+       - File access errors
+       - Image loading failures
+       - Image size violations (rejects images larger than 128x128)
+       - Existing file conflicts (unless FORCE is used)
+       - File validation failures
+
+LIMITATIONS
+       - Maximum image size: 128x128 pixels
+       - Maximum TOOLTYPE entries: 16
+       - Latin-1 encoding for text files
+       - Amiga palette conversion for images
+
+REQUIREMENTS
+       - Amiga operating system 3.0 or higher
+
+BUILDING
+       To build GenIn on AmigaOS:
+              smake
+
+       To install to SDK:C/ directory:
+              smake install
+
+       To clean build artifacts:
+              smake clean
+
+       To run tests:
+              execute test_genin_image
+
+NOTES
+       - TARGET paths can be relative (resolved against spec file location) or absolute
+       - The .info extension is automatically added to TARGET
+       - DEFICON first tries ENVARC:Sys/def_*, then falls back to standard icons
+       - TOOLTYPE keys must be unique within each icon definition
+       - Invalid filename characters are automatically detected and reported
+       - Stack size defaults to 4096 if not specified
+       - Image loading and conversion is planned for future versions
+
+AUTHOR
+       GenIn is part of the amigazen project ToolKit Gen extension.
+
+       Copyright (c) 2025 amigazen project
+       This software is released under the BSD-2-Clause license.
+
+VERSION HISTORY
+       v1.0 - Initial release
+              - Basic icon generation from spec files
+              - Command line parameter support
+              - Multiple icon definitions per file
+              - Comment support
+              - Whitespace-tolerant parsing
+              - Path resolution and filename validation
+              - DefIcon loading with fallback
+              - Stack size configuration
+              - ToolType support
+
+TODO
+       - Image loading and conversion (PNG, IFF, JPEG, GIF, BMP)
+       - Enhanced icon customization options
+       - Batch processing capabilities
+       - Icon template system
+
+SEE ALSO
+       icon.library(3), intuition.library(3), graphics.library(3),
+       datatypes.library(3), utility.library(3)
+
+BUGS
+       Image loading and conversion is not yet implemented. The IMAGE parameter
+       will cause an error until this feature is completed.
+
+       Please report bugs to the amigazen project at github.com/amigazen/Gen
+
+Gen                         2025-09-01                          GENIN(1)

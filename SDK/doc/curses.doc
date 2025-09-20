@@ -1,0 +1,322 @@
+TABLE OF CONTENTS
+
+curses/initscr
+curses/endwin
+curses/beep
+curses/flash
+curses/baudrate
+curses/box
+curses/cbreak
+curses/nocbreak
+curses/crmode
+curses/nocrmode
+curses/clearok
+curses/leaveok
+curses/subwin
+curses/newwin
+curses/delwin
+curses/mvwin
+curses/nl
+curses/nonl
+curses/echo
+curses/noecho
+curses/nodelay
+curses/has_colors
+curses/start_color
+curses/init_color
+curses/keypad
+curses/printw
+curses/wprintw
+curses/mvprintw
+curses/mvwprintw
+curses/scanw
+curses/wscanw
+curses/mvscanw
+curses/mvwscanw
+curses/scrollok
+curses/scroll
+curses/setscrreg
+curses/wsetscrreg
+curses/touchwin
+curses/addch
+curses/waddch
+curses/mvaddch
+curses/mvwaddch
+curses/addstr
+curses/waddstr
+curses/mvaddstr
+curses/mvwaddstr
+curses/attrset
+curses/wattrset
+curses/attron
+curses/wattron
+curses/attroff
+curses/wattroff
+curses/standout
+curses/wstandout
+curses/standend
+curses/wstandend
+curses/erase
+curses/werase
+curses/clear
+curses/wclear
+curses/clrtobot
+curses/wclrtobot
+curses/clrtoeol
+curses/wclrtoeol
+curses/delch
+curses/wdelch
+curses/mvdelch
+curses/mvwdelch
+curses/getch
+curses/wgetch
+curses/mvgetch
+curses/mvwgetch
+curses/getstr
+curses/wgetstr
+curses/mvgetstr
+curses/mvwgetstr
+curses/inch
+curses/winch
+curses/mvinch
+curses/mvwinch
+curses/insch
+curses/winsch
+curses/mvinsch
+curses/mvwinsch
+curses/insertln
+curses/winsertln
+curses/deleteln
+curses/wdeleteln
+curses/move
+curses/wmove
+curses/refresh
+curses/wrefresh
+curses/wnoutrefresh
+curses/doupdate
+curses/fixterm
+curses/flushinp
+curses/idlok
+curses/saveterm
+curses/resetterm
+curses/savetty
+curses/resetty
+curses/mvcur
+curses/overlay
+curses/overwrite
+curses/setterm
+curses/setupterm
+curses/longname
+curses/unctrl
+curses/gettmode
+curses/tgetent
+curses/tgetflag
+curses/tgetnum
+curses/tgetstr
+curses/tgoto
+curses/tparm
+curses/tputscurses/initscr                                                       curses/initscr
+
+   NAME
+	initscr -- initialize curses screen
+
+   SYNOPSIS
+	result = initscr ();
+
+	int initscr (void);
+
+   FUNCTION
+	This must be called before any window can be created or
+	manipulated. It creates "stdscr" and "curscr". curscr is a copy of
+	what curses thinks is currently on the display. Calling
+	wrefresh(curscr) will redraw the entire screen and is useful for
+	noisy modem lines. This is usually called when the user types ^L
+	or sometimes ^R in older programs.
+
+   INPUTS
+	None.
+
+   RESULT
+	On Success, OK is returned.
+	On error, ERR is returned
+
+   EXAMPLE
+
+   NOTES
+	This function must be called before any other curses functions.
+
+   BUGS
+
+   SEE ALSO
+	endwin()
+
+curses/endwin                                                         curses/endwin
+
+   NAME
+	endwin -- cleanup and exit curses
+
+   SYNOPSIS
+	result = endwin ();
+
+	int endwin (void);
+
+   FUNCTION
+	This should be called before exiting a curses program.
+	It frees all memory used and dismantles all structures.
+	It closes the custom screen and window used if curses is used in
+	non-ANSI mode.
+
+   INPUTS
+	None.
+
+   RESULT
+	On Success, OK is returned.
+	On error, ERR is returned
+
+   EXAMPLE
+
+   NOTES
+	This function should be called before program exit to clean up
+	curses resources.
+
+   BUGS
+
+   SEE ALSO
+	initscr()
+
+curses/beep                                                           curses/beep
+
+   NAME
+	beep -- produce audible beep
+
+   SYNOPSIS
+	result = beep ();
+
+	int beep (void);
+
+   FUNCTION
+	Produces an audible beep from the speaker. This beep is similar in pitch
+	and duration to the beep from a terminal when a BEL (^G) character is
+	received. If curses is running in ANSI mode, a BEL character will
+	be sent to the terminal.
+
+   INPUTS
+	None.
+
+   RESULT
+	On Success, OK is returned.
+	On error, ERR is returned
+
+   EXAMPLE
+
+   NOTES
+
+   BUGS
+
+   SEE ALSO
+	flash()
+
+curses/flash                                                         curses/flash
+
+   NAME
+	flash -- flash the display
+
+   SYNOPSIS
+	result = flash ();
+
+	int flash (void);
+
+   FUNCTION
+	Flashes the display by complementing the background colour. With the
+	default black background, this will flash the screen yellow. If
+	curses is being used in ANSI mode, a BEL character will be sent to
+	the terminal.
+
+   INPUTS
+	None.
+
+   RESULT
+	On Success, OK is returned.
+	On error, ERR is returned
+
+   EXAMPLE
+
+   NOTES
+
+   BUGS
+
+   SEE ALSO
+	beep()
+
+curses/baudrate                                                     curses/baudrate
+
+   NAME
+	baudrate -- get current baud rate
+
+   SYNOPSIS
+	rate = baudrate ();
+
+	int baudrate (void);
+
+   FUNCTION
+	Returns current baudrate. On the Amiga, it just returns 19200. It is
+	used to decide how much to refresh over slow serial lines such as
+	modems.
+
+   INPUTS
+	None.
+
+   RESULT
+	19200 is returned.
+
+   EXAMPLE
+
+   NOTES
+
+   BUGS
+
+   SEE ALSO
+
+curses/box                                                             curses/box
+
+   NAME
+	box -- draw a box around a window
+
+   SYNOPSIS
+	result = box (win, vert, hor);
+
+	int box (WINDOW *, char, char);
+
+   FUNCTION
+	Draws a box around the INSIDE edge of the window.
+	win   - pointer returned from newwin or subwin, or stdscr even.
+	vert  - character to use for the vertical.
+	hor   - character to use for the horizontal.
+
+	Either of the characters may be zero. In this case, the defaults of
+	"|" and "-" will be used for vertical and horizontal respectively.
+
+   INPUTS
+	win		- window pointer
+	vert		- vertical character (or 0 for default)
+	hor		- horizontal character (or 0 for default)
+
+   RESULT
+	On Success, OK is returned.
+	On error, ERR is returned
+
+   EXAMPLE
+
+   NOTES
+	The box drawn is INSIDE the window. Therefore any of the clear routines
+	will effect the box if carried out on its window. The normal thing
+	to do is open two windows, one for the box two columns wider and
+	two lines higher than the window for the text. Then use the inner
+	window for the text. This way the box is only drawn once.
+
+   BUGS
+
+   SEE ALSO
+	newwin(), subwin()
+
+
