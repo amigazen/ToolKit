@@ -1,0 +1,3550 @@
+@database fileutils.guide
+
+@Master /gg-src/gg/fsf/fileutils/doc/fileutils.texi
+
+@Width 72
+
+
+This is the AmigaGuide®  file fileutils.guide, produced by Makeinfo-1.68 from 
+the input file /gg-src/gg/fsf/fileutils/doc/fileutils.texi.
+
+START-INFO-DIR-ENTRY
+* File utilities: (fileutils).  GNU file utilities.
+* chgrp: (fileutils)chgrp invocation.           Change file groups.
+* chown: (fileutils)chown invocation.           Change file owners/groups.
+* chmod: (fileutils)chmod invocation.           Change file permissions.
+* cp: (fileutils)cp invocation.                 Copy files.
+* dd: (fileutils)dd invocation.                 Copy and convert a file.
+* df: (fileutils)df invocation.                 Report filesystem disk usage.
+* dir: (fileutils)dir invocation.               List directories briefly.
+* dircolors: (fileutils)dircolors invocation.   Color setup for ls.
+* du: (fileutils)du invocation.                 Report on disk usage.
+* install: (fileutils)install invocation.       Copy and change attributes.
+* ln: (fileutils)ln invocation.                 Make links between files.
+* ls: (fileutils)ls invocation.                 List directory contents.
+* mkdir: (fileutils)mkdir invocation.           Create directories.
+* mkfifo: (fileutils)mkfifo invocation.         Create FIFOs: (named pipes).
+* mknod: (fileutils)mknod invocation.           Create special files.
+* mv: (fileutils)mv invocation.                 Rename files.
+* rm: (fileutils)rm invocation.                 Remove files.
+* rmdir: (fileutils)rmdir invocation.           Remove empty directories.
+* sync: (fileutils)sync invocation.             Synchronize memory and disk.
+* touch: (fileutils)touch invocation.           Change file timestamps.
+* vdir: (fileutils)vdir invocation.             List directories verbosely.
+END-INFO-DIR-ENTRY
+
+   This file documents the GNU set of file utilities.
+
+   Copyright (C) 1994, 95, 96 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that this permission notice may be stated in a
+translation approved by the Foundation.
+
+@node Main "fileutils.guide"
+@next "Introduction"
+
+GNU file utilities
+******************
+
+   This manual minimally documents version 3.16 of the GNU file
+utilities.
+
+
+ @{" Introduction               " link "Introduction"}  Caveats, overview, and authors.
+ @{" Common options             " link "Common options"}  Common options.
+ @{" File permissions           " link "File permissions"}  Access modes.
+ @{" Date input formats         " link "Date input formats"}  Specifying date strings.
+ @{" Directory listing          " link "Directory listing"}  ls dir vdir d v dircolors
+ @{" Basic operations           " link "Basic operations"}  cp dd install mv rm
+ @{" Special file types         " link "Special file types"}  ln mkdir rmdir mkfifo mknod
+ @{" Changing file attributes   " link "Changing file attributes"}  chgrp chmod chown touch
+ @{" Disk usage                 " link "Disk usage"}  df du sync
+ @{" Index                      " link "Index"}  General index.
+
+
+@endnode
+
+@node "Introduction" "fileutils.guide/Introduction"
+@next "Common options"
+@prev "Main"
+@toc "Main"
+
+Introduction
+************
+
+   This manual is incomplete: No attempt is made to explain basic file
+concepts in a way suitable for novices.  Thus, if you are interested,
+please get involved in improving this manual.  The entire GNU community
+will benefit.
+
+   The GNU file utilities are mostly compatible with the POSIX.2
+standard.
+
+   Please report bugs to @{b}fileutils-bugs@gnu.ai.mit.edu@{ub}.  Remember to
+include the version number, machine architecture, input files, and any
+other information needed to reproduce the bug: your input, what you
+expected, what you got, and why it is wrong.  Diffs are welcome, but
+please include a description of the problem as well, since this is
+sometimes difficult to infer. See @{"Bugs" link "gcc.guide/Bugs"}.
+
+   This manual is based on the Unix man pages in the distribution, which
+were originally written by David MacKenzie and updated by Jim Meyering.
+Franc,ois Pinard did the initial conversion to Texinfo format.  Karl
+Berry did the indexing, some reorganization, and editing of the results.
+Richard Stallman contributed his usual invaluable insights to the
+overall process.
+
+
+@endnode
+
+@node "Common options" "fileutils.guide/Common options"
+@next "File permissions"
+@prev "Introduction"
+@toc "Main"
+
+Common options
+**************
+
+   Certain options are available in all of these programs (in fact,
+every GNU program should accept them).  Rather than writing identical
+descriptions for each of the programs, they are described here.
+
+@{b}--help@{ub}
+     Print a usage message listing all available options, then exit
+     successfully.
+
+@{b}--version@{ub}
+     Print the version number, then exit successfully.
+
+
+ @{" Backup options             " link "Backup options"}  -b -S -V, in some programs.
+
+
+@endnode
+
+@node "Backup options" "fileutils.guide/Backup options"
+@toc "Common options"
+
+Backup options
+==============
+
+   Some GNU programs (at least @{b}cp@{ub}, @{b}install@{ub}, @{b}ln@{ub}, and @{b}mv@{ub}) optionally make
+backups of files before writing new versions.  These options control
+the details of these backups.  The options are also briefly mentioned
+in the descriptions of the particular programs.
+
+@{b}-b@{ub}
+@{b}--backup@{ub}
+     Make backups of files that are about to be overwritten or removed.
+     Without this option, the original versions are destroyed.
+
+@{b}-S SUFFIX@{ub}
+@{b}--suffix=SUFFIX@{ub}
+     Append SUFFIX to each backup file made with @{b}-b@{ub}.  If this option is
+     not specified, the value of the @{b}SIMPLE_BACKUP_SUFFIX@{ub} environment
+     variable is used.  And if @{b}SIMPLE_BACKUP_SUFFIX@{ub} is not set, the
+     default is @{b}~@{ub}, just as in Emacs.
+
+@{b}-V METHOD@{ub}
+@{b}--version-control=METHOD@{ub}
+     Use METHOD to determine the type of backups made with @{b}-b@{ub}.  If this
+     option is not specified, the value of the @{b}VERSION_CONTROL@{ub}
+     environment variable is used.  And if @{b}VERSION_CONTROL@{ub} is not set,
+     the default backup type is @{b}existing@{ub}.
+
+     This option corresponds to the Emacs variable @{b}version-control@{ub}; the
+     same values for METHOD are accepted as in Emacs.  This options
+     also more descriptive name.  The valid METHODs (unique
+     abbreviations are accepted):
+
+    @{b}t@{ub}
+    @{b}numbered@{ub}
+          Always make numbered backups.
+
+    @{b}nil@{ub}
+    @{b}existing@{ub}
+          Make numbered backups of files that already have them, simple
+          backups of the others.
+
+    @{b}never@{ub}
+    @{b}simple@{ub}
+          Always make simple backups.
+
+
+@endnode
+
+@node "File permissions" "fileutils.guide/File permissions"
+@next "Date input formats"
+@prev "Common options"
+@toc "Main"
+
+File permissions
+****************
+
+   Each file has a set of @{i}permissions@{ui} that control the kinds of access
+that users have to that file.  The permissions for a file are also
+called its @{i}access mode@{ui}.  They can be represented either in symbolic
+form or as an octal number.
+
+
+ @{" Mode Structure             " link "Mode Structure"}  Structure of file permissions.
+ @{" Symbolic Modes             " link "Symbolic Modes"}  Mnemonic permissions representation.
+ @{" Numeric Modes              " link "Numeric Modes"}  Permissions as octal numbers.
+
+
+@endnode
+
+@node "Mode Structure" "fileutils.guide/Mode Structure"
+@next "Symbolic Modes"
+@toc "File permissions"
+
+Structure of File Permissions
+=============================
+
+   There are three kinds of permissions that a user can have for a file:
+
+  1. permission to read the file.  For directories, this means
+     permission to list the contents of the directory.
+
+  2. permission to write to (change) the file.  For directories, this
+     means permission to create and remove files in the directory.
+
+  3. permission to execute the file (run it as a program).  For
+     directories, this means permission to access files in the
+     directory.
+
+   There are three categories of users who may have different
+permissions to perform any of the above operations on a file:
+
+  1. the file's owner;
+
+  2. other users who are in the file's group;
+
+  3. everyone else.
+
+   Files are given an owner and group when they are created.  Usually
+the owner is the current user and the group is the group of the
+directory the file is in, but this varies with the operating system, the
+filesystem the file is created on, and the way the file is created.  You
+can change the owner and group of a file by using the @{b}chown@{ub} and @{b}chgrp@{ub}
+commands.
+
+   In addition to the three sets of three permissions listed above, a
+file's permissions have three special components, which affect only
+executable files (programs) and, on some systems, directories:
+
+  1. set the process's effective user ID to that of the file upon
+     execution (called the @{i}setuid bit@{ui}).  No effect on directories.
+
+  2. set the process's effective group ID to that of the file upon
+     execution (called the @{i}setgid bit@{ui}).  For directories on some
+     systems, put files created in the directory into the same group as
+     the directory, no matter what group the user who creates them is
+     in.
+
+  3. save the program's text image on the swap device so it will load
+     more quickly when run (called the @{i}sticky bit@{ui}).  For directories on
+     some systems, prevent users from removing files that they do not
+     own in the directory; this is called making the directory
+     @{i}append-only@{ui}.
+
+
+@endnode
+
+@node "Symbolic Modes" "fileutils.guide/Symbolic Modes"
+@next "Numeric Modes"
+@prev "Mode Structure"
+@toc "File permissions"
+
+Symbolic Modes
+==============
+
+@{i}   Symbolic modes@{ui} represent changes to files' permissions as operations
+on single-character symbols.  They allow you to modify either all or
+selected parts of files' permissions, optionally based on their
+previous values, and perhaps on the current @{b}umask@{ub} as well (see
+@{"Umask and Protection" link "Umask and Protection"}).
+
+   The format of symbolic modes is:
+
+     [ugoa...][[+-=][rwxXstugo...]...][,...]
+
+   The following sections describe the operators and other details of
+symbolic modes.
+
+
+ @{" Setting Permissions         " link "Setting Permissions"}  Basic operations on permissions.
+ @{" Copying Permissions         " link "Copying Permissions"}  Copying existing permissions.
+ @{" Changing Special Permissions " link "Changing Special Permissions"}  Special permissions.
+ @{" Conditional Executability   " link "Conditional Executability"}  Conditionally affecting executability.
+ @{" Multiple Changes            " link "Multiple Changes"}  Making multiple changes.
+ @{" Umask and Protection        " link "Umask and Protection"}  The effect of the umask.
+
+
+@endnode
+
+@node "Setting Permissions" "fileutils.guide/Setting Permissions"
+@next "Copying Permissions"
+@toc "Symbolic Modes"
+
+Setting Permissions
+-------------------
+
+   The basic symbolic operations on a file's permissions are adding,
+removing, and setting the permission that certain users have to read,
+write, and execute the file.  These operations have the following
+format:
+
+     USERS OPERATION PERMISSIONS
+
+The spaces between the three parts above are shown for readability only;
+symbolic modes can not contain spaces.
+
+   The USERS part tells which users' access to the file is changed.  It
+consists of one or more of the following letters (or it can be empty;
+see @{"Umask and Protection" link "Umask and Protection"}, for a description of what happens then).
+When more than one of these letters is given, the order that they are
+in does not matter.
+
+@{b}u@{ub}
+     the user who owns the file;
+
+@{b}g@{ub}
+     other users who are in the file's group;
+
+@{b}o@{ub}
+     all other users;
+
+@{b}a@{ub}
+     all users; the same as @{b}ugo@{ub}.
+
+   The OPERATION part tells how to change the affected users' access to
+the file, and is one of the following symbols:
+
+@{b}+@{ub}
+     to add the PERMISSIONS to whatever permissions the USERS already
+     have for the file;
+
+@{b}-@{ub}
+     to remove the PERMISSIONS from whatever permissions the USERS
+     already have for the file;
+
+@{b}=@{ub}
+     to make the PERMISSIONS the only permissions that the USERS have
+     for the file.
+
+   The PERMISSIONS part tells what kind of access to the file should be
+changed; it is zero or more of the following letters.  As with the
+USERS part, the order does not matter when more than one letter is
+given.  Omitting the PERMISSIONS part is useful only with the @{b}=@{ub}
+operation, where it gives the specified USERS no access at all to the
+file.
+
+@{b}r@{ub}
+     the permission the USERS have to read the file;
+
+@{b}w@{ub}
+     the permission the USERS have to write to the file;
+
+@{b}x@{ub}
+     the permission the USERS have to execute the file.
+
+   For example, to give everyone permission to read and write a file,
+but not to execute it, use:
+
+     a=rw
+
+   To remove write permission for from all users other than the file's
+owner, use:
+
+     go-w
+
+The above command does not affect the access that the owner of the file
+has to it, nor does it affect whether other users can read or execute
+the file.
+
+   To give everyone except a file's owner no permission to do anything
+with that file, use the mode below.  Other users could still remove the
+file, if they have write permission on the directory it is in.
+
+     go=
+
+Another way to specify the same thing is:
+
+     og-rxw
+
+
+@endnode
+
+@node "Copying Permissions" "fileutils.guide/Copying Permissions"
+@next "Changing Special Permissions"
+@prev "Setting Permissions"
+@toc "Symbolic Modes"
+
+Copying Existing Permissions
+----------------------------
+
+   You can base a file's permissions on its existing permissions.  To do
+this, instead of using @{b}r@{ub}, @{b}w@{ub}, or @{b}x@{ub} after the operator, you use the
+letter @{b}u@{ub}, @{b}g@{ub}, or @{b}o@{ub}.  For example, the mode
+     o+g
+
+adds the permissions for users who are in a file's group to the
+permissions that other users have for the file.  Thus, if the file
+started out as mode 664 (@{b}rw-rw-r--@{ub}), the above mode would change it to
+mode 666 (@{b}rw-rw-rw-@{ub}).  If the file had started out as mode 741
+(@{b}rwxr----x@{ub}), the above mode would change it to mode 745 (@{b}rwxr--r-x@{ub}).
+The @{b}-@{ub} and @{b}=@{ub} operations work analogously.
+
+
+@endnode
+
+@node "Changing Special Permissions" "fileutils.guide/Changing Special Permissions"
+@next "Conditional Executability"
+@prev "Copying Permissions"
+@toc "Symbolic Modes"
+
+Changing Special Permissions
+----------------------------
+
+   In addition to changing a file's read, write, and execute
+permissions, you can change its special permissions.  See
+@{"Mode Structure" link "Mode Structure"}, for a summary of these permissions.
+
+   To change a file's permission to set the user ID on execution, use @{b}u@{ub}
+in the USERS part of the symbolic mode and @{b}s@{ub} in the PERMISSIONS part.
+
+   To change a file's permission to set the group ID on execution, use
+@{b}g@{ub} in the USERS part of the symbolic mode and @{b}s@{ub} in the PERMISSIONS part.
+
+   To change a file's permission to stay permanently on the swap device,
+use @{b}o@{ub} in the USERS part of the symbolic mode and @{b}t@{ub} in the PERMISSIONS
+part.
+
+   For example, to add set user ID permission to a program, you can use
+the mode:
+
+     u+s
+
+   To remove both set user ID and set group ID permission from it, you
+can use the mode:
+
+     ug-s
+
+   To cause a program to be saved on the swap device, you can use the
+mode:
+
+     o+t
+
+   Remember that the special permissions only affect files that are
+executable, plus, on some systems, directories (on which they have
+different meanings; see @{"Mode Structure" link "Mode Structure"}).  Using @{b}a@{ub} in the USERS part of
+a symbolic mode does not cause the special permissions to be affected;
+thus,
+
+     a+s
+
+has @{i}no effect@{ui}.  You must use @{b}u@{ub}, @{b}g@{ub}, and @{b}o@{ub} explicitly to affect the
+special permissions.  Also, the combinations @{b}u+t@{ub}, @{b}g+t@{ub}, and @{b}o+s@{ub} have no
+effect.
+
+   The @{b}=@{ub} operator is not very useful with special permissions; for
+example, the mode:
+
+     o=t
+
+does cause the file to be saved on the swap device, but it also removes
+all read, write, and execute permissions that users not in the file's
+group might have had for it.
+
+
+@endnode
+
+@node "Conditional Executability" "fileutils.guide/Conditional Executability"
+@next "Multiple Changes"
+@prev "Changing Special Permissions"
+@toc "Symbolic Modes"
+
+Conditional Executability
+-------------------------
+
+   There is one more special type of symbolic permission: if you use @{b}X@{ub}
+instead of @{b}x@{ub}, execute permission is affected only if the file already
+had execute permission or is a directory.  It affects directories'
+execute permission even if they did not initially have any execute
+permissions set.
+
+   For example, this mode:
+
+     a+X
+
+gives all users permission to execute files (or search directories) if
+anyone could before.
+
+
+@endnode
+
+@node "Multiple Changes" "fileutils.guide/Multiple Changes"
+@next "Umask and Protection"
+@prev "Conditional Executability"
+@toc "Symbolic Modes"
+
+Making Multiple Changes
+-----------------------
+
+   The format of symbolic modes is actually more complex than described
+above (see @{"Setting Permissions" link "Setting Permissions"}).  It provides two ways to make
+multiple changes to files' permissions.
+
+   The first way is to specify multiple OPERATION and PERMISSIONS parts
+after a USERS part in the symbolic mode.
+
+   For example, the mode:
+
+     og+rX-w
+
+gives users other than the owner of the file read permission and, if it
+is a directory or if someone already had execute permission to it,
+gives them execute permission; and it also denies them write permission
+to it file.  It does not affect the permission that the owner of the
+file has for it.  The above mode is equivalent to the two modes:
+
+     og+rX
+     og-w
+
+   The second way to make multiple changes is to specify more than one
+simple symbolic mode, separated by commas.  For example, the mode:
+
+     a+r,go-w
+
+gives everyone permission to read the file and removes write permission
+on it for all users except its owner.  Another example:
+
+     u=rwx,g=rx,o=
+
+sets all of the non-special permissions for the file explicitly.  (It
+gives users who are not in the file's group no permission at all for
+it.)
+
+   The two methods can be combined.  The mode:
+
+     a+r,g+x-w
+
+gives all users permission to read the file, and gives users who are in
+the file's group permission to execute it, as well, but not permission
+to write to it.  The above mode could be written in several different
+ways; another is:
+
+     u+r,g+rx,o+r,g-w
+
+
+@endnode
+
+@node "Umask and Protection" "fileutils.guide/Umask and Protection"
+@prev "Multiple Changes"
+@toc "Symbolic Modes"
+
+The Umask and Protection
+------------------------
+
+   If the USERS part of a symbolic mode is omitted, it defaults to @{b}a@{ub}
+(affect all users), except that any permissions that are @{i}set@{ui} in the
+system variable @{b}umask@{ub} are @{i}not affected@{ui}.  The value of @{b}umask@{ub} can be set
+using the @{b}umask@{ub} command.  Its default value varies from system to
+system.
+
+   Omitting the USERS part of a symbolic mode is generally not useful
+with operations other than @{b}+@{ub}.  It is useful with @{b}+@{ub} because it allows
+you to use @{b}umask@{ub} as an easily customizable protection against giving
+away more permission to files than you intended to.
+
+   As an example, if @{b}umask@{ub} has the value 2, which removes write
+permission for users who are not in the file's group, then the mode:
+
+     +w
+
+adds permission to write to the file to its owner and to other users who
+are in the file's group, but @{i}not@{ui} to other users.  In contrast, the mode:
+
+     a+w
+
+ignores @{b}umask@{ub}, and @{i}does@{ui} give write permission for the file to all users.
+
+
+@endnode
+
+@node "Numeric Modes" "fileutils.guide/Numeric Modes"
+@prev "Symbolic Modes"
+@toc "File permissions"
+
+Numeric Modes
+=============
+
+   File permissions are stored internally as 16 bit integers.  As an
+alternative to giving a symbolic mode, you can give an octal (base 8)
+number that corresponds to the internal representation of the new mode.
+This number is always interpreted in octal; you do not have to add a
+leading 0, as you do in C.  Mode 0055 is the same as mode 55.
+
+   A numeric mode is usually shorter than the corresponding symbolic
+mode, but it is limited in that it can not take into account a file's
+previous permissions; it can only set them absolutely.
+
+   The permissions granted to the user, to other users in the file's
+group, and to other users not in the file's group are each stored as
+three bits, which are represented as one octal digit.  The three special
+permissions are also each stored as one bit, and they are as a group
+represented as another octal digit.  Here is how the bits are arranged
+in the 16 bit integer, starting with the lowest valued bit:
+
+     Value in  Corresponding
+     Mode      Permission
+     
+               Other users not in the file's group:
+        1      Execute
+        2      Write
+        4      Read
+     
+               Other users in the file's group:
+       10      Execute
+       20      Write
+       40      Read
+     
+               The file's owner:
+      100      Execute
+      200      Write
+      400      Read
+     
+               Special permissions:
+     1000      Save text image on swap device
+     2000      Set group ID on execution
+     4000      Set user ID on execution
+
+   For example, numeric mode 4755 corresponds to symbolic mode
+@{b}u=rwxs,go=rx@{ub}, and numeric mode 664 corresponds to symbolic mode
+@{b}ug=rw,o=r@{ub}.  Numeric mode 0 corresponds to symbolic mode @{b}ugo=@{ub}.
+
+
+@endnode
+
+@node "Date input formats" "fileutils.guide/Date input formats"
+@next "Directory listing"
+@prev "File permissions"
+@toc "Main"
+
+Date input formats
+******************
+
+     Our units of temporal measurement, from seconds on up to months,
+     are so complicated, asymmetrical and disjunctive so as to make
+     coherent mental reckoning in time all but impossible.  Indeed, had
+     some tyrannical god contrived to enslave our minds to time, to
+     make it all but impossible for us to escape subjection to sodden
+     routines and unpleasant surprises, he could hardly have done
+     better than handing down our present system.  It is like a set of
+     trapezoidal building blocks, with no vertical or horizontal
+     surfaces, like a language in which the simplest thought demands
+     ornate constructions, useless particles and lengthy
+     circumlocutions.  Unlike the more successful patterns of language
+     and science, which enable us to face experience boldly or at least
+     level-headedly, our system of temporal calculation silently and
+     persistently encourages our terror of time.
+
+     ...  It is as though architects had to measure length in feet,
+     width in meters and height in ells; as though basic instruction
+     manuals demanded a knowledge of five different languages.  It is
+     no wonder then that we often look into our own immediate past or
+     future, last Tuesday or a week from Sunday, with feelings of
+     helpless confusion.  ...
+
+     -- Robert Grudin, `Time and the Art of Living'.
+
+   This section describes the textual date representations that GNU
+programs accept.  These are the strings you, as a user, can supply as
+arguments to the various programs.  The C interface (via the @{b}getdate@{ub}
+function) is not described here.
+
+   Although the date syntax here can represent any possible time since
+zero A.D., computer integers are not big enough for such a
+(comparatively) long time.  The earliest date semantically allowed on
+Unix systems is midnight, 1 January 1970 UCT.
+
+
+ @{" General date syntax           " link "General date syntax"}  Common rules.
+ @{" Calendar date item            " link "Calendar date item"}  19 Dec 1994.
+ @{" Time of day item              " link "Time of day item"}  9:20pm.
+ @{" Timezone item                 " link "Timezone item"}  EST, DST, BST, UCT, AHST, ...
+ @{" Day of week item              " link "Day of week item"}  Monday and others.
+ @{" Relative item in date strings " link "Relative item in date strings"}  next tuesday, 2 years ago.
+ @{" Pure numbers in date strings  " link "Pure numbers in date strings"}  19931219, 1440.
+ @{" Authors of getdate            " link "Authors of getdate"}  Bellovin, Salz, Berets, et al.
+
+
+@endnode
+
+@node "General date syntax" "fileutils.guide/General date syntax"
+@next "Calendar date item"
+@toc "Date input formats"
+
+General date syntax
+===================
+
+   A @{i}date@{ui} is a string, possibly empty, containing many items separated
+by whitespace.  The whitespace may be omitted when no ambiguity arises.
+The empty string means the beginning of today (i.e., midnight).  Order
+of the items is immaterial.  A date string may contain many flavors of
+items:
+
+   * calendar date items
+
+   * time of the day items
+
+   * time zone items
+
+   * day of the week items
+
+   * relative items
+
+   * pure numbers.
+
+We describe each of these item types in turn, below.
+
+   A few numbers may be written out in words in most contexts.  This is
+most useful for specifying day of the week items or relative items (see
+below).  Here is the list: @{b}first@{ub} for 1, @{b}next@{ub} for 2, @{b}third@{ub} for 3, @{b}fourth@{ub}
+for 4, @{b}fifth@{ub} for 5, @{b}sixth@{ub} for 6, @{b}seventh@{ub} for 7, @{b}eighth@{ub} for 8, @{b}ninth@{ub} for
+9, @{b}tenth@{ub} for 10, @{b}eleventh@{ub} for 11 and @{b}twelfth@{ub} for 12.  Also, @{b}last@{ub} means
+exactly -1.
+
+   When a month is written this way, it is still considered to be
+written numerically, instead of being "spelled in full"; this changes
+the allowed strings.
+
+   Alphabetic case is completely ignored in dates.  Comments may be
+introduced between round parentheses, as long as included parentheses
+are properly nested.  Hyphens not followed by a digit are currently
+ignored.  Leading zeros on numbers are ignored.
+
+
+@endnode
+
+@node "Calendar date item" "fileutils.guide/Calendar date item"
+@next "Time of day item"
+@prev "General date syntax"
+@toc "Date input formats"
+
+Calendar date item
+==================
+
+   A @{i}calendar date item@{ui} specifies a day of the year.  It is specified
+differently, depending on whether the month is specified numerically or
+literally.  All these strings specify the same calendar date:
+
+     1970-09-17           # ISO 8601.
+     70-9-17              # This century assumed by default.
+     70-09-17             # Leading zeros are ignored.
+     9/17/72              # Common U.S. writing.
+     24 September 1972
+     24 Sept 72           # September has a special abbreviation.
+     24 Sep 72            # Three-letter abbreviations always allowed.
+     Sep 24, 1972
+     24-sep-72
+     24sep72
+
+   The year can also be omitted.  In this case, the last specified year
+is used, or the current year if none.  For example:
+
+     9/17
+     sep 17
+
+   Here are the rules.
+
+   For numeric months, the ISO 8601 format @{b}YEAR-MONTH-DAY@{ub} is allowed,
+where YEAR is any positive number, MONTH is a number between 01 and 12,
+and DAY is a number between 01 and 31.  A leading zero must be present
+if a number is less than ten.  If YEAR is less than 100, then 1900 is
+added to it to force a date in this century.  The construct
+@{b}MONTH/DAY/YEAR@{ub}, popular in the United States, is accepted.  Also
+@{b}MONTH/DAY@{ub}, omitting the year.
+
+   Literal months may be spelled out in full: @{b}January@{ub}, @{b}February@{ub}, @{b}March@{ub},
+@{b}April@{ub}, @{b}May@{ub}, @{b}June@{ub}, @{b}July@{ub}, @{b}August@{ub}, @{b}September@{ub}, @{b}October@{ub}, @{b}November@{ub} or
+@{b}December@{ub}.  Literal months may be abbreviated to their first three
+letters, possibly followed by an abbreviating dot.  It is also
+permitted to write @{b}Sept@{ub} instead of @{b}September@{ub}.
+
+   When months are written literally, the calendar date may be given as
+any of the following:
+
+     DAY MONTH YEAR
+     DAY MONTH
+     MONTH DAY YEAR
+     DAY-MONTH-YEAR
+
+   Or, omitting the year:
+
+     MONTH DAY
+
+
+@endnode
+
+@node "Time of day item" "fileutils.guide/Time of day item"
+@next "Timezone item"
+@prev "Calendar date item"
+@toc "Date input formats"
+
+Time of day item
+================
+
+   A @{i}time of day item@{ui} in date strings specifies the time on a given
+day.  Here are some examples, all of which represent the same time:
+
+     20:02:0
+     20:02
+     8:02pm
+     20:02-0500      # In EST (Eastern U.S. Standard Time).
+
+   More generally, the time of the day may be given as
+@{b}HOUR:MINUTE:SECOND@{ub}, where HOUR is a number between 0 and 23, MINUTE is
+a number between 0 and 59, and SECOND is a number between 0 and 59.
+Alternatively, @{b}:SECOND@{ub} can be omitted, in which case it is taken to be
+zero.
+
+   If the time is followed by @{b}am@{ub} or @{b}pm@{ub} (or @{b}a.m.@{ub} or @{b}p.m.@{ub}), HOUR is
+restricted to run from 1 to 12, and @{b}:MINUTE@{ub} may be omitted (taken to be
+zero).  @{b}am@{ub} indicates the first half of the day, @{b}pm@{ub} indicates the second
+half of the day.  In this notation, 12 is the predecessor of 1:
+midnight is @{b}12am@{ub} while noon is @{b}12pm@{ub}.
+
+   The time may alternatively be followed by a timezone correction,
+expressed as @{b}SHHMM@{ub}, where S is @{b}+@{ub} or @{b}-@{ub}, HH is a number of zone hours and
+MM is a number of zone minutes.  When a timezone correction is given
+this way, it forces interpretation of the time in UTC, overriding any
+previous specification for the timezone or the local timezone.  The
+MINUTE part of the time of the day may not be elided when a timezone
+correction is used.  This is the only way to specify a timezone
+correction by fractional parts of an hour.
+
+   Either @{b}am@{ub}/@{b}pm@{ub} or a timezone correction may be specified, but not both.
+
+
+@endnode
+
+@node "Timezone item" "fileutils.guide/Timezone item"
+@next "Day of week item"
+@prev "Time of day item"
+@toc "Date input formats"
+
+Timezone item
+=============
+
+   A @{i}timezone item@{ui} specifies an international timezone, indicated by a
+small set of letters.  Any included period is ignored.  Military
+timezone designations use a single letter.  Currently, only integral
+zone hours may be represented in a timezone item.  See the previous
+section for a finer control over the timezone correction.
+
+   Here are many non-daylight-savings-time timezones, indexed by the
+zone hour value.
+
++000
+@{b}     GMT@{ub} for Greenwich Mean, @{b}UT@{ub} or @{b}UTC@{ub} for Universal (Coordinated), @{b}WET@{ub}
+     for Western European and @{b}Z@{ub} for militaries.
+
++100
+@{b}     WAT@{ub} for West Africa and @{b}A@{ub} for militaries.
+
++200
+@{b}     AT@{ub} for Azores and @{b}B@{ub} for militaries.
+
++300
+@{b}     C@{ub} for militaries.
+
++400
+@{b}     AST@{ub} for Atlantic Standard and @{b}D@{ub} for militaries.
+
++500
+@{b}     E@{ub} for militaries and @{b}EST@{ub} for Eastern Standard.
+
++600
+@{b}     CST@{ub} for Central Standard and @{b}F@{ub} for militaries.
+
++700
+@{b}     G@{ub} for militaries and @{b}MST@{ub} for Mountain Standard.
+
++800
+@{b}     H@{ub} for militaries and @{b}PST@{ub} for Pacific Standard.
+
++900
+@{b}     I@{ub} for militaries and @{b}YST@{ub} for Yukon Standard.
+
++1000
+@{b}     AHST@{ub} for Alaska-Hawaii Standard, @{b}CAT@{ub} for Central Alaska, @{b}HST@{ub} for
+     Hawaii Standard and @{b}K@{ub} for militaries.
+
++1100
+@{b}     L@{ub} for militaries and @{b}NT@{ub} for Nome.
+
++1200
+@{b}     IDLW@{ub} for International Date Line West and @{b}M@{ub} for militaries.
+
+-100
+@{b}     CET@{ub} for Central European, @{b}FWT@{ub} for French Winter, @{b}MET@{ub} for Middle
+     European, @{b}MEWT@{ub} for Middle European Winter, @{b}N@{ub} for militaries and
+     @{b}SWT@{ub} for Swedish Winter.
+
+-200
+@{b}     EET@{ub} for Eastern European, USSR Zone 1 and @{b}O@{ub} for militaries.
+
+-300
+@{b}     BT@{ub} for Baghdad, USSR Zone 2 and @{b}P@{ub} for militaries.
+
+-400
+@{b}     Q@{ub} for militaries and @{b}ZP4@{ub} for USSR Zone 3.
+
+-500
+@{b}     R@{ub} for militaries and @{b}ZP5@{ub} for USSR Zone 4.
+
+-600
+@{b}     S@{ub} for militaries and @{b}ZP6@{ub} for USSR Zone 5.
+
+-700
+@{b}     T@{ub} for militaries and @{b}WAST@{ub} for West Australian Standard.
+
+-800
+@{b}     CCT@{ub} for China Coast, USSR Zone 7 and @{b}U@{ub} for militaries.
+
+-900
+@{b}     JST@{ub} for Japan Standard, USSR Zone 8 and @{b}V@{ub} for militaries.
+
+-1000
+@{b}     EAST@{ub} for East Australian Standard, @{b}GST@{ub} for Guam Standard, USSR
+     Zone 9 and @{b}W@{ub} for militaries.
+
+-1100
+@{b}     X@{ub} for militaries.
+
+-1200
+@{b}     IDLE@{ub} for International Date Line East, @{b}NZST@{ub} for New Zealand
+     Standard, @{b}NZT@{ub} for New Zealand and @{b}Y@{ub} for militaries.
+
+   Here are many DST timezones, indexed by the zone hour value.  Also,
+by following a non-DST timezone by the string @{b}DST@{ub} in a separate word
+(that is, separated by some whitespace), the corresponding DST timezone
+may be specified.
+
+0
+@{b}     BST@{ub} for British Summer.
+
++400
+@{b}     ADT@{ub} for Atlantic Daylight.
+
++500
+@{b}     EDT@{ub} for Eastern Daylight.
+
++600
+@{b}     CDT@{ub} for Central Daylight.
+
++700
+@{b}     MDT@{ub} for Mountain Daylight.
+
++800
+@{b}     PDT@{ub} for Pacific Daylight.
+
++900
+@{b}     YDT@{ub} for Yukon Daylight.
+
++1000
+@{b}     HDT@{ub} for Hawaii Daylight.
+
+-100
+@{b}     MEST@{ub} for Middle European Summer, @{b}MESZ@{ub} for Middle European Summer,
+     @{b}SST@{ub} for Swedish Summer and @{b}FST@{ub} for French Summer.
+
+-700
+@{b}     WADT@{ub} for West Australian Daylight.
+
+-1000
+@{b}     EADT@{ub} for Eastern Australian Daylight.
+
+-1200
+@{b}     NZDT@{ub} for New Zealand Daylight.
+
+
+@endnode
+
+@node "Day of week item" "fileutils.guide/Day of week item"
+@next "Relative item in date strings"
+@prev "Timezone item"
+@toc "Date input formats"
+
+Day of week item
+================
+
+   The explicit mention of a day of the week will forward the date
+(only if necessary) to reach that day of the week in the future.
+
+   Days of the week may be spelled out in full: @{b}Sunday@{ub}, @{b}Monday@{ub},
+@{b}Tuesday@{ub}, @{b}Wednesday@{ub}, @{b}Thursday@{ub}, @{b}Friday@{ub} or @{b}Saturday@{ub}.  Days may be
+abbreviated to their first three letters, optionally followed by a
+period.  The special abbreviations @{b}Tues@{ub} for @{b}Tuesday@{ub}, @{b}Wednes@{ub} for
+@{b}Wednesday@{ub} and @{b}Thur@{ub} or @{b}Thurs@{ub} for @{b}Thursday@{ub} are also allowed.
+
+   A number may precede a day of the week item to move forward
+supplementary weeks.  It is best used in expression like @{b}third monday@{ub}.
+In this context, @{b}last DAY@{ub} or @{b}next DAY@{ub} is also acceptable; they move one
+week before or after the day that DAY by itself would represent.
+
+   A comma following a day of the week item is ignored.
+
+
+@endnode
+
+@node "Relative item in date strings" "fileutils.guide/Relative item in date strings"
+@next "Pure numbers in date strings"
+@prev "Day of week item"
+@toc "Date input formats"
+
+Relative item in date strings
+=============================
+
+@{i}   Relative items@{ui} adjust a date (or the current date if none) forward
+or backward.  The effects of relative items accumulate.  Here are some
+examples:
+
+     1 year
+     1 year ago
+     3 years
+     2 days
+
+   The unit of time displacement may be selected by the string @{b}year@{ub} or
+@{b}month@{ub} for moving by whole years or months.  These are fuzzy units, as
+years and months are not all of equal duration.  More precise units are
+@{b}fortnight@{ub} which is worth 14 days, @{b}week@{ub} worth 7 days, @{b}day@{ub} worth 24
+hours, @{b}hour@{ub} worth 60 minutes, @{b}minute@{ub} or @{b}min@{ub} worth 60 seconds, and
+@{b}second@{ub} or @{b}sec@{ub} worth one second.  An @{b}s@{ub} suffix on these units is accepted
+and ignored.
+
+   The unit of time may be preceded by a multiplier, given as an
+optionally signed number.  Unsigned numbers are taken as positively
+signed.  No number at all implies 1 for a multiplier.  Following a
+relative item by the string @{b}ago@{ub} is equivalent to preceding the unit by a
+multiplicator with value -1.
+
+   The string @{b}tomorrow@{ub} is worth one day in the future (equivalent to
+@{b}day@{ub}), the string @{b}yesterday@{ub} is worth one day in the past (equivalent to
+@{b}day ago@{ub}).
+
+   The strings @{b}now@{ub} or @{b}today@{ub} are relative items corresponding to
+zero-valued time displacement, these strings come from the fact a
+zero-valued time displacement represents the current time when not
+otherwise change by previous items.  They may be used to stress other
+items, like in @{b}12:00 today@{ub}.  The string @{b}this@{ub} also has the meaning of a
+zero-valued time displacement, but is preferred in date strings like
+@{b}this thursday@{ub}.
+
+   When a relative item makes the resulting date to cross the boundary
+between DST and non-DST (or vice-versa), the hour is adjusted according
+to the local time.
+
+
+@endnode
+
+@node "Pure numbers in date strings" "fileutils.guide/Pure numbers in date strings"
+@next "Authors of getdate"
+@prev "Relative item in date strings"
+@toc "Date input formats"
+
+Pure numbers in date strings
+============================
+
+   The precise intepretation of a pure decimal number is dependent of
+the context in the date string.
+
+   If the decimal number is of the form YYYYMMDD and no other calendar
+date item (see @{"Calendar date item" link "Calendar date item"}) appears before it in the date
+string, then YYYY is read as the year, MM as the month number and DD as
+the day of the month, for the specified calendar date.
+
+   If the decimal number is of the form HHMM and no other time of day
+item appears before it in the date string, then HH is read as the hour
+of the day and MM as the minute of the hour, for the specified time of
+the day.  MM can also be omitted.
+
+   If both a calendar date and a time of day appear to the left of a
+number in the date string, but no relative item, then the number
+overrides the year.
+
+
+@endnode
+
+@node "Authors of getdate" "fileutils.guide/Authors of getdate"
+@prev "Pure numbers in date strings"
+@toc "Date input formats"
+
+Authors of @{b}getdate@{ub}
+==================
+
+@{b}   getdate@{ub} was originally implemented by Steven M. Bellovin
+(@{b}smb@research.att.com@{ub}) while at the University of North Carolina at
+Chapel Hill.  The code was later tweaked by a couple of people on
+Usenet, then completely overhauled by Rich $alz (@{b}rsalz@bbn.com@{ub}) and Jim
+Berets (@{b}jberets@bbn.com@{ub}) in August, 1990.  Various revisions for the
+GNU system were made by David MacKenzie, Jim Meyering, and others.
+
+   This chapter was originally produced by Franc,ois Pinard
+(@{b}pinard@iro.umontreal.ca@{ub}) from the @{b}getdate.y@{ub} source code, and then
+edited by K. Berry (@{b}kb@cs.umb.edu@{ub}).
+
+
+@endnode
+
+@node "Directory listing" "fileutils.guide/Directory listing"
+@next "Basic operations"
+@prev "Date input formats"
+@toc "Main"
+
+Directory listing
+*****************
+
+   This chapter describes the @{b}ls@{ub} command and its variants @{b}dir@{ub} and @{b}vdir@{ub},
+which list information about files.
+
+
+ @{" ls invocation              " link "ls invocation"}  List directory contents.
+ @{" dir invocation             " link "dir invocation"}  Briefly ls.
+ @{" vdir invocation            " link "vdir invocation"}  Verbosely ls.
+ @{" dircolors invocation       " link "dircolors invocation"}  Color setup for ls, etc.
+
+
+@endnode
+
+@node "ls invocation" "fileutils.guide/ls invocation"
+@next "dir invocation"
+@toc "Directory listing"
+
+@{b}ls@{ub}: List directory contents
+===========================
+
+   The @{b}ls@{ub} program lists information about files (of any type, including
+directories).  Options and file arguments can be intermixed
+arbitrarily, as usual.
+
+   For non-option command-line arguments that are directories, by
+default @{b}ls@{ub} lists the contents of directories, not recursively, and
+omitting files with names beginning with @{b}.@{ub}.  For other non-option
+arguments, by default @{b}ls@{ub} lists just the file name.  If no non-option
+arguments are specified, @{b}ls@{ub} lists the contents of the current directory.
+
+   By default, the output is sorted alphabetically.  If standard output
+is a terminal, the output is in columns (sorted vertically); otherwise,
+they are listed one per line.
+
+   Because @{b}ls@{ub} is such a fundamental program, it has accumulated many
+options over the years.  They are described in the subsections below;
+within each section, options are listed alphabetically (ignoring case).
+The division of options into the subsections is not absolute, since some
+options affect more than one aspect of @{b}ls@{ub}'s operation.
+
+   The @{b}-g@{ub} option is accepted but ignored, for compatibility with Unix.
+Also see @{"Common options" link "Common options"}.
+
+
+ @{" Which files are listed " link "Which files are listed"}  
+ @{" What information is listed " link "What information is listed"}  
+ @{" Sorting the output   " link "Sorting the output"}  
+ @{" General output formatting " link "General output formatting"}  
+ @{" Formatting the file names " link "Formatting the file names"}
+
+
+@endnode
+
+@node "Which files are listed" "fileutils.guide/Which files are listed"
+@next "What information is listed"
+@toc "ls invocation"
+
+Which files are listed
+----------------------
+
+   These options determine which files @{b}ls@{ub} lists information for.  By
+default, any files and the contents of any directories on the command
+line are shown.
+
+@{b}-a@{ub}
+@{b}--all@{ub}
+     List all files in directories, including files that start with @{b}.@{ub}.
+
+@{b}-A@{ub}
+@{b}--almost-all@{ub}
+     List all files in directories except for @{b}.@{ub} and @{b}..@{ub}.
+
+@{b}-B@{ub}
+@{b}--ignore-backups@{ub}
+     Do not list files that end with @{b}~@{ub}, unless they are given on the
+     command line.
+
+@{b}-d@{ub}
+@{b}--directory@{ub}
+     List just the names of directories, as with other types of files,
+     rather than listing their contents.
+
+@{b}-I@{ub}
+@{b}--ignore@{ub}
+     Do not list files whose names match the shell pattern (not regular
+     expression) PATTERN unless they are given on the command line.  As
+     in the shell, an initial @{b}.@{ub} in a file name does not match a
+     wildcard at the start of PATTERN.
+
+@{b}-L@{ub}
+@{b}--dereference@{ub}
+     In a long listing, show file information (e.g., times and
+     permissions) for the referents of symbolic links rather than for
+     the symbolic links themselves.
+
+@{b}-R@{ub}
+@{b}--recursive@{ub}
+     List the contents of all directories recursively.
+
+
+@endnode
+
+@node "What information is listed" "fileutils.guide/What information is listed"
+@next "Sorting the output"
+@prev "Which files are listed"
+@toc "ls invocation"
+
+What information is listed
+--------------------------
+
+   These options affect the information that @{b}ls@{ub} displays.  By default,
+only file names are shown.
+
+@{b}-D@{ub}
+@{b}--dired@{ub}
+     With the long listing (@{b}-l@{ub}) format, print an additional line after
+     the main output:
+
+          //DIRED// BEG1 END1 BEG2 END2 ...
+
+     The BEGN and ENDN are unsigned integers which record the byte
+     position of the beginning and end of each file name in the output.
+     This makes it easy for Emacs to find the names, even when they
+     contain unusual characters such as space or newline, without fancy
+     searching.
+
+     If directories are being listed recursively (@{b}-R@{ub}), output a similar
+     line after each subdirectory:
+          //SUBDIRED// BEG1 END1 ...
+
+@{b}-G@{ub}
+@{b}--no-group@{ub}
+     Inhibit display of group information in a long format directory
+     listing.  (This is the default in some non-GNU versions of @{b}ls@{ub}, so
+     we provide this option for compatibility.)
+
+@{b}-i@{ub}
+@{b}--inode@{ub}
+     Print the inode number (also called the file serial number and
+     index number) of each file to the left of the file name.  (This
+     number uniquely identifies each file within a particular
+     filesystem.)
+
+@{b}-l@{ub}
+@{b}--format=long@{ub}
+@{b}--format=verbose@{ub}
+     In addition to the name of each file, print the file type,
+     permissions, number of hard links, owner name, group name, size in
+     bytes, and timestamp (by default, the modification time).  For
+     files with a time more than six months old or more than one hour
+     into the future, the timestamp contains the year instead of the
+     time of day.
+
+     For each directory that is listed, preface the files with a line
+     @{b}total BLOCKS@{ub}, where BLOCKS is the total disk space used by all
+     files in that directory.  By default, 1024-byte blocks are used;
+     if the environment variable @{b}POSIXLY_CORRECT@{ub} is set, 512-byte
+     blocks are used (unless the @{b}-k@{ub} option is given).  The BLOCKS
+     computed counts each hard link separately; this is arguably a
+     deficiency.
+
+     The permissions listed are similar to symbolic mode specifications
+     (see @{"Symbolic Modes" link "Symbolic Modes"}).  But @{b}ls@{ub} combines multiple bits into the
+     third character of each set of permissions as follows:
+    @{b}s@{ub}
+          If the setuid or setgid bit and the corresponding executable
+          bit are both set.
+
+    @{b}S@{ub}
+          If the setuid or setgid bit is set but the corresponding
+          executable bit is not set.
+
+    @{b}t@{ub}
+          If the sticky bit and the other-executable bit are both set.
+
+    @{b}T@{ub}
+          If the sticky bit is set but the other-executable bit is not
+          set.
+
+    @{b}x@{ub}
+          If the executable bit is set and none of the above apply.
+
+    @{b}-@{ub}
+          Otherwise.
+
+@{b}-o@{ub}
+     Produce long format directory listings, but don't display group
+     information.  It is equivalent to using @{b}--format=long@{ub} with
+     @{b}--no-group@{ub} .  This option is provided for compatibility with other
+     versions of @{b}ls@{ub}.
+
+@{b}-s@{ub}
+@{b}--size@{ub}
+     Print the size of each file in 1024-byte blocks to the left of the
+     file name.  If the environment variable @{b}POSIXLY_CORRECT@{ub} is set,
+     512-byte blocks are used instead, unless the @{b}-k@{ub} option is given
+     (see @{"General output formatting" link "General output formatting"}).
+
+     For files that are NFS-mounted from an HP-UX system to a BSD
+     system, this option reports sizes that are half the correct
+     values.  On HP-UX systems, it reports sizes that are twice the
+     correct values for files that are NFS-mounted from BSD systems.
+     This is due to a flaw in HP-UX; it also affects the HP-UX @{b}ls@{ub}
+     program.
+
+
+@endnode
+
+@node "Sorting the output" "fileutils.guide/Sorting the output"
+@next "General output formatting"
+@prev "What information is listed"
+@toc "ls invocation"
+
+Sorting the output
+------------------
+
+   These options change the order in which @{b}ls@{ub} sorts the information it
+outputs.  By default, sorting is done by character code (e.g., ASCII
+order).
+
+@{b}-c@{ub}
+@{b}--time=ctime@{ub}
+@{b}--time=status@{ub}
+     Sort according to the status change time (the @{b}ctime@{ub} in the inode).
+     If the long listing format (@{b}-l@{ub}) is being used, print the status
+     change time instead of the modification time.
+
+@{b}-f@{ub}
+     Primarily, like @{b}-U@{ub}--do not sort; list the files in whatever order
+     they are stored in the directory.  But also enable @{b}-a@{ub} (list all
+     files) and disable @{b}-l@{ub}, @{b}--color@{ub}, and @{b}-s@{ub} (if they were specified
+     before the @{b}-f@{ub}).
+
+@{b}-r@{ub}
+@{b}--reverse@{ub}
+     Reverse whatever the sorting method is--e.g., list files in reverse
+     alphabetical order, youngest first, smallest first, or whatever.
+
+@{b}-S@{ub}
+@{b}--sort=size@{ub}
+     Sort by file size, largest first.
+
+@{b}-t@{ub}
+@{b}--sort=time@{ub}
+     Sort by modification time (the @{b}mtime@{ub} in the inode), newest first.
+
+@{b}-u@{ub}
+@{b}--time=atime@{ub}
+@{b}--time=access@{ub}
+@{b}--time=use@{ub}
+     Sort by access time (the @{b}atime@{ub} in the inode).  If the long listing
+     format is being used, print the last access time.
+
+@{b}-U@{ub}
+@{b}--sort=none@{ub}
+     Do not sort; list the files in whatever order they are stored in
+     the directory.  (Do not do any of the other unrelated things that
+     @{b}-f@{ub} does.)  This is especially useful when listing very large
+     directories, since not doing any sorting can be noticeably faster.
+
+@{b}-X@{ub}
+@{b}--sort=extension@{ub}
+     Sort directory contents alphabetically by file extension
+     (characters after the last @{b}.@{ub}); files with no extension are sorted
+     first.
+
+
+@endnode
+
+@node "General output formatting" "fileutils.guide/General output formatting"
+@next "Formatting the file names"
+@prev "Sorting the output"
+@toc "ls invocation"
+
+General output formatting
+-------------------------
+
+   These options affect the appearance of the overall output.
+
+@{b}-1@{ub}
+@{b}--format=single-column@{ub}
+     List one file per line.  This is the default for @{b}ls@{ub} when standard
+     output is not a terminal.
+
+@{b}-C@{ub}
+@{b}--format=vertical@{ub}
+     List files in columns, sorted vertically.  This is the default for
+     @{b}ls@{ub} if standard output is a terminal.  It is always the default for
+     the @{b}dir@{ub} and @{b}d@{ub} programs.
+
+@{b}--color [=WHEN]@{ub}
+     Specify whether to use color for distinguishing file types.  WHEN
+     may be omitted, or one of:
+        * none Do not use color at all.  This is the default.
+
+        * auto Only use color if standard output is a terminal.
+
+        * always Always use color.  Specifying @{b}--color@{ub} and no WHEN is
+     equivalent to @{b}--color=always@{ub}.
+
+@{b}-F@{ub}
+@{b}--classify@{ub}
+     Append a character to each file name indicating the file type.
+     Also, for regular files that are executable, append @{b}*@{ub}.  The file
+     type indicators are @{b}/@{ub} for directories, @{b}\@@{ub} for symbolic links, @{b}|@{ub} for
+     FIFOs, @{b}=@{ub} for sockets, and nothing for regular files.
+
+@{b}--full-time@{ub}
+     List times in full, rather than using the standard abbreviation
+     heuristics.  The format is the same as @{b}date@{ub}'s default; it's not
+     possible to change this, but you can extract out the date string
+     with @{b}cut@{ub} and then pass the result to @{b}date -d@{ub}.  See
+     @{"date invocation" link "sh-utils.guide/date invocation"}.
+
+     This is most useful because the time output includes the seconds.
+     (Unix filesystems store file timestamps only to the nearest
+     second, so this option shows all the information there is.)  For
+     example, this can help when you have a Makefile that is not
+     regenerating files properly.
+
+@{b}-k@{ub}
+@{b}--kilobytes@{ub}
+     If file sizes are being listed, print them in kilobytes.  This
+     overrides the environment variable @{b}POSIXLY_CORRECT@{ub}.
+
+@{b}-m@{ub}
+@{b}--format=commas@{ub}
+     List files horizontally, with as many as will fit on each line,
+     separated by @{b}, @{ub} (a comma and a space).
+
+@{b}-n@{ub}
+@{b}--numeric-uid-gid@{ub}
+     List the numeric UID and GID instead of the names.
+
+@{b}-p@{ub}
+     Append a character to each file name indicating the file type.
+     This is like @{b}-F@{ub}, except that executables are not marked.
+
+@{b}-x FORMAT@{ub}
+@{b}--format=across@{ub}
+@{b}--format=horizontal@{ub}
+     List the files in columns, sorted horizontally.
+
+@{b}-T COLS@{ub}
+@{b}--tabsize=COLS@{ub}
+     Assume that each tabstop is COLS columns wide.  The default is 8.
+     @{b}ls@{ub} uses tabs where possible in the output, for efficiency.  If
+     COLS is zero, do not use tabs at all.
+
+@{b}-w@{ub}
+@{b}--width=COLS@{ub}
+     Assume the screen is COLS columns wide.  The default is taken from
+     the terminal settings if possible; otherwise the environment
+     variable @{b}COLUMNS@{ub} is used if it is set; otherwise the default is 80.
+
+
+@endnode
+
+@node "Formatting the file names" "fileutils.guide/Formatting the file names"
+@prev "General output formatting"
+@toc "ls invocation"
+
+Formatting the file names
+-------------------------
+
+   These options change how file names themselves are printed.
+
+@{b}-b@{ub}
+@{b}--escape@{ub}
+     Quote nongraphic characters in file names using alphabetic and
+     octal backslash sequences like those used in C.
+
+@{b}-N@{ub}
+@{b}--literal@{ub}
+     Do not quote file names.
+
+@{b}-q@{ub}
+@{b}--hide-control-chars@{ub}
+     Print question marks instead of nongraphic characters in file
+     names.  This is the default.
+
+@{b}-Q@{ub}
+@{b}--quote-name@{ub}
+     Enclose file names in double quotes and quote nongraphic
+     characters as in C.
+
+
+@endnode
+
+@node "dir invocation" "fileutils.guide/dir invocation"
+@next "vdir invocation"
+@prev "ls invocation"
+@toc "Directory listing"
+
+@{b}dir@{ub}: Briefly list directory contents
+====================================
+
+@{b}   dir@{ub} (also installed as @{b}d@{ub}) is equivalent to @{b}ls -C@{ub}; that is, files are
+by default listed in columns, sorted vertically.
+
+   See @{"ls" link "ls invocation"}.
+
+
+@endnode
+
+@node "vdir invocation" "fileutils.guide/vdir invocation"
+@next "dircolors invocation"
+@prev "dir invocation"
+@toc "Directory listing"
+
+@{b}vdir@{ub}: Verbosely list directory contents
+=======================================
+
+@{b}   vdir@{ub} (also installed as @{b}v@{ub})is equivalent to @{b}ls -l@{ub}; that is, files are
+by default listed in long format.
+
+
+@endnode
+
+@node "dircolors invocation" "fileutils.guide/dircolors invocation"
+@prev "vdir invocation"
+@toc "Directory listing"
+
+@{b}dircolors@{ub}: Color setup for @{b}ls@{ub}
+=============================
+
+@{b}   dircolors@{ub} outputs a sequence of shell commands to set up the
+terminal for color output from @{b}ls@{ub} (and @{b}dir@{ub}, etc.).  Typical usage:
+
+     eval `dircolors [OPTION]... [FILE]`
+
+   If FILE is specified, @{b}dircolors@{ub} reads it to determine which colors
+to use for which file types and extensions.  Otherwise, a precompiled
+database is used.  For details on the format of these files, run
+@{b}dircolors --print-database@{ub}.
+
+   The output is a shell command to set the @{b}LS_COLORS@{ub} environment
+variable.  You can specify the shell syntax to use on the command line,
+or @{b}dircolors@{ub} will guess it from the value of the @{b}SHELL@{ub} environment
+variable.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-b@{ub}
+@{b}--sh@{ub}
+@{b}--bourne-shell@{ub}
+     Output Bourne shell commands.  This is the default if the @{b}SHELL@{ub}
+     environment variable is set and does not end with @{b}csh@{ub} or @{b}tcsh@{ub}.
+
+@{b}-c@{ub}
+@{b}--csh@{ub}
+@{b}--c-shell@{ub}
+     Output C shell commands.  This is the default if @{b}SHELL@{ub} ends with
+     @{b}csh@{ub} or @{b}tcsh@{ub}.
+
+@{b}-p@{ub}
+@{b}--print-database@{ub}
+     Print the (compiled-in) default color configuration database.  This
+     output is itself a valid configuration file, and is fairly
+     descriptive of the possibilities.
+
+
+@endnode
+
+@node "Basic operations" "fileutils.guide/Basic operations"
+@next "Special file types"
+@prev "Directory listing"
+@toc "Main"
+
+Basic operations
+****************
+
+   This chapter describes the commands for basic file manipulation:
+copying, moving (renaming), and deleting (removing).
+
+
+ @{" cp invocation              " link "cp invocation"}  Copy files.
+ @{" dd invocation              " link "dd invocation"}  Convert and copy a file.
+ @{" install invocation         " link "install invocation"}  Copy files and set attributes.
+ @{" mv invocation              " link "mv invocation"}  Move (rename) files.
+ @{" rm invocation              " link "rm invocation"}  Remove files or directories.
+
+
+@endnode
+
+@node "cp invocation" "fileutils.guide/cp invocation"
+@next "dd invocation"
+@toc "Basic operations"
+
+@{b}cp@{ub}: Copy files and directories
+==============================
+
+@{b}   cp@{ub} copies files (or, optionally, directories).  The copy is
+completely independent of the original.  You can either copy one file to
+another, or copy arbitrarily many files to a destination directory.
+Synopsis:
+
+     cp [OPTION]... SOURCE DEST
+     cp [OPTION]... SOURCE... DIRECTORY
+
+   If the last argument names an existing directory, @{b}cp@{ub} copies each
+SOURCE file into that directory (retaining the same name).  Otherwise,
+if only two files are given, it copies the first onto the second.  It
+is an error if the last argument is not a directory and more than two
+non-option arguments are given.
+
+   Generally, files are written just as they are read.  For exceptions,
+see the @{b}--sparse@{ub} option below.
+
+   By default, @{b}cp@{ub} does not copy directories (see @{b}-r@{ub} below).
+
+@{b}   cp@{ub} generally refuses to copy a file onto itself, with the following
+exception: if @{b}--force --backup@{ub} is specified with SOURCE and DEST
+identical, and referring to a regular file, @{b}cp@{ub} will make a backup file,
+either regular or numbered, as specified in the usual ways (see
+@{"Backup options" link "Backup options"}).  This is useful when you simply want to make a
+backup of an existing file before changing it.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-a@{ub}
+@{b}--archive@{ub}
+     Preserve as much as possible of the structure and attributes of the
+     original files in the copy (but do not preserve directory
+     structure).  Equivalent to @{b}-dpR@{ub}.
+
+@{b}-b@{ub}
+@{b}--backup@{ub}
+     Make backups of files that are about to be overwritten or removed.
+     See @{"Backup options" link "Backup options"}.
+
+@{b}-d@{ub}
+@{b}--no-dereference@{ub}
+     Copy symbolic links as symbolic links rather than copying the
+     files that they point to, and preserve hard links between source
+     files in the copies.
+
+@{b}-f@{ub}
+@{b}--force@{ub}
+     Remove existing destination files.
+
+@{b}-i@{ub}
+@{b}--interactive@{ub}
+     Prompt whether to overwrite existing regular destination files.
+
+@{b}-l@{ub}
+@{b}--link@{ub}
+     Make hard links instead of copies of non-directories.
+
+@{b}-p@{ub}
+@{b}--preserve@{ub}
+     Preserve the original files' owner, group, permissions, and
+     timestamps.
+
+@{b}-P@{ub}
+@{b}--parents@{ub}
+     Form the name of each destination file by appending to the target
+     directory a slash and the specified name of the source file.  The
+     last argument given to @{b}cp@{ub} must be the name of an existing
+     directory.  For example, the command:
+
+          cp --parents a/b/c existing_dir
+
+     copies the file @{b}a/b/c@{ub} to @{b}existing_dir/a/b/c@{ub}, creating any missing
+     intermediate directories.
+
+@{b}-r@{ub}
+     Copy directories recursively, copying any non-directories and
+     non-symbolic links (that is, FIFOs and special files) as if they
+     were regular files.  This means trying to read the data in each
+     source file and writing it to the destination.  Thus, with this
+     option, @{b}cp@{ub} may well hang indefinitely reading a FIFO, unless
+     something else happens to be writing it.
+
+@{b}-R@{ub}
+@{b}--recursive@{ub}
+     Copy directories recursively, preserving non-directories (see @{b}-r@{ub}
+     just above).
+
+@{b}--sparse=WHEN@{ub}
+     A @{i}sparse file@{ui} contains @{i}holes@{ui}--a sequence of zero bytes that does
+     not occupy any physical disk blocks; the @{b}read@{ub} system call reads
+     these as zeroes.  This can both save considerable disk space and
+     increase speed, since many binary files contain lots of
+     consecutive zero bytes.  By default, @{b}cp@{ub} detects holes in input
+     source files via a crude heuristic and makes the corresponding
+     output file sparse as well.
+
+     The WHEN value can be one of the following:
+    @{b}auto@{ub}
+          The default behavior: the output file is sparse if the input
+          file is sparse.
+
+    @{b}always@{ub}
+          Always make the output file sparse.  This is useful when the
+          input file resides on a filesystem that does not support
+          sparse files (the most notable example is @{b}efs@{ub} filesystems in
+          SGI IRIX 5.3 and earlier), but the output file is on another
+          type of filesystem.
+
+    @{b}never@{ub}
+          Never make the output file sparse.  If you find an
+          application for this option, let us know.
+
+@{b}-s@{ub}
+@{b}--symbolic-link@{ub}
+     Make symbolic links instead of copies of non-directories.  All
+     source file names must be absolute (starting with @{b}/@{ub}) unless the
+     destination files are in the current directory.  This option merely
+     results in an error message on systems that do not support
+     symbolic links.
+
+@{b}-S SUFFIX@{ub}
+@{b}--suffix=SUFFIX@{ub}
+     Append SUFFIX to each backup file made with @{b}-b@{ub}.  See
+     @{"Backup options" link "Backup options"}.
+
+@{b}-u@{ub}
+@{b}--update@{ub}
+     Do not copy a nondirectory that has an existing destination with
+     the same or newer modification time.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Print the name of each file before copying it.
+
+@{b}-V METHOD@{ub}
+@{b}--version-control=METHOD@{ub}
+     Change the type of backups made with @{b}-b@{ub}.  The METHOD argument can
+     be @{b}numbered@{ub} (or @{b}t@{ub}), @{b}existing@{ub} (or @{b}nil@{ub}), or @{b}never@{ub} (or @{b}simple@{ub}).  See
+     @{"Backup options" link "Backup options"}.
+
+@{b}-x@{ub}
+@{b}--one-file-system@{ub}
+     Skip subdirectories that are on different filesystems from the one
+     that the copy started on.
+
+
+@endnode
+
+@node "dd invocation" "fileutils.guide/dd invocation"
+@next "install invocation"
+@prev "cp invocation"
+@toc "Basic operations"
+
+@{b}dd@{ub}: Convert and copy a file
+===========================
+
+@{b}   dd@{ub} copies a file (from standard input to standard output, by
+default) with a changeable I/O blocksize, while optionally performing
+conversions on it.  Synopsis:
+
+     dd [OPTION]...
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+   The numeric-valued options below (BYTES and BLOCKS) can be followed
+by a multiplier: @{b}b@{ub}=512, @{b}c@{ub}=1, @{b}k@{ub}=1024, @{b}w@{ub}=2, @{b}xM@{ub}=M.
+
+@{b}if=FILE@{ub}
+     Read from FILE instead of standard input.
+
+@{b}of=FILE@{ub}
+     Write to FILE instead of standard output.  Unless @{b}conv=notrunc@{ub} is
+     given, @{b}dd@{ub} truncates FILE to zero bytes (or the size specified with
+     @{b}seek=@{ub}).
+
+@{b}ibs=BYTES@{ub}
+     Read BYTES bytes at a time.
+
+@{b}obs=BYTES@{ub}
+     Write BYTES bytes at a time.
+
+@{b}bs=BYTES@{ub}
+     Both read and write BYTES bytes at a time.  This overrides @{b}ibs@{ub} and
+     @{b}obs@{ub}.
+
+@{b}cbs=BYTES@{ub}
+     Convert BYTES bytes at a time.
+
+@{b}skip=BLOCKS@{ub}
+     Skip BLOCKS @{b}ibs@{ub}-byte blocks in the input file before copying.
+
+@{b}seek=BLOCKS@{ub}
+     Skip BLOCKS @{b}obs@{ub}-byte blocks in the output file before copying.
+
+@{b}count=BLOCKS@{ub}
+     Copy BLOCKS @{b}obs@{ub}-byte blocks from the input file, instead of
+     everything until the end of the file.
+
+@{b}conv=CONVERSION[,CONVERSION]...@{ub}
+     Convert the file as specified by the CONVERSION argument(s).  (No
+     spaces around any comma(s).)
+
+     Conversions:
+
+    @{b}ascii@{ub}
+          Convert EBCDIC to ASCII.
+
+    @{b}ebcdic@{ub}
+          Convert ASCII to EBCDIC.
+
+    @{b}ibm@{ub}
+          Convert ASCII to alternate EBCDIC.
+
+    @{b}block@{ub}
+          For each line in the input, output @{b}cbs@{ub} bytes, replacing the
+          input newline with a space and padding with spaces as
+          necessary.
+
+    @{b}unblock@{ub}
+          Replace trailing spaces in each @{b}cbs@{ub}-sized input block with a
+          newline.
+
+    @{b}lcase@{ub}
+          Change uppercase letters to lowercase.
+
+    @{b}ucase@{ub}
+          Change lowercase letters to uppercase.
+
+    @{b}swab@{ub}
+          Swap every pair of input bytes.  GNU @{b}dd@{ub}, unlike others, works
+          when an odd number of bytes are read--the last byte is simply
+          copied (since there is nothing to swap it with).
+
+    @{b}noerror@{ub}
+          Continue after read errors.
+
+    @{b}notrunc@{ub}
+          Do not truncate the output file.
+
+    @{b}sync@{ub}
+          Pad every input block to size of @{b}ibs@{ub} with trailing zero bytes.
+
+
+@endnode
+
+@node "install invocation" "fileutils.guide/install invocation"
+@next "mv invocation"
+@prev "dd invocation"
+@toc "Basic operations"
+
+@{b}install@{ub}: Copy files and set attributes
+======================================
+
+@{b}   install@{ub} copies files while setting their permission modes and, if
+possible, their owner and group.  Synopses:
+
+     install [OPTION]... SOURCE DEST
+     install [OPTION]... SOURCE... DIRECTORY
+     install -d [OPTION]... DIRECTORY...
+
+   In the first of these, the SOURCE file is copied to the DEST target
+file.  In the second, each of the SOURCE files are copied to the
+destination DIRECTORY.  In the last, each DIRECTORY (and any missing
+parent directories) is created.
+
+@{b}   install@{ub} is similar to @{b}cp@{ub}, but allows you to control the attributes
+of destination files.  It is typically used in Makefiles to copy
+programs into their destination directories.  It refuses to copy files
+onto themselves.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-b@{ub}
+@{b}--backup@{ub}
+     Make backups of files that are about to be overwritten or removed.
+     See @{"Backup options" link "Backup options"}.
+
+@{b}-c@{ub}
+     Ignored; for compatibility with old Unix versions of @{b}install@{ub}.
+
+@{b}-d@{ub}
+@{b}--directory@{ub}
+     Create each given directory and any missing parent directories,
+     setting the owner, group and mode as given on the command line or
+     to the defaults.  It also gives any parent directories it creates
+     those attributes.  (This is different from the SunOS 4.x @{b}install@{ub},
+     which gives directories that it creates the default attributes.)
+
+@{b}-g GROUP@{ub}
+@{b}--group=GROUP@{ub}
+     Set the group ownership of installed files or directories to
+     GROUP. The default is the process's current group.  GROUP may be
+     either a group name or a numeric group id.
+
+@{b}-m MODE@{ub}
+@{b}--mode=MODE@{ub}
+     Set the permissions for the installed file or directory to MODE,
+     which can be either an octal number, or a symbolic mode as in
+     @{b}chmod@{ub}, with 0 as the point of departure (see @{"File permissions" link "File permissions"}).
+     The default mode is 0755--read, write, and execute for the owner,
+     and read and execute for group and other.
+
+@{b}-o OWNER@{ub}
+@{b}--owner=OWNER@{ub}
+     If @{b}install@{ub} has appropriate privileges (is run as root), set the
+     ownership of installed files or directories to OWNER. The default
+     is @{b}root@{ub}.  OWNER may be either a user name or a numeric user ID.
+
+@{b}-l LOGFILE@{ub}
+@{b}--log=LOGILE@{ub}
+     Create a log file with name, size and date of all installed files.
+     LOGFILE should be a path like /var/install-logs/fileutils-3.13.
+
+@{b}-s@{ub}
+@{b}--strip@{ub}
+     Strip the symbol tables from installed binary executables.
+
+@{b}-S SUFFIX@{ub}
+@{b}--suffix=SUFFIX@{ub}
+     Append SUFFIX to each backup file made with @{b}-b@{ub}.  See
+     @{"Backup options" link "Backup options"}.
+
+@{b}-V METHOD@{ub}
+@{b}--version-control=METHOD@{ub}
+     Change the type of backups made with @{b}-b@{ub}.  The METHOD argument can
+     be @{b}numbered@{ub} (or @{b}t@{ub}), @{b}existing@{ub} (or @{b}nil@{ub}), or @{b}never@{ub} (or @{b}simple@{ub}).  See
+     @{"Backup options" link "Backup options"}.
+
+
+@endnode
+
+@node "mv invocation" "fileutils.guide/mv invocation"
+@next "rm invocation"
+@prev "install invocation"
+@toc "Basic operations"
+
+@{b}mv@{ub}: Move (rename) files
+=======================
+
+@{b}   mv@{ub} moves or renames files (or directories).  Synopsis:
+
+     mv [OPTION]... SOURCE DEST
+     mv [OPTION]... SOURCE... DIRECTORY
+
+   If the last argument names an existing directory, @{b}mv@{ub} moves each
+other given file into a file with the same name in that directory.
+Otherwise, if only two files are given, it renames the first as the
+second.  It is an error if the last argument is not a directory and
+more than two files are given.
+
+@{b}   mv@{ub} can move only regular files across filesystems.
+
+   If a destination file exists but is normally unwritable, standard
+input is a terminal, and the @{b}-f@{ub} or @{b}--force@{ub} option is not given, @{b}mv@{ub}
+prompts the user for whether to replace the file.  (You might own the
+file, or have write permission on its directory.)  If the response does
+not begin with @{b}y@{ub} or @{b}Y@{ub}, the file is skipped.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-b@{ub}
+@{b}--backup@{ub}
+     Make backups of files that are about to be overwritten or removed.
+     See @{"Backup options" link "Backup options"}.
+
+@{b}-f@{ub}
+@{b}--force@{ub}
+     Remove existing destination files and never prompt the user.
+
+@{b}-i@{ub}
+@{b}--interactive@{ub}
+     Prompt whether to overwrite each existing destination file,
+     regardless of its permissions.  If the response does not begin
+     with @{b}y@{ub} or @{b}Y@{ub}, the file is skipped.
+
+@{b}-u@{ub}
+@{b}--update@{ub}
+     Do not move a nondirectory that has an existing destination with
+     the same or newer modification time.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Print the name of each file before moving it.
+
+@{b}-S SUFFIX@{ub}
+@{b}--suffix=SUFFIX@{ub}
+     Append SUFFIX to each backup file made with @{b}-b@{ub}.  See
+     @{"Backup options" link "Backup options"}.
+
+@{b}-V METHOD@{ub}
+@{b}--version-control=METHOD@{ub}
+     Change the type of backups made with @{b}-b@{ub}.  The METHOD argument can
+     be @{b}numbered@{ub} (or @{b}t@{ub}), @{b}existing@{ub} (or @{b}nil@{ub}), or @{b}never@{ub} (or @{b}simple@{ub}).  See
+     @{"Backup options" link "Backup options"}.
+
+
+@endnode
+
+@node "rm invocation" "fileutils.guide/rm invocation"
+@prev "mv invocation"
+@toc "Basic operations"
+
+@{b}rm@{ub}: Remove files or directories
+===============================
+
+@{b}   rm@{ub} removes each given FILE.  By default, it does not remove
+directories.  Synopsis:
+
+     rm [OPTION]... [FILE]...
+
+   If a file is unwritable, standard input is a terminal, and the @{b}-f@{ub} or
+@{b}--force@{ub} option is not given, or the @{b}-i@{ub} or @{b}--interactive@{ub} option @{i}is@{ui}
+given, @{b}rm@{ub} prompts the user for whether to remove the file.  If the
+response does not begin with @{b}y@{ub} or @{b}Y@{ub}, the file is skipped.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-d@{ub}
+@{b}--directory@{ub}
+     Remove directories with @{b}unlink@{ub} instead of @{b}rmdir@{ub}, and don't require
+     a directory to be empty before trying to unlink it.  Only works if
+     you have appropriate privileges.  Because unlinking a directory
+     causes any files in the deleted directory to become unreferenced,
+     it is wise to @{b}fsck@{ub} the filesystem after doing this.
+
+@{b}-f@{ub}
+@{b}--force@{ub}
+     Ignore nonexistent files and never prompt the user.
+
+@{b}-i@{ub}
+@{b}--interactive@{ub}
+     Prompt whether to remove each file.  If the response does not begin
+     with @{b}y@{ub} or @{b}Y@{ub}, the file is skipped.
+
+@{b}-r@{ub}
+@{b}-R@{ub}
+@{b}--recursive@{ub}
+     Remove the contents of directories recursively.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Print the name of each file before removing it.
+
+   One common question is how to remove files whose names being with a
+@{b}-@{ub}.  GNU @{b}rm@{ub}, like every program that uses the @{b}getopt@{ub} function to parse
+its arguments, lets you use the @{b}--@{ub} option to indicate that all
+following arguments are non-options.  To remove a file called @{b}-f@{ub} in the
+current directory, you could type either:
+
+     rm -- -f
+
+or:
+
+     rm ./-f
+
+   The Unix @{b}rm@{ub} program's use of a single @{b}-@{ub} for this purpose predates
+the development of the getopt standard syntax.
+
+
+@endnode
+
+@node "Special file types" "fileutils.guide/Special file types"
+@next "Changing file attributes"
+@prev "Basic operations"
+@toc "Main"
+
+Special file types
+******************
+
+   This chapter describes commands which create special types of files
+(and @{b}rmdir@{ub}, which removes directories, one special file type).
+
+   Although Unix-like operating systems have markedly fewer special file
+types than others, not @{i}everything@{ui} can be treated only as the
+undifferentiated byte stream of @{i}normal files@{ui}.  For example, when a file
+is created or removed, the system must record this information, which
+it does in a @{i}directory@{ui}--a special type of file.  Although you can read
+directories as normal files, if you're curious, in order for the system
+to do its job it must impose a structure, a certain order, on the bytes
+of the file.  Thus it is a "special" type of file.
+
+   Besides directories, other special file types include named pipes
+(FIFOs), symbolic links, sockets, and so-called @{i}special files@{ui}.
+
+
+ @{" ln invocation              " link "ln invocation"}  Make links between files.
+ @{" mkdir invocation           " link "mkdir invocation"}  Make directories.
+ @{" mkfifo invocation          " link "mkfifo invocation"}  Make FIFOs (named pipes).
+ @{" mknod invocation           " link "mknod invocation"}  Make block or character special files.
+ @{" rmdir invocation           " link "rmdir invocation"}  Remove empty directories.
+
+
+@endnode
+
+@node "ln invocation" "fileutils.guide/ln invocation"
+@next "mkdir invocation"
+@toc "Special file types"
+
+@{b}ln@{ub}: Make links between files
+============================
+
+@{b}   ln@{ub} makes links between files.  By default, it makes hard links; with
+the @{b}-s@{ub} option, it makes symbolic (or @{i}soft@{ui}) links.  Synopses:
+
+     ln [OPTION]... SOURCE [DEST]
+     ln [OPTION]... SOURCE... DIRECTORY
+
+   If the last argument names an existing directory, @{b}ln@{ub} links each
+SOURCE file into a file with the same name in that directory.  (But see
+the description of the @{b}--no-dereference@{ub} option below.)  If only one
+file is given, it links that file into the current directory.
+Otherwise, if only two files are given, it links the first onto the
+second.  It is an error if the last argument is not a directory and more
+than two files are given.  By default, it does not remove existing
+files.
+
+   A @{i}hard link@{ui} is another name for an existing file; the link and the
+original are indistinguishable.  (Technically speaking, they share the
+same inode, and the inode contains all the information about a
+file--indeed, it is not incorrect to say that the inode @{i}is@{ui} the file.)
+On all existing implementations, you cannot make a hard links to
+directories, and hard links cannot cross filesystem boundaries.  (These
+restrictions are not mandated by POSIX, however.)
+
+@{i}   Symbolic links@{ui} (@{i}symlinks@{ui} for short), on the other hand, are a
+special file type (which not all kernels support; in particular, system
+V release 3 (and older) systems lack symlinks) in which the link file
+actually refers to a different file, by name.  When most operations
+(opening, reading, writing, and so on) are passed the symbolic link
+file, the kernel automatically @{i}dereferences@{ui} the link and operates on
+the target of the link.  But some operations (e.g., removing) work on
+the link file itself, rather than on its target.  See @{"Symbolic Links" link "library.guide/Symbolic Links"}.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-b@{ub}
+@{b}--backup@{ub}
+     Make backups of files that are about to be overwritten or removed.
+     See @{"Backup options" link "Backup options"}.
+
+@{b}-d@{ub}
+@{b}-F@{ub}
+@{b}--directory@{ub}
+     Allow the super-user to make hard links to directories.
+
+@{b}-f@{ub}
+@{b}--force@{ub}
+     Remove existing destination files.
+
+@{b}-i@{ub}
+@{b}--interactive@{ub}
+     Prompt whether to remove existing destination files.
+
+@{b}-n@{ub}
+@{b}--no-dereference@{ub}
+     When given an explicit destination that is a symlink to a
+     directory, treat that destination as if it were a normal file.
+
+     When the destination is an actual directory (not a symlink to one),
+     there is no ambiguity.  The link is created in that directory.
+     But when the specified destination is a symlink to a directory,
+     there are two ways to treat the user's request.  @{b}ln@{ub} can treat the
+     destination just as it would a normal directory and create the
+     link in it.  On the other hand, the destination can be viewed as a
+     non-directory--as the symlink itself.  In that case, @{b}ln@{ub} must
+     delete or backup that symlink before creating the new link.  The
+     default is to treat a destination that is a symlink to a directory
+     just like a directory.
+
+@{b}-s@{ub}
+@{b}--symbolic@{ub}
+     Make symbolic links instead of hard links.  This option merely
+     produces an error message on systems that do not support symbolic
+     links.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Print the name of each file before linking it.
+
+@{b}-S SUFFIX@{ub}
+@{b}--suffix=SUFFIX@{ub}
+     Append SUFFIX to each backup file made with @{b}-b@{ub}.  See
+     @{"Backup options" link "Backup options"}.
+
+@{b}-V METHOD@{ub}
+@{b}--version-control=METHOD@{ub}
+     Change the type of backups made with @{b}-b@{ub}.  The METHOD argument can
+     be @{b}numbered@{ub} (or @{b}t@{ub}), @{b}existing@{ub} (or @{b}nil@{ub}), or @{b}never@{ub} (or @{b}simple@{ub}).  See
+     @{"Backup options" link "Backup options"}.
+
+
+@endnode
+
+@node "mkdir invocation" "fileutils.guide/mkdir invocation"
+@next "mkfifo invocation"
+@prev "ln invocation"
+@toc "Special file types"
+
+@{b}mkdir@{ub}: Make directories
+=======================
+
+@{b}   mkdir@{ub} creates directories with the specified names.  Synopsis:
+
+     mkdir [OPTION]... NAME...
+
+   It is not an error if a NAME is already a directory; @{b}mkdir@{ub} simply
+proceeds.  But if a NAME is an existing file and is anything but a
+directory, @{b}mkdir@{ub} complains.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-m MODE@{ub}
+@{b}--mode=MODE@{ub}
+     Set the mode of created directories to MODE, which is symbolic as
+     in @{b}chmod@{ub} and uses 0777 (read, write and execute allowed for
+     everyone) minus the bits set in the umask for the point of the
+     departure.  See @{"File permissions" link "File permissions"}.
+
+@{b}-p@{ub}
+@{b}--parents@{ub}
+     Make any missing parent directories for each argument.  The mode
+     for parent directories is set to the umask modified by @{b}u+wx@{ub}.
+     Ignore arguments corresponding to existing directories.
+
+@{b}--verbose@{ub}
+     Print a message for each created directory.  This is most useful
+     with @{b}--parents@{ub}.
+
+
+@endnode
+
+@node "mkfifo invocation" "fileutils.guide/mkfifo invocation"
+@next "mknod invocation"
+@prev "mkdir invocation"
+@toc "Special file types"
+
+@{b}mkfifo@{ub}: Make FIFOs (named pipes)
+================================
+
+@{b}   mkfifo@{ub} creates FIFOs (also called @{i}named pipes@{ui}) with the specified
+names.  Synopsis:
+
+     mkfifo [OPTION] NAME...
+
+   A @{i}FIFO@{ui} is a special file type that permits independent processes to
+communicate.  One process opens the FIFO file for writing, and another
+for reading, after which data can flow as with the usual anonymous pipe
+in shells or elsewhere.
+
+   The program accepts the following option.  Also see @{"Common options" link "Common options"}.
+
+@{b}-m MODE@{ub}
+@{b}--mode=MODE@{ub}
+     Set the mode of created FIFOs to MODE, which is symbolic as in
+     @{b}chmod@{ub} and uses 0666 (read and write allowed for everyone) minus
+     the bits set in the umask for the point of departure.  See
+     @{"File permissions" link "File permissions"}.
+
+
+@endnode
+
+@node "mknod invocation" "fileutils.guide/mknod invocation"
+@next "rmdir invocation"
+@prev "mkfifo invocation"
+@toc "Special file types"
+
+@{b}mknod@{ub}: Make block or character special files
+============================================
+
+@{b}   mknod@{ub} creates a FIFO, character special file, or block special file
+with the specified name.  Synopsis:
+
+     mknod [OPTION]... NAME TYPE [MAJOR MINOR]
+
+   Unlike the phrase "special file type" above, the term @{i}special file@{ui}
+has a technical meaning on Unix: something that can generate or receive
+data.  Usually this corresponds to a physical piece of hardware, e.g.,
+a printer or a disk.  (These files are typically created at
+system-configuration time.)  The @{b}mknod@{ub} command is what creates files of
+this type.  Such devices can be read either a character at a time or a
+"block" (many characters) at a time, hence we say there are @{i}block
+special@{ui} files and @{i}character special@{ui} files.
+
+   The arguments after NAME specify the type of file to make:
+
+@{b}p@{ub}
+     for a FIFO
+
+@{b}b@{ub}
+     for a block (buffered) special file
+
+@{b}c@{ub}
+     for a character (buffered) special file
+
+@{b}u@{ub}
+     for a character (unbuffered) special file
+
+   When making a block or character special file, the major and minor
+device numbers must be given after the file type.
+
+   The program accepts the following option.  Also see @{"Common options" link "Common options"}.
+
+@{b}-m MODE@{ub}
+@{b}--mode=MODE@{ub}
+     Set the mode of created files to MODE, which is symbolic as in
+     @{b}chmod@{ub} and uses 0666 minus the bits set in the umask as the point
+     of departure.  See @{"File permissions" link "File permissions"}.
+
+
+@endnode
+
+@node "rmdir invocation" "fileutils.guide/rmdir invocation"
+@prev "mknod invocation"
+@toc "Special file types"
+
+@{b}rmdir@{ub}: Remove empty directories
+===============================
+
+@{b}   rmdir@{ub} removes empty directories.  Synopsis:
+
+     rmdir [OPTION]... DIRECTORY...
+
+   If any DIRECTORY argument does not refer to an existing empty
+directory, it is an error.
+
+   The program accepts the following option.  Also see @{"Common options" link "Common options"}.
+
+@{b}-p@{ub}
+@{b}--parents@{ub}
+     Remove any parent directories that become empty after an argument
+     DIRECTORY is removed.
+
+   See @{"rm invocation" link "rm invocation"}, for how to remove non-empty directories
+(recursively).
+
+
+@endnode
+
+@node "Changing file attributes" "fileutils.guide/Changing file attributes"
+@next "Disk usage"
+@prev "Special file types"
+@toc "Main"
+
+Changing file attributes
+************************
+
+   A file is not merely its contents, a name, and a file type (see
+@{"Special file types" link "Special file types"}).  A file also has an owner (a userid), a group (a
+group id), permissions (what the owner can do with the file, what
+people in the group can do, and what everyone else can do), various
+timestamps, and other information.  Collectively, we call these a file's
+@{i}attributes@{ui}.
+
+   These commands change file attributes.
+
+
+ @{" chown invocation           " link "chown invocation"}  Change file owners and groups.
+ @{" chgrp invocation           " link "chgrp invocation"}  Change file groups.
+ @{" chmod invocation           " link "chmod invocation"}  Change access permissions.
+ @{" touch invocation           " link "touch invocation"}  Change file timestamps.
+
+
+@endnode
+
+@node "chown invocation" "fileutils.guide/chown invocation"
+@next "chgrp invocation"
+@toc "Changing file attributes"
+
+@{b}chown@{ub}: Change file owner and group
+==================================
+
+@{b}   chown@{ub} changes the user and/or group ownership of each given file.
+Synopsis:
+
+     chown [OPTION]... NEW-OWNER FILE...
+
+   The first non-option argument, NEW-OWNER, specifies the new owner
+and/or group, as follows (with no embedded white space):
+
+     [OWNER] [ [:.] [GROUP] ]
+
+   Specifically:
+
+OWNER
+     If only an OWNER (a user name or numeric user id) is given, that
+     user is made the owner of each given file, and the files' group is
+     not changed.
+
+OWNER@{B}.@{UB}GROUP
+OWNER@{B}:@{UB}GROUP
+     If the OWNER is followed by a colon or dot and a GROUP (a group
+     name or numeric group id), with no spaces between them, the group
+     ownership of the files is changed as well (to GROUP).
+
+OWNER@{B}.@{UB}
+OWNER@{B}:@{UB}
+     If a colon or dot but no group name follows OWNER, that user is
+     made the owner of the files and the group of the files is changed
+     to OWNER's login group.
+
+@{B}.@{UB}GROUP
+@{B}:@{UB}GROUP
+     If the colon or dot and following GROUP are given, but the owner
+     is omitted, only the group of the files is changed; in this case,
+     @{b}chown@{ub} performs the same function as @{b}chgrp@{ub}.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-c@{ub}
+@{b}--changes@{ub}
+     Verbosely describe the action for each FILE whose ownership
+     actually changes.
+
+@{b}-f@{ub}
+@{b}--silent@{ub}
+@{b}--quiet@{ub}
+     Do not print error messages about files whose ownership cannot be
+     changed.
+
+@{b}-h@{ub}
+@{b}--no-dereference@{ub}
+     Act on symbolic links themselves instead of what they point to.
+     Only available if the @{b}lchown@{ub} system call is provided.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Verbosely describe the action (or non-action) taken for every FILE.
+
+@{b}-R@{ub}
+@{b}--recursive@{ub}
+     Recursively change ownership of directories and their contents.
+
+
+@endnode
+
+@node "chgrp invocation" "fileutils.guide/chgrp invocation"
+@next "chmod invocation"
+@prev "chown invocation"
+@toc "Changing file attributes"
+
+@{b}chgrp@{ub}: Change group ownership
+=============================
+
+@{b}   chgrp@{ub} changes the group ownership of each given FILE to GROUP, which
+can be either a group name or a numeric group id.  Synopsis:
+
+     chgrp [OPTION]... GROUP FILE...
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-c@{ub}
+@{b}--changes@{ub}
+     Verbosely describe the action for each FILE whose group actually
+     changes.
+
+@{b}-f@{ub}
+@{b}--silent@{ub}
+@{b}--quiet@{ub}
+     Do not print error messages about files whose group cannot be
+     changed.
+
+@{b}-f@{ub}
+@{b}--no-dereference@{ub}
+     Act on symbolic links themselves instead of what they point to.
+     Only available if the @{b}lchown@{ub} system call is provided.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Verbosely describe the action or non-action taken for every FILE.
+
+@{b}-R@{ub}
+@{b}--recursive@{ub}
+     Recursively change the group ownership of directories and their
+     contents.
+
+
+@endnode
+
+@node "chmod invocation" "fileutils.guide/chmod invocation"
+@next "touch invocation"
+@prev "chgrp invocation"
+@toc "Changing file attributes"
+
+@{b}chmod@{ub}: Change access permissions
+================================
+
+@{b}   chmod@{ub} changes the access permissions of the named files.  Synopsis:
+
+     chmod [OPTION]... MODE FILE...
+
+@{b}   chmod@{ub} never changes the permissions of symbolic links, since the
+@{b}chmod@{ub} system call cannot change their permissions.  This is not a
+problem since the permissions of symbolic links are never used.
+However, for each symbolic link listed on the command line, @{b}chmod@{ub}
+changes the permissions of the pointed-to file.  In contrast, @{b}chmod@{ub}
+ignores symbolic links encountered during recursive directory
+traversals.
+
+   The first non-option argument, MODE, specifies the new permissions.
+See the section below for details.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-c@{ub}
+@{b}--changes@{ub}
+     Verbosely describe the action for each FILE whose permissions
+     actually changes.
+
+@{b}-f@{ub}
+@{b}--silent@{ub}
+@{b}--quiet@{ub}
+     Do not print error messages about files whose permissions cannot be
+     changed.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Verbosely describe the action or non-action taken for every FILE.
+
+@{b}-R@{ub}
+@{b}--recursive@{ub}
+     Recursively change permissions of directories and their contents.
+
+
+@endnode
+
+@node "touch invocation" "fileutils.guide/touch invocation"
+@prev "chmod invocation"
+@toc "Changing file attributes"
+
+@{b}touch@{ub}: Change file timestamps
+=============================
+
+@{b}   touch@{ub} changes the access and/or modification times of the specified
+files.  Synopsis:
+
+     touch [OPTION]... FILE...
+
+   If the first FILE would be a valid argument to the @{b}-t@{ub} option and no
+timestamp is given with any of the @{b}-d@{ub}, @{b}-r@{ub}, or @{b}-t@{ub} options and the @{b}--@{ub}
+argument is not given, that argument is interpreted as the time for the
+other files instead of as a file name.
+
+   Any FILE that does not exist is created empty.
+
+   If changing both the access and modification times to the current
+time, @{b}touch@{ub} can change the timestamps for files that the user running
+it does not own but has write permission for.  Otherwise, the user must
+own the files.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-a@{ub}
+@{b}--time=atime@{ub}
+@{b}--time=access@{ub}
+@{b}--time=use@{ub}
+     Change the access time only.
+
+@{b}-c@{ub}
+@{b}--no-create@{ub}
+     Do not create files that do not exist.
+
+@{b}-d@{ub}
+@{b}--date=time@{ub}
+     Use TIME instead of the current time.  It can contain month names,
+     timezones, @{b}am@{ub} and @{b}pm@{ub}, etc.  See @{"Date input formats" link "Date input formats"}.
+
+@{b}-f@{ub}
+     Ignored; for compatibility with BSD versions of @{b}touch@{ub}.
+
+@{b}-m@{ub}
+@{b}--time=mtime@{ub}
+@{b}--time=modify@{ub}
+     Change the modification time only.
+
+@{b}-r FILE@{ub}
+@{b}--reference=FILE@{ub}
+     Use the times of the reference FILE instead of the current time.
+
+@{b}-t MMDDhhmm[[CC]YY][.ss]@{ub}
+     Use the argument (months, days, hours, minutes, optional century
+     and years, optional seconds) instead of the current time.
+
+
+@endnode
+
+@node "Disk usage" "fileutils.guide/Disk usage"
+@next "Index"
+@prev "Changing file attributes"
+@toc "Main"
+
+Disk usage
+**********
+
+   No disk can hold an infinite amount of data.  These commands report
+on how much disk storage is in use or available.  (This has nothing
+much to do with how much @{i}main memory@{ui}, i.e., RAM, a program is using when
+it runs; for that, you want @{b}ps@{ub} or @{b}pstat@{ub} or @{b}swap@{ub} or some such command.)
+
+
+ @{" df invocation              " link "df invocation"}  Report filesystem disk space usage.
+ @{" du invocation              " link "du invocation"}  Estimate file space usage.
+ @{" sync invocation            " link "sync invocation"}  Synchronize memory and disk.
+
+
+@endnode
+
+@node "df invocation" "fileutils.guide/df invocation"
+@next "du invocation"
+@toc "Disk usage"
+
+@{b}df@{ub}: Report filesystem disk space usage
+======================================
+
+@{b}   df@{ub} reports the amount of disk space used and available on
+filesystems.  Synopsis:
+
+     df [OPTION]... [FILE]...
+
+   With no arguments, @{b}df@{ub} reports the space used and available on all
+currently mounted filesystems (of all types).  Otherwise, @{b}df@{ub} reports on
+the filesystem containing each argument FILE.
+
+   Disk space is shown in 1024-byte blocks by default, unless the
+environment variable @{b}POSIXLY_CORRECT@{ub} is set, in which case 512-byte
+blocks are used (unless the @{b}-k@{ub} option is given).
+
+   If an argument FILE is a disk device file containing a mounted
+filesystem, @{b}df@{ub} shows the space available on that filesystem rather than
+on the filesystem containing the device node (i.e., the root
+filesystem).  GNU @{b}df@{ub} does not attempt to determine the disk usage on
+unmounted filesystems, because on most kinds of systems doing so
+requires extremely nonportable intimate knowledge of filesystem
+structures.
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-a@{ub}
+@{b}--all@{ub}
+     Include in the listing filesystems that have a size of 0 blocks,
+     which are omitted by default.  Such filesystems are typically
+     special-purpose pseudo-filesystems, such as automounter entries.
+     Also, filesystems of type "ignore" or "auto", supported by some
+     operating systems, are only included if this option is specified.
+
+@{b}-h@{ub}
+@{b}--human-readable@{ub}
+     Append a size letter such as @{b}M@{ub} for megabytes to each size.
+
+@{b}-i@{ub}
+@{b}--inodes@{ub}
+     List inode usage information instead of block usage.  An inode
+     (short for index node) is contains information about a file such
+     as its owner, permissions, timestamps, and location on the disk.
+
+@{b}-k@{ub}
+@{b}--kilobytes@{ub}
+     Print sizes in 1024-byte blocks.  This overrides the environment
+     variable @{b}POSIXLY_CORRECT@{ub}.
+
+@{b}-m@{ub}
+@{b}--megabytes@{ub}
+     Print sizes in megabyte (that 1,048,576 bytes) blocks.
+
+@{b}--no-sync@{ub}
+     Do not invoke the @{b}sync@{ub} system call before getting any usage data.
+     This may make @{b}df@{ub} run significantly faster on systems with many
+     disks, but on some systems (notably SunOS) the results may be
+     slightly out of date.  This is the default.
+
+@{b}-P@{ub}
+@{b}--portability@{ub}
+     Use the POSIX output format.  This is like the default format
+     except that the information about each filesystem is always
+     printed on exactly one line; a mount device is never put on a line
+     by itself.  This means that if the mount device name is more than
+     20 characters long (e.g., for some network mounts), the columns
+     are misaligned.
+
+@{b}--sync@{ub}
+     Invoke the @{b}sync@{ub} system call before getting any usage data.  On
+     some systems (notably SunOS), doing this yields more up to date
+     results, but in general this option makes @{b}df@{ub} much slower,
+     especially when there are many or very busy filesystems.
+
+@{b}-t FSTYPE@{ub}
+@{b}--type=FSTYPE@{ub}
+     Limit the listing to filesystems of type FSTYPE.  Multiple
+     filesystem types can be specified by giving multiple @{b}-t@{ub} options.
+     By default, nothing is omitted.
+
+@{b}-T@{ub}
+@{b}--print-type@{ub}
+     Print each filesystem's type.  The types printed here are the same
+     ones you can include or exclude with @{b}-t@{ub} and @{b}-x@{ub}.  The particular
+     types printed are whatever is supported by the system.  Here are
+     some of the common names (this list is certainly not exhaustive):
+
+    @{b}nfs@{ub}
+          An NFS filesystem, i.e., one mounted over a network from
+          another machine.  This is the one type name which seems to be
+          used uniformly by all systems.
+
+    @{b}4.2, ufs, efs...@{ub}
+          A filesystem on a locally-mounted hard disk.  (The system
+          might even support more than one type here; Linux does.)
+
+    @{b}hsfs, cdfs@{ub}
+          A filesystem on a CD-ROM drive.  HP-UX uses @{b}cdfs@{ub}, most other
+          systems use @{b}hsfs@{ub} (@{b}hs@{ub} for `High Sierra').
+
+    @{b}pcfs@{ub}
+          An MS-DOS filesystem, usually on a diskette.
+
+@{b}-x FSTYPE@{ub}
+@{b}--exclude-type=FSTYPE@{ub}
+     Limit the listing to filesystems not of type FSTYPE.  Multiple
+     filesystem types can be eliminated by giving multiple @{b}-x@{ub} options.
+     By default, no filesystem types are omitted.
+
+@{b}-v@{ub}
+     Ignored; for compatibility with System V versions of @{b}df@{ub}.
+
+
+@endnode
+
+@node "du invocation" "fileutils.guide/du invocation"
+@next "sync invocation"
+@prev "df invocation"
+@toc "Disk usage"
+
+@{b}du@{ub}: Estimate file space usage
+=============================
+
+@{b}   du@{ub} reports the amount of disk space used by the specified files and
+for each subdirectory (of directory arguments).  Synopsis:
+
+     du [OPTION]... [FILE]...
+
+   With no arguments, @{b}du@{ub} reports the disk space for the current
+directory.  The output is in 1024-byte units by default, unless the
+environment variable @{b}POSIXLY_CORRECT@{ub} is set, in which case 512-byte
+blocks are used (unless @{b}-k@{ub} is specified).
+
+   The program accepts the following options.  Also see @{"Common options" link "Common options"}.
+
+@{b}-a@{ub}
+@{b}--all@{ub}
+     Show counts for all files, not just directories.
+
+@{b}-b@{ub}
+@{b}--bytes@{ub}
+     Print sizes in bytes, instead of kilobytes.
+
+@{b}-c@{ub}
+@{b}--total@{ub}
+     Print a grand total of all arguments after all arguments have been
+     processed.  This can be used to find out the total disk usage of a
+     given set of files or directories.
+
+@{b}-D@{ub}
+@{b}--dereference-args@{ub}
+     Dereference symbolic links that are command line arguments.  Does
+     not affect other symbolic links.  This is helpful for finding out
+     the disk usage of directories, such as @{b}/usr/tmp@{ub}, which are often
+     symbolic links.
+
+@{b}-h@{ub}
+@{b}--human-readable@{ub}
+     Append a size letter, such as @{b}M@{ub} for megabytes, to each size.
+
+@{b}-k@{ub}
+@{b}--kilobytes@{ub}
+     Print sizes in kilobytes.  This overrides the environment variable
+     @{b}POSIXLY_CORRECT@{ub}.
+
+@{b}-l@{ub}
+@{b}--count-links@{ub}
+     Count the size of all files, even if they have appeared already
+     (as a hard link).
+
+@{b}-L@{ub}
+@{b}--dereference@{ub}
+     Dereference symbolic links (show the disk space used by the file
+     or directory that the link points to instead of the space used by
+     the link).
+
+@{b}-m@{ub}
+@{b}--megabytes@{ub}
+     Print sizes in megabyte (that 1,048,576 bytes) blocks.
+
+@{b}-s@{ub}
+@{b}--summarize@{ub}
+     Display only a total for each argument.
+
+@{b}-S@{ub}
+@{b}--separate-dirs@{ub}
+     Report the size of each directory separately, not including the
+     sizes of subdirectories.
+
+@{b}-x@{ub}
+@{b}--one-file-system@{ub}
+     Skip directories that are on different filesystems from the one
+     that the argument being processed is on.
+
+   On BSD systems, @{b}du@{ub} reports sizes that are half the correct values
+for files that are NFS-mounted from HP-UX systems.  On HP-UX systems,
+it reports sizes that are twice the correct values for files that are
+NFS-mounted from BSD systems.  This is due to a flaw in HP-UX; it also
+affects the HP-UX @{b}du@{ub} program.
+
+
+@endnode
+
+@node "sync invocation" "fileutils.guide/sync invocation"
+@prev "du invocation"
+@toc "Disk usage"
+
+@{b}sync@{ub}: Synchronize data on disk with memory
+==========================================
+
+@{b}   sync@{ub} writes any data buffered in memory out to disk.  This can
+include (but is not limited to) modified superblocks, modified inodes,
+and delayed reads and writes.  This must be implemented by the kernel;
+The @{b}sync@{ub} program does nothing but exercise the @{b}sync@{ub} system call.
+
+   The kernel keeps data in memory to avoid doing (relatively slow) disk
+reads and writes.  This improves performance, but if the computer
+crashes, data may be lost or the filesystem corrupted as a result. @{b}sync@{ub}
+ensures everything in memory is written to disk.
+
+   Any arguments are ignored, except for a lone @{b}--help@{ub} or @{b}--version@{ub}
+(see @{"Common options" link "Common options"}).
+
+
+@endnode
+
+@node "Index" "fileutils.guide/Index"
+@prev "Disk usage"
+@toc "Main"
+
+Index
+*****
+
+@index "Index"
+
+
+
+ @{" - and Unix rm                            " link "rm invocation"}   rm invocation
+ @{" -, removing files beginning with         " link "rm invocation"}   rm invocation
+ @{" -1                                       " link "General output formatting"}   General output formatting
+ @{" -a <1>                                   " link "touch invocation"}   touch invocation
+ @{" -a <2>                                   " link "cp invocation"}   cp invocation
+ @{" -a                                       " link "df invocation"}   df invocation
+ @{" -A                                       " link "Which files are listed"}   Which files are listed
+ @{" -a <1>                                   " link "du invocation"}   du invocation
+ @{" -a                                       " link "Which files are listed"}   Which files are listed
+ @{" -all <1>                                 " link "du invocation"}   du invocation
+ @{" -all <2>                                 " link "Which files are listed"}   Which files are listed
+ @{" -all                                     " link "df invocation"}   df invocation
+ @{" -almost-all                              " link "Which files are listed"}   Which files are listed
+ @{" -archive                                 " link "cp invocation"}   cp invocation
+ @{" -b <1>                                   " link "install invocation"}   install invocation
+ @{" -b <2>                                   " link "Formatting the file names"}   Formatting the file names
+ @{" -b <3>                                   " link "mv invocation"}   mv invocation
+ @{" -b <4>                                   " link "dircolors invocation"}   dircolors invocation
+ @{" -b <5>                                   " link "Backup options"}   Backup options
+ @{" -b                                       " link "cp invocation"}   cp invocation
+ @{" -B                                       " link "Which files are listed"}   Which files are listed
+ @{" -b <1>                                   " link "du invocation"}   du invocation
+ @{" -b                                       " link "ln invocation"}   ln invocation
+ @{" -backup <1>                              " link "ln invocation"}   ln invocation
+ @{" -backup <2>                              " link "mv invocation"}   mv invocation
+ @{" -backup <3>                              " link "cp invocation"}   cp invocation
+ @{" -backup <4>                              " link "Backup options"}   Backup options
+ @{" -backup                                  " link "install invocation"}   install invocation
+ @{" -bourne-shell                            " link "dircolors invocation"}   dircolors invocation
+ @{" -bytes                                   " link "du invocation"}   du invocation
+ @{" -C                                       " link "General output formatting"}   General output formatting
+ @{" -c <1>                                   " link "du invocation"}   du invocation
+ @{" -c <2>                                   " link "install invocation"}   install invocation
+ @{" -c <3>                                   " link "Sorting the output"}   Sorting the output
+ @{" -c <4>                                   " link "chmod invocation"}   chmod invocation
+ @{" -c <5>                                   " link "chgrp invocation"}   chgrp invocation
+ @{" -c <6>                                   " link "chown invocation"}   chown invocation
+ @{" -c <7>                                   " link "touch invocation"}   touch invocation
+ @{" -c                                       " link "dircolors invocation"}   dircolors invocation
+ @{" -c-shell                                 " link "dircolors invocation"}   dircolors invocation
+ @{" -changes <1>                             " link "chown invocation"}   chown invocation
+ @{" -changes <2>                             " link "chgrp invocation"}   chgrp invocation
+ @{" -changes                                 " link "chmod invocation"}   chmod invocation
+ @{" -classify                                " link "General output formatting"}   General output formatting
+ @{" -color                                   " link "General output formatting"}   General output formatting
+ @{" -count-links                             " link "du invocation"}   du invocation
+ @{" -csh                                     " link "dircolors invocation"}   dircolors invocation
+ @{" -d <1>                                   " link "cp invocation"}   cp invocation
+ @{" -d <2>                                   " link "touch invocation"}   touch invocation
+ @{" -d                                       " link "Which files are listed"}   Which files are listed
+ @{" -D <1>                                   " link "du invocation"}   du invocation
+ @{" -D                                       " link "What information is listed"}   What information is listed
+ @{" -d <1>                                   " link "ln invocation"}   ln invocation
+ @{" -d <2>                                   " link "rm invocation"}   rm invocation
+ @{" -d                                       " link "install invocation"}   install invocation
+ @{" -date                                    " link "touch invocation"}   touch invocation
+ @{" -dereference <1>                         " link "Which files are listed"}   Which files are listed
+ @{" -dereference                             " link "du invocation"}   du invocation
+ @{" -dereference-args                        " link "du invocation"}   du invocation
+ @{" -directory <1>                           " link "rm invocation"}   rm invocation
+ @{" -directory <2>                           " link "ln invocation"}   ln invocation
+ @{" -directory <3>                           " link "install invocation"}   install invocation
+ @{" -directory                               " link "Which files are listed"}   Which files are listed
+ @{" -dired                                   " link "What information is listed"}   What information is listed
+ @{" -escape                                  " link "Formatting the file names"}   Formatting the file names
+ @{" -exclude-type                            " link "df invocation"}   df invocation
+ @{" -f <1>                                   " link "chgrp invocation"}   chgrp invocation
+ @{" -f <2>                                   " link "touch invocation"}   touch invocation
+ @{" -f                                       " link "rm invocation"}   rm invocation
+ @{" -F                                       " link "General output formatting"}   General output formatting
+ @{" -f <1>                                   " link "ln invocation"}   ln invocation
+ @{" -f <2>                                   " link "Sorting the output"}   Sorting the output
+ @{" -f                                       " link "chgrp invocation"}   chgrp invocation
+ @{" -F                                       " link "ln invocation"}   ln invocation
+ @{" -f <1>                                   " link "chmod invocation"}   chmod invocation
+ @{" -f <2>                                   " link "cp invocation"}   cp invocation
+ @{" -f <3>                                   " link "mv invocation"}   mv invocation
+ @{" -f                                       " link "chown invocation"}   chown invocation
+ @{" -force <1>                               " link "cp invocation"}   cp invocation
+ @{" -force <2>                               " link "rm invocation"}   rm invocation
+ @{" -force <3>                               " link "ln invocation"}   ln invocation
+ @{" -force                                   " link "mv invocation"}   mv invocation
+ @{" -format <1>                              " link "General output formatting"}   General output formatting
+ @{" -format <2>                              " link "What information is listed"}   What information is listed
+ @{" -format                                  " link "General output formatting"}   General output formatting
+ @{" -full-time                               " link "General output formatting"}   General output formatting
+ @{" -G                                       " link "What information is listed"}   What information is listed
+ @{" -g                                       " link "install invocation"}   install invocation
+ @{" -g (ignored)                             " link "ls invocation"}   ls invocation
+ @{" -group                                   " link "install invocation"}   install invocation
+ @{" -h <1>                                   " link "du invocation"}   du invocation
+ @{" -h <2>                                   " link "df invocation"}   df invocation
+ @{" -h                                       " link "chown invocation"}   chown invocation
+ @{" -help                                    " link "Common options"}   Common options
+ @{" -hide-control-chars                      " link "Formatting the file names"}   Formatting the file names
+ @{" -human-readable <1>                      " link "du invocation"}   du invocation
+ @{" -human-readable                          " link "df invocation"}   df invocation
+ @{" -I                                       " link "Which files are listed"}   Which files are listed
+ @{" -i <1>                                   " link "cp invocation"}   cp invocation
+ @{" -i <2>                                   " link "ln invocation"}   ln invocation
+ @{" -i <3>                                   " link "df invocation"}   df invocation
+ @{" -i <4>                                   " link "rm invocation"}   rm invocation
+ @{" -i <5>                                   " link "mv invocation"}   mv invocation
+ @{" -i                                       " link "What information is listed"}   What information is listed
+ @{" -ignore-backups                          " link "Which files are listed"}   Which files are listed
+ @{" -ignore=PATTERN                          " link "Which files are listed"}   Which files are listed
+ @{" -inode                                   " link "What information is listed"}   What information is listed
+ @{" -inodes                                  " link "df invocation"}   df invocation
+ @{" -interactive <1>                         " link "mv invocation"}   mv invocation
+ @{" -interactive <2>                         " link "ln invocation"}   ln invocation
+ @{" -interactive <3>                         " link "rm invocation"}   rm invocation
+ @{" -interactive                             " link "cp invocation"}   cp invocation
+ @{" -k <1>                                   " link "General output formatting"}   General output formatting
+ @{" -k <2>                                   " link "df invocation"}   df invocation
+ @{" -k                                       " link "du invocation"}   du invocation
+ @{" -kilobytes <1>                           " link "df invocation"}   df invocation
+ @{" -kilobytes <2>                           " link "du invocation"}   du invocation
+ @{" -kilobytes                               " link "General output formatting"}   General output formatting
+ @{" -l                                       " link "install invocation"}   install invocation
+ @{" -L                                       " link "Which files are listed"}   Which files are listed
+ @{" -l <1>                                   " link "What information is listed"}   What information is listed
+ @{" -l                                       " link "du invocation"}   du invocation
+ @{" -L                                       " link "du invocation"}   du invocation
+ @{" -l                                       " link "cp invocation"}   cp invocation
+ @{" -link                                    " link "cp invocation"}   cp invocation
+ @{" -literal                                 " link "Formatting the file names"}   Formatting the file names
+ @{" -log                                     " link "install invocation"}   install invocation
+ @{" -m <1>                                   " link "du invocation"}   du invocation
+ @{" -m <2>                                   " link "install invocation"}   install invocation
+ @{" -m <3>                                   " link "touch invocation"}   touch invocation
+ @{" -m <4>                                   " link "df invocation"}   df invocation
+ @{" -m <5>                                   " link "mknod invocation"}   mknod invocation
+ @{" -m <6>                                   " link "General output formatting"}   General output formatting
+ @{" -m <7>                                   " link "mkfifo invocation"}   mkfifo invocation
+ @{" -m                                       " link "mkdir invocation"}   mkdir invocation
+ @{" -megabytes <1>                           " link "df invocation"}   df invocation
+ @{" -megabytes                               " link "du invocation"}   du invocation
+ @{" -mode <1>                                " link "mknod invocation"}   mknod invocation
+ @{" -mode <2>                                " link "install invocation"}   install invocation
+ @{" -mode <3>                                " link "mkfifo invocation"}   mkfifo invocation
+ @{" -mode                                    " link "mkdir invocation"}   mkdir invocation
+ @{" -n <1>                                   " link "General output formatting"}   General output formatting
+ @{" -n                                       " link "ln invocation"}   ln invocation
+ @{" -N                                       " link "Formatting the file names"}   Formatting the file names
+ @{" -no-create                               " link "touch invocation"}   touch invocation
+ @{" -no-dereference <1>                      " link "chgrp invocation"}   chgrp invocation
+ @{" -no-dereference <2>                      " link "cp invocation"}   cp invocation
+ @{" -no-dereference <3>                      " link "ln invocation"}   ln invocation
+ @{" -no-dereference                          " link "chown invocation"}   chown invocation
+ @{" -no-group                                " link "What information is listed"}   What information is listed
+ @{" -no-sync                                 " link "df invocation"}   df invocation
+ @{" -numeric-uid-gid                         " link "General output formatting"}   General output formatting
+ @{" -o <1>                                   " link "install invocation"}   install invocation
+ @{" -o                                       " link "What information is listed"}   What information is listed
+ @{" -one-file-system <1>                     " link "du invocation"}   du invocation
+ @{" -one-file-system                         " link "cp invocation"}   cp invocation
+ @{" -owner                                   " link "install invocation"}   install invocation
+ @{" -p                                       " link "dircolors invocation"}   dircolors invocation
+ @{" -P <1>                                   " link "cp invocation"}   cp invocation
+ @{" -P                                       " link "df invocation"}   df invocation
+ @{" -p <1>                                   " link "mkdir invocation"}   mkdir invocation
+ @{" -p <2>                                   " link "rmdir invocation"}   rmdir invocation
+ @{" -p                                       " link "cp invocation"}   cp invocation
+ @{" -parents <1>                             " link "rmdir invocation"}   rmdir invocation
+ @{" -parents <2>                             " link "cp invocation"}   cp invocation
+ @{" -parents                                 " link "mkdir invocation"}   mkdir invocation
+ @{" -portability                             " link "df invocation"}   df invocation
+ @{" -preserve                                " link "cp invocation"}   cp invocation
+ @{" -print-database                          " link "dircolors invocation"}   dircolors invocation
+ @{" -print-type                              " link "df invocation"}   df invocation
+ @{" -q                                       " link "Formatting the file names"}   Formatting the file names
+ @{" -Q                                       " link "Formatting the file names"}   Formatting the file names
+ @{" -quiet <1>                               " link "chmod invocation"}   chmod invocation
+ @{" -quiet <2>                               " link "chgrp invocation"}   chgrp invocation
+ @{" -quiet                                   " link "chown invocation"}   chown invocation
+ @{" -quote-name                              " link "Formatting the file names"}   Formatting the file names
+ @{" -R                                       " link "chgrp invocation"}   chgrp invocation
+ @{" -r <1>                                   " link "rm invocation"}   rm invocation
+ @{" -r                                       " link "Sorting the output"}   Sorting the output
+ @{" -R                                       " link "rm invocation"}   rm invocation
+ @{" -r                                       " link "touch invocation"}   touch invocation
+ @{" -R <1>                                   " link "Which files are listed"}   Which files are listed
+ @{" -R <2>                                   " link "cp invocation"}   cp invocation
+ @{" -R <3>                                   " link "chmod invocation"}   chmod invocation
+ @{" -R                                       " link "chown invocation"}   chown invocation
+ @{" -recursive <1>                           " link "rm invocation"}   rm invocation
+ @{" -recursive <2>                           " link "chown invocation"}   chown invocation
+ @{" -recursive <3>                           " link "chmod invocation"}   chmod invocation
+ @{" -recursive <4>                           " link "chgrp invocation"}   chgrp invocation
+ @{" -recursive <5>                           " link "Which files are listed"}   Which files are listed
+ @{" -recursive                               " link "cp invocation"}   cp invocation
+ @{" -reference                               " link "touch invocation"}   touch invocation
+ @{" -reverse                                 " link "Sorting the output"}   Sorting the output
+ @{" -S                                       " link "install invocation"}   install invocation
+ @{" -s <1>                                   " link "What information is listed"}   What information is listed
+ @{" -s <2>                                   " link "ln invocation"}   ln invocation
+ @{" -s                                       " link "cp invocation"}   cp invocation
+ @{" -S <1>                                   " link "Sorting the output"}   Sorting the output
+ @{" -S                                       " link "cp invocation"}   cp invocation
+ @{" -s                                       " link "install invocation"}   install invocation
+ @{" -S <1>                                   " link "mv invocation"}   mv invocation
+ @{" -S <2>                                   " link "Backup options"}   Backup options
+ @{" -S <3>                                   " link "ln invocation"}   ln invocation
+ @{" -S                                       " link "du invocation"}   du invocation
+ @{" -s                                       " link "du invocation"}   du invocation
+ @{" -separate-dirs                           " link "du invocation"}   du invocation
+ @{" -sh                                      " link "dircolors invocation"}   dircolors invocation
+ @{" -silent <1>                              " link "chown invocation"}   chown invocation
+ @{" -silent <2>                              " link "chgrp invocation"}   chgrp invocation
+ @{" -silent                                  " link "chmod invocation"}   chmod invocation
+ @{" -size                                    " link "What information is listed"}   What information is listed
+ @{" -sort                                    " link "Sorting the output"}   Sorting the output
+ @{" -sparse=WHEN                             " link "cp invocation"}   cp invocation
+ @{" -strip                                   " link "install invocation"}   install invocation
+ @{" -suffix <1>                              " link "install invocation"}   install invocation
+ @{" -suffix <2>                              " link "mv invocation"}   mv invocation
+ @{" -suffix <3>                              " link "Backup options"}   Backup options
+ @{" -suffix <4>                              " link "cp invocation"}   cp invocation
+ @{" -suffix                                  " link "ln invocation"}   ln invocation
+ @{" -summarize                               " link "du invocation"}   du invocation
+ @{" -symbolic                                " link "ln invocation"}   ln invocation
+ @{" -symbolic-link                           " link "cp invocation"}   cp invocation
+ @{" -sync                                    " link "df invocation"}   df invocation
+ @{" -T <1>                                   " link "df invocation"}   df invocation
+ @{" -T                                       " link "General output formatting"}   General output formatting
+ @{" -t <1>                                   " link "Sorting the output"}   Sorting the output
+ @{" -t                                       " link "df invocation"}   df invocation
+ @{" -tabsize                                 " link "General output formatting"}   General output formatting
+ @{" -time <1>                                " link "touch invocation"}   touch invocation
+ @{" -time                                    " link "Sorting the output"}   Sorting the output
+ @{" -total                                   " link "du invocation"}   du invocation
+ @{" -type                                    " link "df invocation"}   df invocation
+ @{" -U                                       " link "Sorting the output"}   Sorting the output
+ @{" -u <1>                                   " link "Sorting the output"}   Sorting the output
+ @{" -u <2>                                   " link "mv invocation"}   mv invocation
+ @{" -u                                       " link "cp invocation"}   cp invocation
+ @{" -update <1>                              " link "mv invocation"}   mv invocation
+ @{" -update                                  " link "cp invocation"}   cp invocation
+ @{" -V                                       " link "cp invocation"}   cp invocation
+ @{" -v                                       " link "cp invocation"}   cp invocation
+ @{" -V <1>                                   " link "ln invocation"}   ln invocation
+ @{" -V                                       " link "mv invocation"}   mv invocation
+ @{" -v <1>                                   " link "ln invocation"}   ln invocation
+ @{" -v <2>                                   " link "chown invocation"}   chown invocation
+ @{" -v <3>                                   " link "chmod invocation"}   chmod invocation
+ @{" -v <4>                                   " link "chgrp invocation"}   chgrp invocation
+ @{" -v <5>                                   " link "rm invocation"}   rm invocation
+ @{" -v                                       " link "mv invocation"}   mv invocation
+ @{" -V <1>                                   " link "install invocation"}   install invocation
+ @{" -V                                       " link "Backup options"}   Backup options
+ @{" -verbose <1>                             " link "rm invocation"}   rm invocation
+ @{" -verbose <2>                             " link "ln invocation"}   ln invocation
+ @{" -verbose <3>                             " link "mv invocation"}   mv invocation
+ @{" -verbose <4>                             " link "chmod invocation"}   chmod invocation
+ @{" -verbose <5>                             " link "chgrp invocation"}   chgrp invocation
+ @{" -verbose <6>                             " link "mkdir invocation"}   mkdir invocation
+ @{" -verbose <7>                             " link "cp invocation"}   cp invocation
+ @{" -verbose                                 " link "chown invocation"}   chown invocation
+ @{" -version                                 " link "Common options"}   Common options
+ @{" -version-control <1>                     " link "ln invocation"}   ln invocation
+ @{" -version-control <2>                     " link "cp invocation"}   cp invocation
+ @{" -version-control <3>                     " link "Backup options"}   Backup options
+ @{" -version-control <4>                     " link "install invocation"}   install invocation
+ @{" -version-control                         " link "mv invocation"}   mv invocation
+ @{" -w                                       " link "General output formatting"}   General output formatting
+ @{" -width                                   " link "General output formatting"}   General output formatting
+ @{" -x <1>                                   " link "General output formatting"}   General output formatting
+ @{" -x <2>                                   " link "cp invocation"}   cp invocation
+ @{" -x <3>                                   " link "du invocation"}   du invocation
+ @{" -x                                       " link "df invocation"}   df invocation
+ @{" -X                                       " link "Sorting the output"}   Sorting the output
+ @{" 4.2 filesystem type                      " link "df invocation"}   df invocation
+ @{" abbreviations for months                 " link "Calendar date item"}   Calendar date item
+ @{" access permissions, changing             " link "chmod invocation"}   chmod invocation
+ @{" access time, changing                    " link "touch invocation"}   touch invocation
+ @{" access time, sorting files by            " link "Sorting the output"}   Sorting the output
+ @{" across, listing files                    " link "General output formatting"}   General output formatting
+ @{" adding permissions                       " link "Setting Permissions"}   Setting Permissions
+ @{" ago in date strings                      " link "Relative item in date strings"}   Relative item in date strings
+ @{" Alaska-Hawaii Time                       " link "Timezone item"}   Timezone item
+ @{" alternate ebcdic, converting to          " link "dd invocation"}   dd invocation
+ @{" always color option                      " link "General output formatting"}   General output formatting
+ @{" am in date strings                       " link "Time of day item"}   Time of day item
+ @{" append-only directories                  " link "Mode Structure"}   Mode Structure
+ @{" appropriate privileges                   " link "install invocation"}   install invocation
+ @{" ascii, converting to                     " link "dd invocation"}   dd invocation
+ @{" atime, changing                          " link "touch invocation"}   touch invocation
+ @{" atime, sorting files by                  " link "Sorting the output"}   Sorting the output
+ @{" Atlantic Standard Time                   " link "Timezone item"}   Timezone item
+ @{" attributes, file                         " link "Changing file attributes"}   Changing file attributes
+ @{" authors of getdate                       " link "Authors of getdate"}   Authors of getdate
+ @{" auto color option                        " link "General output formatting"}   General output formatting
+ @{" automounter filesystems                  " link "df invocation"}   df invocation
+ @{" Azores Time                              " link "Timezone item"}   Timezone item
+ @{" b for block special file                 " link "mknod invocation"}   mknod invocation
+ @{" backslash sequences for file names       " link "Formatting the file names"}   Formatting the file names
+ @{" backup files, ignoring                   " link "Which files are listed"}   Which files are listed
+ @{" backup files, type made                  " link "Backup options"}   Backup options
+ @{" backup options                           " link "Backup options"}   Backup options
+ @{" backup suffix                            " link "Backup options"}   Backup options
+ @{" backups, making <1>                      " link "cp invocation"}   cp invocation
+ @{" backups, making <2>                      " link "install invocation"}   install invocation
+ @{" backups, making <3>                      " link "Backup options"}   Backup options
+ @{" backups, making <4>                      " link "mv invocation"}   mv invocation
+ @{" backups, making                          " link "ln invocation"}   ln invocation
+ @{" backups, making only                     " link "cp invocation"}   cp invocation
+ @{" Baghdad Time                             " link "Timezone item"}   Timezone item
+ @{" beginning of time, for Unix              " link "Date input formats"}   Date input formats
+ @{" Bellovin, Steven M.                      " link "Authors of getdate"}   Authors of getdate
+ @{" Berets, Jim                              " link "Authors of getdate"}   Authors of getdate
+ @{" Berry, K.                                " link "Authors of getdate"}   Authors of getdate
+ @{" block (space-padding)                    " link "dd invocation"}   dd invocation
+ @{" block size                               " link "dd invocation"}   dd invocation
+ @{" block size of conversion                 " link "dd invocation"}   dd invocation
+ @{" block size of input                      " link "dd invocation"}   dd invocation
+ @{" block size of output                     " link "dd invocation"}   dd invocation
+ @{" block special files                      " link "mknod invocation"}   mknod invocation
+ @{" block special files, creating            " link "mknod invocation"}   mknod invocation
+ @{" Bourne shell syntax for color setup      " link "dircolors invocation"}   dircolors invocation
+ @{" bs                                       " link "dd invocation"}   dd invocation
+ @{" BSD touch compatibility                  " link "touch invocation"}   touch invocation
+ @{" buffered character file                  " link "mknod invocation"}   mknod invocation
+ @{" bugs, reporting                          " link "Introduction"}   Introduction
+ @{" byte-swapping                            " link "dd invocation"}   dd invocation
+ @{" c for character special file             " link "mknod invocation"}   mknod invocation
+ @{" C shell syntax for color setup           " link "dircolors invocation"}   dircolors invocation
+ @{" calendar date item                       " link "Calendar date item"}   Calendar date item
+ @{" case, ignored in dates                   " link "General date syntax"}   General date syntax
+ @{" cbs                                      " link "dd invocation"}   dd invocation
+ @{" CD-ROM filesystem type                   " link "df invocation"}   df invocation
+ @{" cdfs filesystem type                     " link "df invocation"}   df invocation
+ @{" Central Alaska Time                      " link "Timezone item"}   Timezone item
+ @{" Central European Time                    " link "Timezone item"}   Timezone item
+ @{" Central Standard Time                    " link "Timezone item"}   Timezone item
+ @{" changed files, verbosely describing      " link "chgrp invocation"}   chgrp invocation
+ @{" changed owners, verbosely describing     " link "chown invocation"}   chown invocation
+ @{" changing access permissions              " link "chmod invocation"}   chmod invocation
+ @{" changing file attributes                 " link "Changing file attributes"}   Changing file attributes
+ @{" changing file ownership                  " link "chown invocation"}   chown invocation
+ @{" changing file timestamps                 " link "touch invocation"}   touch invocation
+ @{" changing group ownership <1>             " link "chown invocation"}   chown invocation
+ @{" changing group ownership                 " link "chgrp invocation"}   chgrp invocation
+ @{" changing special permissions             " link "Changing Special Permissions"}   Changing Special Permissions
+ @{" character special files                  " link "mknod invocation"}   mknod invocation
+ @{" character special files, creating        " link "mknod invocation"}   mknod invocation
+ @{" chgrp                                    " link "chgrp invocation"}   chgrp invocation
+ @{" China Coast Time                         " link "Timezone item"}   Timezone item
+ @{" chmod                                    " link "chmod invocation"}   chmod invocation
+ @{" chown                                    " link "chown invocation"}   chown invocation
+ @{" color database, printing                 " link "dircolors invocation"}   dircolors invocation
+ @{" color setup                              " link "dircolors invocation"}   dircolors invocation
+ @{" color, distinguishing file types with    " link "General output formatting"}   General output formatting
+ @{" COLUMNS                                  " link "General output formatting"}   General output formatting
+ @{" commas, outputting between files         " link "General output formatting"}   General output formatting
+ @{" comments, in dates                       " link "General date syntax"}   General date syntax
+ @{" common options                           " link "Common options"}   Common options
+ @{" conditional executability                " link "Conditional Executability"}   Conditional Executability
+ @{" conv                                     " link "dd invocation"}   dd invocation
+ @{" converstion block size                   " link "dd invocation"}   dd invocation
+ @{" converting while copying a file          " link "dd invocation"}   dd invocation
+ @{" copying directories recursively          " link "cp invocation"}   cp invocation
+ @{" copying existing permissions             " link "Copying Permissions"}   Copying Permissions
+ @{" copying files and directories            " link "cp invocation"}   cp invocation
+ @{" copying files and setting attributes     " link "install invocation"}   install invocation
+ @{" count                                    " link "dd invocation"}   dd invocation
+ @{" cp                                       " link "cp invocation"}   cp invocation
+ @{" crashes and corruption                   " link "sync invocation"}   sync invocation
+ @{" creating directories                     " link "mkdir invocation"}   mkdir invocation
+ @{" creating FIFOs (named pipes)             " link "mkfifo invocation"}   mkfifo invocation
+ @{" creating links (hard or soft)            " link "ln invocation"}   ln invocation
+ @{" csh syntax for color setup               " link "dircolors invocation"}   dircolors invocation
+ @{" ctime, sorting by                        " link "Sorting the output"}   Sorting the output
+ @{" database for color setup, printing       " link "dircolors invocation"}   dircolors invocation
+ @{" date format, ISO 8601                    " link "Calendar date item"}   Calendar date item
+ @{" date input formats                       " link "Date input formats"}   Date input formats
+ @{" day in date strings                      " link "Relative item in date strings"}   Relative item in date strings
+ @{" day of week item                         " link "Day of week item"}   Day of week item
+ @{" daylight savings time                    " link "Timezone item"}   Timezone item
+ @{" dd                                       " link "dd invocation"}   dd invocation
+ @{" dereferencing symbolic links             " link "ln invocation"}   ln invocation
+ @{" device file, disk                        " link "df invocation"}   df invocation
+ @{" df                                       " link "df invocation"}   df invocation
+ @{" dir                                      " link "dir invocation"}   dir invocation
+ @{" dircolors                                " link "dircolors invocation"}   dircolors invocation
+ @{" directories, copying                     " link "cp invocation"}   cp invocation
+ @{" directories, copying recursively         " link "cp invocation"}   cp invocation
+ @{" directories, creating                    " link "mkdir invocation"}   mkdir invocation
+ @{" directories, creating with given attributes " link "install invocation"}   install invocation
+ @{" directories, removing (recursively)      " link "rm invocation"}   rm invocation
+ @{" directories, removing empty              " link "rmdir invocation"}   rmdir invocation
+ @{" directories, removing with unlink        " link "rm invocation"}   rm invocation
+ @{" directory listing                        " link "ls invocation"}   ls invocation
+ @{" directory listing, brief                 " link "dir invocation"}   dir invocation
+ @{" directory listing, recursive             " link "Which files are listed"}   Which files are listed
+ @{" directory listing, verbose               " link "vdir invocation"}   vdir invocation
+ @{" directory order, listing by              " link "Sorting the output"}   Sorting the output
+ @{" dired Emacs mode support                 " link "What information is listed"}   What information is listed
+ @{" disk device file                         " link "df invocation"}   df invocation
+ @{" disk usage                               " link "Disk usage"}   Disk usage
+ @{" disk usage by filesystem                 " link "df invocation"}   df invocation
+ @{" disk usage for files                     " link "du invocation"}   du invocation
+ @{" diskette filesystem                      " link "df invocation"}   df invocation
+ @{" displacement of dates                    " link "Relative item in date strings"}   Relative item in date strings
+ @{" DOS filesystem                           " link "df invocation"}   df invocation
+ @{" du                                       " link "du invocation"}   du invocation
+ @{" East Australian Standard Time            " link "Timezone item"}   Timezone item
+ @{" Eastern European Time                    " link "Timezone item"}   Timezone item
+ @{" Eastern Standard Time                    " link "Timezone item"}   Timezone item
+ @{" ebcdic, converting to                    " link "dd invocation"}   dd invocation
+ @{" efs filesystem type                      " link "df invocation"}   df invocation
+ @{" empty files, creating                    " link "touch invocation"}   touch invocation
+ @{" epoch, for Unix                          " link "Date input formats"}   Date input formats
+ @{" error messages, omitting <1>             " link "chgrp invocation"}   chgrp invocation
+ @{" error messages, omitting <2>             " link "chmod invocation"}   chmod invocation
+ @{" error messages, omitting                 " link "chown invocation"}   chown invocation
+ @{" executables and file type, marking       " link "General output formatting"}   General output formatting
+ @{" execute permission                       " link "Mode Structure"}   Mode Structure
+ @{" execute permission, symbolic             " link "Setting Permissions"}   Setting Permissions
+ @{" existing backup method                   " link "Backup options"}   Backup options
+ @{" extension, sorting files by              " link "Sorting the output"}   Sorting the output
+ @{" FIFOs, creating                          " link "mkfifo invocation"}   mkfifo invocation
+ @{" file attributes, changing                " link "Changing file attributes"}   Changing file attributes
+ @{" file information, preserving             " link "cp invocation"}   cp invocation
+ @{" file ownership, changing                 " link "chown invocation"}   chown invocation
+ @{" file permissions                         " link "File permissions"}   File permissions
+ @{" file permissions, numeric                " link "Numeric Modes"}   Numeric Modes
+ @{" file space usage                         " link "du invocation"}   du invocation
+ @{" file timestamps, changing                " link "touch invocation"}   touch invocation
+ @{" file type and executables, marking       " link "General output formatting"}   General output formatting
+ @{" file type, marking                       " link "General output formatting"}   General output formatting
+ @{" file types                               " link "Special file types"}   Special file types
+ @{" file types, special                      " link "Special file types"}   Special file types
+ @{" file utilities                           " link "Top"}   Top
+ @{" files beginning with -, removing         " link "rm invocation"}   rm invocation
+ @{" files, copying                           " link "cp invocation"}   cp invocation
+ @{" filesystem disk usage                    " link "df invocation"}   df invocation
+ @{" filesystem space, retrieving current data more slowly " link "df invocation"}   df invocation
+ @{" filesystem space, retrieving old data more quickly " link "df invocation"}   df invocation
+ @{" filesystem types, limiting output to certain " link "df invocation"}   df invocation
+ @{" filesystem types, printing               " link "df invocation"}   df invocation
+ @{" filesystems and hard links               " link "ln invocation"}   ln invocation
+ @{" filesystems, omitting copying to different " link "cp invocation"}   cp invocation
+ @{" first in date strings                    " link "General date syntax"}   General date syntax
+ @{" fortnight in date strings                " link "Relative item in date strings"}   Relative item in date strings
+ @{" French Winter Time                       " link "Timezone item"}   Timezone item
+ @{" fsck                                     " link "rm invocation"}   rm invocation
+ @{" general date syntax                      " link "General date syntax"}   General date syntax
+ @{" getdate                                  " link "Date input formats"}   Date input formats
+ @{" giving away permissions                  " link "Umask and Protection"}   Umask and Protection
+ @{" grand total of disk space                " link "du invocation"}   du invocation
+ @{" Greenwich Mean Time                      " link "Timezone item"}   Timezone item
+ @{" group owner, default                     " link "Mode Structure"}   Mode Structure
+ @{" group ownership of installed files, setting " link "install invocation"}   install invocation
+ @{" group ownership, changing                " link "chgrp invocation"}   chgrp invocation
+ @{" group ownerships, changing               " link "chown invocation"}   chown invocation
+ @{" group, permissions for                   " link "Setting Permissions"}   Setting Permissions
+ @{" Guam Standard Time                       " link "Timezone item"}   Timezone item
+ @{" hard links to directories                " link "ln invocation"}   ln invocation
+ @{" hard links, counting in du               " link "du invocation"}   du invocation
+ @{" hard links, creating                     " link "ln invocation"}   ln invocation
+ @{" hard links, preserving                   " link "cp invocation"}   cp invocation
+ @{" Hawaii Standard Time                     " link "Timezone item"}   Timezone item
+ @{" help, online                             " link "Common options"}   Common options
+ @{" High Sierra filesystem                   " link "df invocation"}   df invocation
+ @{" history                                  " link "Introduction"}   Introduction
+ @{" holes, copying files with                " link "cp invocation"}   cp invocation
+ @{" horizontal, listing files                " link "General output formatting"}   General output formatting
+ @{" hour in date strings                     " link "Relative item in date strings"}   Relative item in date strings
+ @{" hsfs filesystem type                     " link "df invocation"}   df invocation
+ @{" human-readable df output <1>             " link "du invocation"}   du invocation
+ @{" human-readable df output                 " link "df invocation"}   df invocation
+ @{" ibs                                      " link "dd invocation"}   dd invocation
+ @{" if                                       " link "dd invocation"}   dd invocation
+ @{" ignore filesystems                       " link "df invocation"}   df invocation
+ @{" inode number, printing                   " link "What information is listed"}   What information is listed
+ @{" inode usage                              " link "df invocation"}   df invocation
+ @{" inodes, written buffered                 " link "sync invocation"}   sync invocation
+ @{" input block size                         " link "dd invocation"}   dd invocation
+ @{" install                                  " link "install invocation"}   install invocation
+ @{" installation log                         " link "install invocation"}   install invocation
+ @{" International Date Line East             " link "Timezone item"}   Timezone item
+ @{" International Date Line West             " link "Timezone item"}   Timezone item
+ @{" introduction                             " link "Introduction"}   Introduction
+ @{" ISO 8601 date format                     " link "Calendar date item"}   Calendar date item
+ @{" items in date strings                    " link "General date syntax"}   General date syntax
+ @{" Japan Standard Time                      " link "Timezone item"}   Timezone item
+ @{" kilobytes for filesystem sizes           " link "df invocation"}   df invocation
+ @{" last DAY                                 " link "Day of week item"}   Day of week item
+ @{" last in date strings                     " link "General date syntax"}   General date syntax
+ @{" lcase, converting to                     " link "dd invocation"}   dd invocation
+ @{" lchown <1>                               " link "chgrp invocation"}   chgrp invocation
+ @{" lchown                                   " link "chown invocation"}   chown invocation
+ @{" leading directories, creating missing    " link "install invocation"}   install invocation
+ @{" links, creating                          " link "ln invocation"}   ln invocation
+ @{" Linux filesystem types                   " link "df invocation"}   df invocation
+ @{" ln                                       " link "ln invocation"}   ln invocation
+ @{" local filesystem types                   " link "df invocation"}   df invocation
+ @{" LOGFILE                                  " link "install invocation"}   install invocation
+ @{" long ls format                           " link "What information is listed"}   What information is listed
+ @{" ls                                       " link "ls invocation"}   ls invocation
+ @{" LS_COLORS                                " link "dircolors invocation"}   dircolors invocation
+ @{" MacKenzie, David                         " link "Authors of getdate"}   Authors of getdate
+ @{" Makefiles, installing programs in        " link "install invocation"}   install invocation
+ @{" manipulating files                       " link "Basic operations"}   Basic operations
+ @{" megabytes for filesystem sizes <1>       " link "df invocation"}   df invocation
+ @{" megabytes for filesystem sizes           " link "du invocation"}   du invocation
+ @{" Meyering, Jim                            " link "Authors of getdate"}   Authors of getdate
+ @{" Middle European Time                     " link "Timezone item"}   Timezone item
+ @{" Middle European Winter Time              " link "Timezone item"}   Timezone item
+ @{" midnight in date strings                 " link "Time of day item"}   Time of day item
+ @{" minute in date strings                   " link "Relative item in date strings"}   Relative item in date strings
+ @{" minutes, timezone correction by          " link "Time of day item"}   Time of day item
+ @{" mkdir                                    " link "mkdir invocation"}   mkdir invocation
+ @{" mkfifo                                   " link "mkfifo invocation"}   mkfifo invocation
+ @{" mknod                                    " link "mknod invocation"}   mknod invocation
+ @{" modes and umask                          " link "Umask and Protection"}   Umask and Protection
+ @{" modes of created directories, setting    " link "mkdir invocation"}   mkdir invocation
+ @{" modes of created FIFOs, setting          " link "mkfifo invocation"}   mkfifo invocation
+ @{" modification time, sorting files by      " link "Sorting the output"}   Sorting the output
+ @{" modify time, changing                    " link "touch invocation"}   touch invocation
+ @{" month in date strings                    " link "Relative item in date strings"}   Relative item in date strings
+ @{" month names in date strings              " link "Calendar date item"}   Calendar date item
+ @{" months, written-out                      " link "General date syntax"}   General date syntax
+ @{" Mountain Standard Time                   " link "Timezone item"}   Timezone item
+ @{" MS-DOS filesystem                        " link "df invocation"}   df invocation
+ @{" mtime, changing                          " link "touch invocation"}   touch invocation
+ @{" multiple changes to permissions          " link "Multiple Changes"}   Multiple Changes
+ @{" multipliers after numbers                " link "dd invocation"}   dd invocation
+ @{" mv                                       " link "mv invocation"}   mv invocation
+ @{" named pipes, creating                    " link "mkfifo invocation"}   mkfifo invocation
+ @{" New Zealand Standard Time                " link "Timezone item"}   Timezone item
+ @{" newer files, copying only                " link "cp invocation"}   cp invocation
+ @{" newer files, moving only                 " link "mv invocation"}   mv invocation
+ @{" next DAY                                 " link "Day of week item"}   Day of week item
+ @{" next in date strings                     " link "General date syntax"}   General date syntax
+ @{" NFS filesystem type                      " link "df invocation"}   df invocation
+ @{" NFS mounts from BSD to HP-UX <1>         " link "du invocation"}   du invocation
+ @{" NFS mounts from BSD to HP-UX             " link "What information is listed"}   What information is listed
+ @{" noerror                                  " link "dd invocation"}   dd invocation
+ @{" Nome Standard Time                       " link "Timezone item"}   Timezone item
+ @{" non-directories, copying as special files " link "cp invocation"}   cp invocation
+ @{" none color option                        " link "General output formatting"}   General output formatting
+ @{" none, sorting option for ls              " link "Sorting the output"}   Sorting the output
+ @{" noon in date strings                     " link "Time of day item"}   Time of day item
+ @{" notrunc                                  " link "dd invocation"}   dd invocation
+ @{" now in date strings                      " link "Relative item in date strings"}   Relative item in date strings
+ @{" numbered backup method                   " link "Backup options"}   Backup options
+ @{" numbers, written-out                     " link "General date syntax"}   General date syntax
+ @{" numeric modes                            " link "Numeric Modes"}   Numeric Modes
+ @{" numeric uid and gid                      " link "General output formatting"}   General output formatting
+ @{" obs                                      " link "dd invocation"}   dd invocation
+ @{" octal numbers for file modes             " link "Numeric Modes"}   Numeric Modes
+ @{" of                                       " link "dd invocation"}   dd invocation
+ @{" one filesystem, restricting du to        " link "du invocation"}   du invocation
+ @{" one-line output format                   " link "df invocation"}   df invocation
+ @{" ordinal numbers                          " link "General date syntax"}   General date syntax
+ @{" other permissions                        " link "Setting Permissions"}   Setting Permissions
+ @{" output block size                        " link "dd invocation"}   dd invocation
+ @{" output format, portable                  " link "df invocation"}   df invocation
+ @{" owner of file, permissions for           " link "Setting Permissions"}   Setting Permissions
+ @{" owner, default                           " link "Mode Structure"}   Mode Structure
+ @{" ownership of installed files, setting    " link "install invocation"}   install invocation
+ @{" p for FIFO file                          " link "mknod invocation"}   mknod invocation
+ @{" Pacific Standard Time                    " link "Timezone item"}   Timezone item
+ @{" parent directories and cp                " link "cp invocation"}   cp invocation
+ @{" parent directories, creating             " link "mkdir invocation"}   mkdir invocation
+ @{" parent directories, creating missing     " link "install invocation"}   install invocation
+ @{" parent directories, removing             " link "rmdir invocation"}   rmdir invocation
+ @{" PC filesystem                            " link "df invocation"}   df invocation
+ @{" pcfs                                     " link "df invocation"}   df invocation
+ @{" permissions of files                     " link "File permissions"}   File permissions
+ @{" permissions of installed files, setting  " link "install invocation"}   install invocation
+ @{" permissions, changing access             " link "chmod invocation"}   chmod invocation
+ @{" permissions, copying existing            " link "Copying Permissions"}   Copying Permissions
+ @{" permissions, for changing file timestamps " link "touch invocation"}   touch invocation
+ @{" permissions, output by ls                " link "What information is listed"}   What information is listed
+ @{" Pinard, F.                               " link "Authors of getdate"}   Authors of getdate
+ @{" pm in date strings                       " link "Time of day item"}   Time of day item
+ @{" portable output format                   " link "df invocation"}   df invocation
+ @{" POSIX output format                      " link "df invocation"}   df invocation
+ @{" POSIX.2                                  " link "Introduction"}   Introduction
+ @{" POSIXLY_CORRECT                          " link "df invocation"}   df invocation
+ @{" POSIXLY_CORRECT, overridden by df -k     " link "df invocation"}   df invocation
+ @{" POSIXLY_CORRECT, overridden by du -k     " link "du invocation"}   du invocation
+ @{" POSIXLY_CORRECT, overridden by ls -k     " link "General output formatting"}   General output formatting
+ @{" POSIXLY_CORRECT, overrides ls -s         " link "What information is listed"}   What information is listed
+ @{" printing color database                  " link "dircolors invocation"}   dircolors invocation
+ @{" prompting, and ln                        " link "ln invocation"}   ln invocation
+ @{" prompting, and mv                        " link "mv invocation"}   mv invocation
+ @{" prompting, and rm                        " link "rm invocation"}   rm invocation
+ @{" prompts, forcing                         " link "mv invocation"}   mv invocation
+ @{" prompts, omitting                        " link "mv invocation"}   mv invocation
+ @{" pure numbers in date strings             " link "Pure numbers in date strings"}   Pure numbers in date strings
+ @{" read errors, ignoring                    " link "dd invocation"}   dd invocation
+ @{" read permission                          " link "Mode Structure"}   Mode Structure
+ @{" read permission, symbolic                " link "Setting Permissions"}   Setting Permissions
+ @{" read system call, and holes              " link "cp invocation"}   cp invocation
+ @{" recursive directory listing              " link "Which files are listed"}   Which files are listed
+ @{" recursively changing access permissions  " link "chmod invocation"}   chmod invocation
+ @{" recursively changing file ownership      " link "chown invocation"}   chown invocation
+ @{" recursively changing group ownership     " link "chgrp invocation"}   chgrp invocation
+ @{" recursively copying directories          " link "cp invocation"}   cp invocation
+ @{" relative items in date strings           " link "Relative item in date strings"}   Relative item in date strings
+ @{" removing empty directories               " link "rmdir invocation"}   rmdir invocation
+ @{" removing files or directories            " link "rm invocation"}   rm invocation
+ @{" removing permissions                     " link "Setting Permissions"}   Setting Permissions
+ @{" reverse sorting                          " link "Sorting the output"}   Sorting the output
+ @{" rm                                       " link "rm invocation"}   rm invocation
+ @{" rmdir                                    " link "rmdir invocation"}   rmdir invocation
+ @{" root as default owner                    " link "install invocation"}   install invocation
+ @{" Salz, Rich                               " link "Authors of getdate"}   Authors of getdate
+ @{" seek                                     " link "dd invocation"}   dd invocation
+ @{" self-backups                             " link "cp invocation"}   cp invocation
+ @{" setgid                                   " link "Mode Structure"}   Mode Structure
+ @{" setting permissions                      " link "Setting Permissions"}   Setting Permissions
+ @{" setuid                                   " link "Mode Structure"}   Mode Structure
+ @{" setup for color                          " link "dircolors invocation"}   dircolors invocation
+ @{" sh syntax for color setup                " link "dircolors invocation"}   dircolors invocation
+ @{" SHELL environment variable, and color    " link "dircolors invocation"}   dircolors invocation
+ @{" simple backup method                     " link "Backup options"}   Backup options
+ @{" SIMPLE_BACKUP_SUFFIX                     " link "Backup options"}   Backup options
+ @{" single-column output of files            " link "General output formatting"}   General output formatting
+ @{" size of files, reporting                 " link "What information is listed"}   What information is listed
+ @{" size of files, sorting files by          " link "Sorting the output"}   Sorting the output
+ @{" skip                                     " link "dd invocation"}   dd invocation
+ @{" sorting ls output                        " link "Sorting the output"}   Sorting the output
+ @{" sparse files, copying                    " link "cp invocation"}   cp invocation
+ @{" special file types                       " link "Special file types"}   Special file types
+ @{" special files                            " link "mknod invocation"}   mknod invocation
+ @{" status time, sorting by                  " link "Sorting the output"}   Sorting the output
+ @{" sticky                                   " link "Mode Structure"}   Mode Structure
+ @{" stripping symbol table information       " link "install invocation"}   install invocation
+ @{" subtracting permissions                  " link "Setting Permissions"}   Setting Permissions
+ @{" superblock, writing                      " link "sync invocation"}   sync invocation
+ @{" swab (byte-swapping)                     " link "dd invocation"}   dd invocation
+ @{" swap space, saving text image in         " link "Mode Structure"}   Mode Structure
+ @{" Swedish Winter Time                      " link "Timezone item"}   Timezone item
+ @{" symbol table information, stripping      " link "install invocation"}   install invocation
+ @{" symbolic (soft) links, creating          " link "ln invocation"}   ln invocation
+ @{" symbolic links, changing group           " link "chgrp invocation"}   chgrp invocation
+ @{" symbolic links, changing owner           " link "chown invocation"}   chown invocation
+ @{" symbolic links, copying                  " link "cp invocation"}   cp invocation
+ @{" symbolic links, copying with             " link "cp invocation"}   cp invocation
+ @{" symbolic links, dereferencing            " link "Which files are listed"}   Which files are listed
+ @{" symbolic links, permissions of           " link "chmod invocation"}   chmod invocation
+ @{" symbolic modes                           " link "Symbolic Modes"}   Symbolic Modes
+ @{" sync                                     " link "sync invocation"}   sync invocation
+ @{" sync (padding with nulls)                " link "dd invocation"}   dd invocation
+ @{" synchronize disk and memory              " link "sync invocation"}   sync invocation
+ @{" terminal, using color iff                " link "General output formatting"}   General output formatting
+ @{" text image, saving in swap space         " link "Mode Structure"}   Mode Structure
+ @{" this in date strings                     " link "Relative item in date strings"}   Relative item in date strings
+ @{" time                                     " link "touch invocation"}   touch invocation
+ @{" time of day item                         " link "Time of day item"}   Time of day item
+ @{" timestamps, changing file                " link "touch invocation"}   touch invocation
+ @{" timezone correction                      " link "Time of day item"}   Time of day item
+ @{" timezone item                            " link "Timezone item"}   Timezone item
+ @{" today in date strings                    " link "Relative item in date strings"}   Relative item in date strings
+ @{" tomorrow in date strings                 " link "Relative item in date strings"}   Relative item in date strings
+ @{" touch                                    " link "touch invocation"}   touch invocation
+ @{" truncating output file, avoiding         " link "dd invocation"}   dd invocation
+ @{" u for unbuffered character special file  " link "mknod invocation"}   mknod invocation
+ @{" ucase, converting to                     " link "dd invocation"}   dd invocation
+ @{" ufs filesystem type                      " link "df invocation"}   df invocation
+ @{" umask and modes                          " link "Umask and Protection"}   Umask and Protection
+ @{" unblock                                  " link "dd invocation"}   dd invocation
+ @{" unbuffered character special file        " link "mknod invocation"}   mknod invocation
+ @{" Universal Coordinated Time               " link "Timezone item"}   Timezone item
+ @{" unlink                                   " link "rm invocation"}   rm invocation
+ @{" unsorted directory listing               " link "Sorting the output"}   Sorting the output
+ @{" use time, changing                       " link "touch invocation"}   touch invocation
+ @{" use time, sorting files by               " link "Sorting the output"}   Sorting the output
+ @{" USSR Zone                                " link "Timezone item"}   Timezone item
+ @{" utilities for file handling              " link "Top"}   Top
+ @{" vdir                                     " link "vdir invocation"}   vdir invocation
+ @{" verbose ls format                        " link "What information is listed"}   What information is listed
+ @{" version number, finding                  " link "Common options"}   Common options
+ @{" version-control Emacs variable           " link "Backup options"}   Backup options
+ @{" VERSION_CONTROL                          " link "Backup options"}   Backup options
+ @{" vertical sorted files in columns         " link "General output formatting"}   General output formatting
+ @{" week in date strings                     " link "Relative item in date strings"}   Relative item in date strings
+ @{" West African Time                        " link "Timezone item"}   Timezone item
+ @{" West Australian Standard Time            " link "Timezone item"}   Timezone item
+ @{" Western European Time                    " link "Timezone item"}   Timezone item
+ @{" write permission                         " link "Mode Structure"}   Mode Structure
+ @{" write permission, symbolic               " link "Setting Permissions"}   Setting Permissions
+ @{" year in date strings                     " link "Relative item in date strings"}   Relative item in date strings
+ @{" yesterday in date strings                " link "Relative item in date strings"}   Relative item in date strings
+ @{" Yukon Standard Time                      " link "Timezone item"}   Timezone item
+
+@endnode
+

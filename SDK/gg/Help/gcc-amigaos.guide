@@ -1,0 +1,1254 @@
+@database gcc-amigaos.guide
+
+@Master /gg-src/gg/egcs/gcc/gcc-amigaos.texi
+
+@Width 72
+
+
+This is the AmigaGuide®  file gcc-amigaos.guide, produced by Makeinfo-1.68 from 
+the input file /gg-src/gg/egcs/gcc/gcc-amigaos.texi.
+
+   This document describes implemenation specific features of the GNU CC
+compiler port for the AmigaOS.
+
+   Copyright (C) 1996, 1997 Kamil Iskra
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+@node Main "gcc-amigaos.guide"
+@next "Introduction"
+
+   This document describes the AmigaOS-only features of the @{b}GNU CC@{ub}
+compiler.
+
+   Last updated Oct 25th, 1997.
+
+
+ @{" Introduction " link "Introduction"}  Purpose of this document.
+
+ @{" Invocation   " link "Invocation"}  Command line options.
+ @{" Attributes   " link "Attributes"}  Variable and function attributes.
+ @{" Defines      " link "Defines"}  Preprocessor symbols.
+ @{" Miscellaneous " link "Miscellaneous"}  Uncategorizable.
+
+ @{" Index        " link "Index"}  Concept index.
+
+
+@endnode
+
+@node "Introduction" "gcc-amigaos.guide/Introduction"
+@next "Invocation"
+@prev "Main"
+@toc "Main"
+
+Introduction
+************
+
+   This document is supposed to be an addendum to the baseline @{b}GCC@{ub}
+documentation.
+
+   It focuses on the features that are visible by users and are
+important to them. It is not supposed to document the internals of the
+AmigaOS port of @{b}GCC@{ub}.
+
+   It describes features implemented in the @{b}Geek Gadgets GCC@{ub} port.  As
+of this writing, this is version 2.7.2.1, @{b}Geek Gadgets@{ub} snapshot @{b}970728@{ub}.
+For more information about @{b}Geek Gadgets@{ub}, please refer to:
+
+http://www.ninemoons.com/ADE/ADE.html
+ftp://ftp.ninemoons.com/pub/geekgadgets/README
+
+   This document also describes some features that are not yet part of
+the @{b}Geek Gadgets GCC@{ub} port, but which should be there soon. Such
+features are marked with @{i}[EXPERIMENTAL]@{ui}. If you have @{b}GCC@{ub} from a
+snapshot later than specified above, it's possible that these features
+are available in it. Some of these features might also be available in
+BETA @{b}GCC@{ub} releases available on Kamil Iskra's WWW page:
+
+http://student.uci.agh.edu.pl/~iskra/ade.html
+
+   This document focuses on @{b}GCC@{ub}. It does not describe the AmigaOS-only
+features of other @{b}GNU@{ub} packages, such as @{b}binutils@{ub}, unless they are very
+closely connected to @{b}GCC@{ub}.
+
+   This means, that, unless stated otherwise, when we talk about the
+"compiler", we mean the @{b}gcc@{ub}, @{b}cpp@{ub} and @{b}cc1@{ub} executables, i.e., the
+executables that convert @{b}C@{ub} source code to assembly source code. The
+assembler and linker are generally beyond the scope of this document.
+
+   The primary source of information used to create this document was
+the @{b}GCC@{ub} source code. Some parts of this document are based on:
+
+   * The @{b}LibNIX@{ub} manual, written by Matthias Fleischer and Gunther Nikl:
+
+     fleischr@izfm.uni-stuttgart.de
+     gnikl@informatik.uni-rostock.de
+
+   * The @{b}A2IXLibrary@{ub} manual, written by Hans Verkuil:
+
+     hans@wyst.hobby.nl
+
+   * The @{b}README@{ub} file, maintained by Rask Ingemann Lambertsen:
+
+     gc948374@gbar.dtu.dk
+     http://www.gbar.dtu.dk/~c948374/GNU/
+
+   * The @{b}Geek Gadgets FAQ@{ub}, maintained by Lynn Winebarger:
+
+     owinebar@indiana.edu
+     http://nickel.ucs.indiana.edu/~owinebar/interests/amiga/amiga.html
+
+   * The @{b}FAQ for g++ and libg++@{ub}, written by Joe Buck:
+
+     jbuck@synopsys.com
+     http://www.cygnus.com/misc/g++FAQ_toc.html
+
+   * Discussions on various @{b}Geek Gadgets@{ub} mailing lists:
+
+     gg@ninemoons.com
+     gg-gcc@ninemoons.com
+     gg-ixemul@ninemoons.com
+
+   This document was created by Kamil Iskra. Please email any questions,
+suggestions etc. to <iskra@student.uci.agh.edu.pl> or, even better, to
+the <gg-gcc@ninemoons.com> mailing list.
+
+   The author would like to thank Kriton Kyrimis <kyrimis@cti.gr> and
+Lars Hecking <lhecking@nmrc.ucc.ie> for correcting an awful lot of
+language mistakes in this document.
+
+
+@endnode
+
+@node "Invocation" "gcc-amigaos.guide/Invocation"
+@next "Attributes"
+@prev "Introduction"
+@toc "Main"
+
+Invocation
+**********
+
+   The AmigaOS port of @{b}GCC@{ub} supports the following non-standard command
+line options:
+
+
+ @{" -noixemul          " link "-noixemul"}  Link with @{b}LibNIX@{ub}.
+
+ @{" -fbaserel          " link "-fbaserel"}  Produce @{b}a4@{ub}-relative data.
+ @{" -resident          " link "-resident"}  Produce a @{b}pure@{ub} executable.
+ @{" -fbaserel32        " link "-fbaserel32"}  Produce @{b}a4@{ub}-relative data with no size limits.
+ @{" -resident32        " link "-resident32"}  Produce a @{b}pure@{ub} executable with no size limits.
+ @{" -msmall-code       " link "-msmall-code"}  Produce @{b}PC@{ub}-relative code.
+
+ @{" -mstackcheck       " link "-mstackcheck"}  Produce stack-checking code.
+ @{" -mstackextend      " link "-mstackextend"}  Produce stack-extending code.
+ @{" -mfixedstack       " link "-mfixedstack"}  Produce plain code.
+
+ @{" -mrestore-a4       " link "-mrestore-a4"}  Reload @{b}a4@{ub} in public functions.
+ @{" -malways-restore-a4 " link "-malways-restore-a4"}  Reload @{b}a4@{ub} in all functions.
+
+ @{" -mregparm          " link "-mregparm"}  Pass function arguments in registers.
+
+ @{" -frepo             " link "-frepo"}  Enable @{b}C++@{ub} Template Repository.
+
+   Accordingly, the AmigaOS port of @{b}GCC@{ub} supports several flavors of
+linker libraries. See
+@{"Relation between library flavors and compile-time options" link "Library flavors"}.
+
+
+@endnode
+
+@node "-noixemul" "gcc-amigaos.guide/-noixemul"
+@next "-fbaserel"
+@prev "Invocation"
+@toc "Invocation"
+
+-noixemul
+=========
+
+   By default, the executables created with @{b}GCC@{ub} require @{b}ixemul.library@{ub}
+to run. This has its advantages (easy porting of @{b}UN*X@{ub} programs,
+resource tracking, debugging, profiling, etc) and disadvantages
+(@{b}UN*X@{ub}-style pathnames, large shared library, etc).
+
+   If @{b}-noixemul@{ub} is specified on the @{b}GCC@{ub} command line, the executable
+created will not require @{b}ixemul.library@{ub} -- it will use the static
+linker library @{b}LibNIX@{ub} instead. This library is very Amiga-like and
+@{b}SAS/C@{ub}-like, so it is convenient for the AmigaOS-specific development.
+
+@{i}     Note@{ui}: There is no great mystery about the @{b}-noixemul@{ub} option. It has
+     absolutely no effect on the code generated by the compiler, only
+     instructing the @{b}gcc@{ub} driver to pass different options to the linker
+     and preprocessor (see @{"Options information" link "Options information"}, See @{"Library flavors" link "Library flavors"}).
+
+     This option has no negative form.
+
+   For more information, please refer to the @{b}LibNIX@{ub} documentation.
+
+
+@endnode
+
+@node "-fbaserel" "gcc-amigaos.guide/-fbaserel"
+@next "-resident"
+@prev "-noixemul"
+@toc "Invocation"
+
+-fbaserel
+=========
+
+   By default, the code generated by @{b}GCC@{ub} references data using 32-bit,
+absolute addressing.
+
+   The @{b}-fbaserel@{ub} option will make @{b}GCC@{ub} generate code that references
+data with 16 bit offsets relative to the @{b}a4@{ub} address register. This
+makes executables smaller and faster. Unfortunately, the size of the
+data section cannot exceed 64 KB, so this option cannot be used for
+large programs, like @{b}GCC@{ub} itself.
+
+@{i}     Note@{ui}: For a base-relative executable, @{b}-fbaserel@{ub} needs to be
+     specified for compiling @{i}and@{ui} linking. Base-relative programs
+     require special startup code and special versions of linker
+     libraries.  Since not all linker libraries are available in both
+     plain and base relative versions, the usefulness of this option is
+     limited. It is important to note that when the base-relative
+     library is missing, the linker will attempt to use the plain one.
+     This might result in strange link-time or even run-time errors.
+
+     This option is the AmigaOS equivalent of the standard @{b}GCC@{ub} option
+     @{b}-fpic@{ub}, which is not supported by the AmigaOS port.  @{b}-fpic@{ub}
+     generates code that references data indirectly, through a @{i}global
+     offset table@{ui}. The special addressing modes available on the @{b}m68k@{ub}
+     processor family allow for a much more efficient implementation
+     with @{b}-fbaserel@{ub}.
+
+     The negative form of @{b}-fbaserel@{ub} is @{b}-fno-baserel@{ub}, and is on by
+     default.
+
+   For more information, please refer to the @{b}LibNIX@{ub} documentation.
+
+
+@endnode
+
+@node "-resident" "gcc-amigaos.guide/-resident"
+@next "-fbaserel32"
+@prev "-fbaserel"
+@toc "Invocation"
+
+-resident
+=========
+
+   Executables produced with the @{b}-resident@{ub} option are @{i}pure@{ui}, so they can
+be made @{i}resident@{ui} using the AmigaShell @{b}resident@{ub} command. @{b}resident@{ub}
+executables are loaded to memory just once, and several concurrent
+instances share the code section.
+
+@{i}     Note@{ui}: The compiler generates the same code for @{b}-resident@{ub} as for
+     @{b}-fbaserel@{ub} (see @{"-fbaserel" link "-fbaserel"}). Only the linking stage is different
+     (special startup code is linked).
+
+     This option has no negative form.
+
+   For more information, please refer to the @{b}LibNIX@{ub} documentation.
+
+
+@endnode
+
+@node "-fbaserel32" "gcc-amigaos.guide/-fbaserel32"
+@next "-resident32"
+@prev "-resident"
+@toc "Invocation"
+
+-fbaserel32
+===========
+
+   The difference between the @{b}-fbaserel32@{ub} and @{b}-fbaserel@{ub} options (see
+@{"-fbaserel" link "-fbaserel"}) is the same as between the standard @{b}GCC@{ub} options @{b}-fPIC@{ub} and
+@{b}-fpic@{ub}.
+
+   Code generated with @{b}-fbaserel32@{ub} references data with 32 bit offsets
+relative to the @{b}a4@{ub} address register. In contrast to the @{b}-fbaserel@{ub} (see
+@{"-fbaserel" link "-fbaserel"}) option, there is no 64 KB size limit. Unfortunately, the
+addressing modes with 32 bit offsets are only available on 68020 and
+higher processors. Therefore, it is necessary to specify @{b}-m68020@{ub} or
+higher to use this option.
+
+@{i}     Note@{ui}: This option used to be called @{b}-flarge-baserel@{ub} before @{b}Geek
+     Gadgets@{ub} snapshot @{b}970109@{ub}. Since it was not functional then, this
+     should not cause any compatibility problems.
+
+     The negative form of @{b}-fbaserel32@{ub} is @{b}-fno-baserel32@{ub}, and is on by
+     default.
+
+
+@endnode
+
+@node "-resident32" "gcc-amigaos.guide/-resident32"
+@next "-msmall-code"
+@prev "-fbaserel32"
+@toc "Invocation"
+
+-resident32
+===========
+
+   This option is an improved version of @{b}-resident@{ub} (see @{"-resident" link "-resident"}) --
+it does not impose any limits on data section size. Unfortunately, just
+like @{b}-fbaserel32@{ub} (see @{"-fbaserel32" link "-fbaserel32"}), it is only available for 68020 or
+higher processors. Therefore, it is necessary to specify @{b}-m68020@{ub} or
+higher to use this option.
+
+@{i}     Note@{ui}: This option was first made available in the @{b}GCC@{ub} 2.7.2.1,
+     @{b}Geek Gadgets@{ub} snapshot @{b}970109@{ub}.
+
+     This option has no negative form.
+
+
+@endnode
+
+@node "-msmall-code" "gcc-amigaos.guide/-msmall-code"
+@next "-mstackcheck"
+@prev "-resident32"
+@toc "Invocation"
+
+-msmall-code
+============
+
+   By default, the code generated by the compiler references functions
+using 32-bit, absolute addressing.
+
+   Code generated by @{b}GCC@{ub} with the @{b}-msmall-code@{ub} option references
+symbols in the code section with 16 bit offsets, relative to the @{b}PC@{ub}
+(@{i}program counter@{ui}). This makes executables smaller and faster.
+Unfortunately, the size of the code section is generally limited to 32
+KB, so this option can only be used for relatively small programs.
+
+@{i}     Note@{ui}: Actually, the compiler always generates 32-bit code
+     references. If the assembler can calculate the offset between the
+     referencing instruction and the referenced symbol (in other words,
+     if the referenced symbol is in the same source file), it replaces
+     the 32-bit reference with the @{b}PC@{ub}-relative one. External references
+     are left intact, unless @{b}-msmall-code@{ub} is used, in which case the
+     assembler generates @{b}PC@{ub}-relative references, and the exact offsets
+     are calculated by the linker.
+
+     This option has no negative form.
+
+   For more information, please refer to the @{b}LibNIX@{ub} documentation.
+
+
+@endnode
+
+@node "-mstackcheck" "gcc-amigaos.guide/-mstackcheck"
+@next "-mstackextend"
+@prev "-msmall-code"
+@toc "Invocation"
+
+-mstackcheck
+============
+
+   By default, the code generated by @{b}GCC@{ub} does not check if there is
+enough stack available before performing stack-consuming operations.
+This is generally not necessary on @{b}UN*X@{ub} systems, where the stack is
+extended automagically whenever needed.
+
+   Unfortunately, the AmigaOS provides tasks with a static, fixed size
+stack.
+
+   However, if a program is compiled with @{b}-mstackcheck@{ub}, it will check
+if there is enough stack available before performing any stack-hungry
+operations. If there is a danger of stack overflow, the program will
+abort and the user will be notified.
+
+   Needless to say, stack checking increases the executable size and the
+execution time.
+
+@{i}     Note@{ui}: Stack checking cannot be used for functions that might be
+     called from outside your task. This includes interrupt handlers,
+     shared library functions, hooks etc. In such cases, you should
+     either avoid using @{b}-mstackcheck@{ub} for files containing such
+     functions, or use @{b}__attribute__((interrupt))@{ub} (see @{"interrupt" link "interrupt"}).
+
+     It is safe to call a function that performs stack checking from one
+     that does not, and vice versa.
+
+     The negative form of @{b}-mstackcheck@{ub} is @{b}-mno-stackcheck@{ub}, and is on by
+     default.
+
+@{i}     Warning@{ui}: @{b}-mno-stackcheck@{ub} used to be called @{b}-mnostackcheck@{ub} before
+     @{b}Geek Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+   For more information, please refer to the @{b}LibNIX@{ub} documentation.
+
+
+@endnode
+
+@node "-mstackextend" "gcc-amigaos.guide/-mstackextend"
+@next "-mfixedstack"
+@prev "-mstackcheck"
+@toc "Invocation"
+
+-mstackextend
+=============
+
+@{b}   -mstackextend@{ub} is very similar to @{b}-mstackcheck@{ub} (see @{"-mstackcheck" link "-mstackcheck"}).
+
+   The main difference is that when a program runs out of stack, it is
+not aborted, but a new stack area is allocated and the program
+continues to run.
+
+@{i}     Note@{ui}: Stack extension can slow programs down significantly. It is
+     advised that programs are written in such a way that they do not
+     require too much stack. This can generally be achieved by
+     explicitly allocating memory for large structures and arrays using
+     functions like @{b}malloc()@{ub} or @{b}AllocMem()@{ub}, instead of creating them as
+     local variables. Another method is replacing recursion with
+     iteration.  In addition, it might be considered to use stack
+     extension only for selected, "dangerous" functions (see
+     @{"stackext" link "stackext"}), not for all functions in a given program.
+
+     The negative form of @{b}-mstackextend@{ub} is @{b}-mno-stackextend@{ub}, and is on
+     by default.
+
+@{i}     Warning@{ui}: @{b}-mno-stackextend@{ub} used to be called @{b}-mnostackextend@{ub} before
+     @{b}Geek Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+   For more information, please refer to the @{b}LibNIX@{ub} documentation.
+
+
+@endnode
+
+@node "-mfixedstack" "gcc-amigaos.guide/-mfixedstack"
+@next "-mrestore-a4"
+@prev "-mstackextend"
+@toc "Invocation"
+
+-mfixedstack
+============
+
+   This option makes @{b}GCC@{ub} generate plain code, that does neither stack
+checking nor extension. Since this is the default, there is generally
+no need to use this option.
+
+@{i}     Note@{ui}: This option has no negative form.
+
+
+@endnode
+
+@node "-mrestore-a4" "gcc-amigaos.guide/-mrestore-a4"
+@next "-malways-restore-a4"
+@prev "-mfixedstack"
+@toc "Invocation"
+
+-mrestore-a4
+============
+
+   This option is used to create the @{b}IXEmul@{ub} shared libraries (those
+@{b}*.ixlibrary@{ub} files).
+
+   It sets @{b}a4@{ub} to the appropriate value in the prologues of all public
+functions (i.e., functions with external linkage). This is necessary if
+these functions are called from the code of application.
+
+@{i}     Note@{ui}: This option should not be used except for the creation of an
+     @{b}IXEmul@{ub} shared library.
+
+     This option was first made available in the @{b}GCC@{ub} 2.7.2, @{b}Geek
+     Gadgets@{ub} snapshot @{b}960902@{ub}. It used to be called @{b}-frestore-a4@{ub}, and
+     was relabeled to its current name in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek Gadgets@{ub}
+     snapshot @{b}961012@{ub}.
+
+     The negative form of @{b}-mrestore-a4@{ub} is @{b}-mno-restore-a4@{ub}, and is on by
+     default.
+
+   For more information, please refer to the @{b}A2IXLibrary@{ub} documentation.
+
+
+@endnode
+
+@node "-malways-restore-a4" "gcc-amigaos.guide/-malways-restore-a4"
+@next "-mregparm"
+@prev "-mrestore-a4"
+@toc "Invocation"
+
+-malways-restore-a4
+===================
+
+   This option is very similar to @{b}-mrestore-a4@{ub} (see @{"-mrestore-a4" link "-mrestore-a4"}).
+
+   The only difference is that it sets @{b}a4@{ub} in all functions, including
+private ones (i.e., functions with internal linkage, @{b}static@{ub}). This is
+safer than @{b}-mrestore-a4@{ub} (see @{"-mrestore-a4" link "-mrestore-a4"}), but is also slower.
+
+@{i}     Note@{ui}: This option should not be used except for the creation of an
+     @{b}IXEmul@{ub} shared library.
+
+     This option was first made available in the @{b}GCC@{ub} 2.7.2, @{b}Geek
+     Gadgets@{ub} snapshot @{b}960902@{ub}. It used to be called @{b}-falways-restore-a4@{ub},
+     and was relabeled to its current name in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+     Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+     The negative form of @{b}-malways-restore-a4@{ub} is
+     @{b}-mno-always-restore-a4@{ub}, and is on by default.
+
+   For more information, please refer to the @{b}A2IXLibrary@{ub} documentation.
+
+
+@endnode
+
+@node "-mregparm" "gcc-amigaos.guide/-mregparm"
+@next "-frepo"
+@prev "-malways-restore-a4"
+@toc "Invocation"
+
+-mregparm
+=========
+
+   On the @{b}m68k@{ub} architecture, @{b}GCC@{ub} passes function arguments on the stack
+by default.
+
+@{b}   -mregparm@{ub} allows for passing arguments in registers. This can be
+slightly faster than the standard method of passing arguments on the
+stack.
+
+   The full syntax of this option is:
+
+-mregparm[=<value>]
+
+@{b}   value@{ub} should be an integer ranging from 1 to 4. If no @{b}value@{ub} is
+provided, 2 will be used.
+
+   Four types of function arguments are recognized:
+
+@{b}Integer@{ub}
+     Integer numbers (this includes enumerations, small structures and
+     @{b}bool@{ub} in @{b}C++@{ub}, but excludes @{b}long long@{ub}, which is too large). They are
+     passed in data registers, starting from @{b}d0@{ub}.
+
+@{b}Pointer@{ub}
+     Pointers to objects or functions (this includes @{b}C++@{ub} references and
+     the implicit @{b}this@{ub} argument). They are passed in address registers,
+     starting from @{b}a0@{ub}.
+
+@{b}Float@{ub}
+     Floating point numbers. If the floating point code generation is
+     enabled, they are passed in floating point registers, starting from
+     @{b}fp0@{ub}. Otherwise, they are handled like the next type.
+
+@{b}Other@{ub}
+     All the other types of arguments, like large structures, pointers
+     to class methods in @{b}C++@{ub}, etc. They are always passed on the stack.
+
+   The value given for @{b}-mregparm@{ub} indicates how many arguments of each
+of the above first three types should be passed in registers.
+
+   Example: @{b}GCC@{ub} is invoked with @{b}-mregparm@{ub} (without any value, so 2 will
+be used) to compile a source containing the function:
+
+     void fun(int a, char *str, char b, int c);
+
+@{b}   a@{ub} and @{b}b@{ub} will be passed in @{b}d0@{ub} and @{b}d1@{ub}, respectively, @{b}str@{ub} will be
+passed in @{b}a0@{ub}, and @{b}c@{ub} will be passed on the stack.
+
+@{i}     Note@{ui}: To use this option properly, it is very important that all
+     sources are fully prototyped. There may be very serious problems
+     if they are not, since @{b}GCC@{ub} will have to "guess" where to put
+     arguments, potentially making a wrong decission. Example:
+
+          [in file1.c]
+          void f(void)
+          {
+             g(0); /* Call to a function with no prototype.  The argument
+                      will be put in d0, since it is an integer.  */
+          }
+          
+          [in file2.c]
+          void g(char *a) /* The argument is expected in a0, since it is
+                             a pointer.  */
+          {
+          }
+
+@{b}     -Wimplicit -Wstrict-prototypes@{ub} should be used to ensure that there
+     are no prototypes missing.
+
+     In case of @{b}stdargs@{ub} functions, such as @{b}printf@{ub}, all arguments are
+     passed on the stack.
+
+     As of this writing, @{b}-mregparm@{ub} is supported by neither @{b}IXEmul@{ub} nor
+     @{b}LibNIX@{ub}, so its usefulness is very limited.
+
+     This option was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+     Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+     The negative form of @{b}-mregparm@{ub} is @{b}-mno-regparm@{ub}, and is on by
+     default.
+
+
+@endnode
+
+@node "-frepo" "gcc-amigaos.guide/-frepo"
+@prev "-mregparm"
+@toc "Invocation"
+
+-frepo
+======
+
+   The AmigaOS port of @{b}GCC@{ub} includes @{b}C++@{ub} @{i}Template Repository@{ui} patch,
+so-called @{b}repo@{ub} patch.
+
+   In order to activate it, please compile @{b}C++@{ub} source files with
+@{b}-frepo@{ub}. The compiler will not generate unnecessary @{b}template@{ub} code, and
+will create @{b}.rpo@{ub} files that contain information about @{b}template@{ub} symbols
+used in each source file.  Afterwards, during linking stage, a special
+tool called @{b}collect2@{ub} will make sure that every required instantiation of
+each @{b}template@{ub} is linked into the executable, recompiling some source
+files if necessary.
+
+@{i}     Note@{ui}: This option was first made available in the @{b}GCC@{ub} 2.7.2.1,
+     @{b}Geek Gadgets@{ub} snapshot @{b}970109@{ub}.
+
+     This option is not specific to the AmigaOS port of @{b}GCC@{ub},
+     nevertheless it is not fully supported in the baseline sources.
+
+     This patch has been created in Cygnus Support, a company that is a
+     major contributor to the @{b}GNU@{ub} project. It has not been integrated
+     into the baseline sources due to design disagreements.
+
+     The negative form of @{b}-frepo@{ub} is @{b}-fno-repo@{ub}, and is on by default.
+
+   For more information, please refer to the @{b}G++ FAQ@{ub}.
+
+
+@endnode
+
+@node "Attributes" "gcc-amigaos.guide/Attributes"
+@next "Defines"
+@prev "Invocation"
+@toc "Main"
+
+Attributes
+**********
+
+   The following non-standard attributes are available in the AmigaOS
+port of @{b}GCC@{ub}:
+
+
+Variable attributes:
+ @{" chip     " link "chip"}  Put object in @{b}chip@{ub} memory.
+
+Function attributes:
+ @{" saveds   " link "saveds"}  Reload @{b}a4@{ub}.
+ @{" interrupt " link "interrupt"}  Do not mess with the stack.
+ @{" stackext " link "stackext"}  Generate stack extension.
+ @{" regparm  " link "regparm"}  Pass arguments in registers.
+ @{" stkparm  " link "stkparm"}  Pass arguments on the stack.
+
+
+@endnode
+
+@node "chip" "gcc-amigaos.guide/chip"
+@next "saveds"
+@prev "Attributes"
+@toc "Attributes"
+
+chip
+====
+
+   Amiga hardware requires some data to be located in @{b}chip@{ub} memory.
+
+   Typically, if an initialized buffer is required (containing a picture
+bitmap, for example), a plain, statically initialized buffer is used,
+and the data is copied into a dynamically allocated @{b}MEMF_CHIP@{ub} buffer.
+
+   This is not necessary with the @{b}chip@{ub} attribute. If this attribute is
+specified for an initialized, static variable, it will be allocated in
+@{b}chip@{ub} memory automagically by the AmigaOS.
+
+   A small example:
+
+     UWORD __attribute__((chip)) bitmap1[] = { ... };
+
+@{i}     Note@{ui}: For compatibility with other AmigaOS @{b}C@{ub} compilers, a
+     preprocessor symbol @{b}__chip@{ub} is available, which expands to
+     @{b}__attribute__((chip))@{ub} (see @{"Keyword macros" link "Keyword macros"}).
+
+     All the @{b}chip@{ub} attribute does is specifying that data should go to a
+     section called @{b}.datachip@{ub}. Therefore, the standard @{b}GCC@{ub} feature
+     @{b}__attribute__((section(".datachip")))@{ub} can be used instead.
+
+     This attribute was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+     Gadgets@{ub} snapshot @{b}970328@{ub}.
+
+     For proper operation, this attribute requires a special version of
+     the assembler, which generates standard AmigaOS object files. This
+     version is not yet available in @{b}Geek Gadgets@{ub} in binary form, since
+     support for this object files format is not yet complete.
+
+
+@endnode
+
+@node "saveds" "gcc-amigaos.guide/saveds"
+@next "interrupt"
+@prev "chip"
+@toc "Attributes"
+
+saveds
+======
+
+   This attribute is ignored, unless base-relative data (see
+@{"-fbaserel" link "-fbaserel"}) is compiled.
+
+   To improve speed, programs compiled with the AmigaOS port of @{b}GCC@{ub} set
+the @{b}a4@{ub} register to the appropriate value only once, in the startup
+code. Code generated with the standard @{b}GCC@{ub} option @{b}-fpic@{ub}, in contrast,
+sets the @{b}a4@{ub} register in every function which references global data.
+
+   This is only safe as long as all function calls are performed from
+within your own code. Things become "tricky" if callback functions,
+like the AmigaOS hooks, interrupt handlers etc. are used. If global
+data is referenced in such functions, @{b}a4@{ub} has to be set properly.
+
+   This is exactly what the @{b}saveds@{ub} attribute does: it initializes @{b}a4@{ub} in
+the function prologue, and restores it to its original value in the
+function epilogue.
+
+@{i}     Note@{ui}: For compatibility with other AmigaOS @{b}C@{ub} compilers, a
+     preprocessor symbol @{b}__saveds@{ub} is available, which expands to
+     @{b}__attribute__((saveds))@{ub} (see @{"Keyword macros" link "Keyword macros"}).
+
+     Please do not use this attribute in pure executables (see
+     @{"-resident" link "-resident"}, see @{"-resident32" link "-resident32"}). This is because several
+     invocations of pure executables can run concurrently, each one
+     having its own data section, and there is no way to find out to
+     which of these sections should @{b}a4@{ub} be set.
+
+     The @{b}saveds@{ub} attribute is not necessary in function declarations
+     (prototypes).
+
+   This attribute was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+
+@endnode
+
+@node "interrupt" "gcc-amigaos.guide/interrupt"
+@next "stackext"
+@prev "saveds"
+@toc "Attributes"
+
+interrupt
+=========
+
+   This attribute should be used for any kind of callback functions that
+can be called from outside your task. This includes interrupt handlers,
+shared library functions, etc.
+
+   Most often, the @{b}interrupt@{ub} attribute is only necessary if a program
+is compiled with stack checking or extension (see @{"-mstackcheck" link "-mstackcheck"}, see
+@{"-mstackextend" link "-mstackextend"}). It will prevent the compiler from generating stack
+checking or extension code for the function it was specified for.
+
+   Additionally, it will set @{b}CC@{ub} (@{i}condition codes register@{ui}) in the
+function epilogue to return value, by performing @{b}tstl d0@{ub}.
+
+@{i}     Note@{ui}: For compatibility with other AmigaOS @{b}C@{ub} compilers, a
+     preprocessor symbol @{b}__interrupt@{ub} is available, which expands to
+     @{b}__attribute__((interrupt))@{ub} (see @{"Keyword macros" link "Keyword macros"}).
+
+     The @{b}interrupt@{ub} attribute is mutually exclusive with the @{b}stackext@{ub}
+     attribute (see @{"stackext" link "stackext"}).
+
+     This attribute is not necessary in function declarations
+     (prototypes).
+
+   This attribute was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+
+@endnode
+
+@node "stackext" "gcc-amigaos.guide/stackext"
+@next "regparm"
+@prev "interrupt"
+@toc "Attributes"
+
+stackext
+========
+
+   This attribute makes @{b}GCC@{ub} generate stack extension code for the
+function for which it was used (see @{"-mstackextend" link "-mstackextend"}). This makes it
+possible to use stack extension selectively, only for the "dangerous"
+functions -- recursive functions, functions with large local variables,
+etc.
+
+@{i}     Note@{ui}: For compatibility with other AmigaOS @{b}C@{ub} compilers, a
+     preprocessor symbol @{b}__stackext@{ub} is available, which expands to
+     @{b}__attribute__((stackext))@{ub} (see @{"Keyword macros" link "Keyword macros"}).
+
+     The @{b}stackext@{ub} attribute is mutually exclusive with the @{b}interrupt@{ub}
+     attribute (see @{"interrupt" link "interrupt"}).
+
+     This attribute is not necessary in function declarations
+     (prototypes).
+
+   This attribute was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+
+@endnode
+
+@node "regparm" "gcc-amigaos.guide/regparm"
+@next "stkparm"
+@prev "stackext"
+@toc "Attributes"
+
+regparm
+=======
+
+   The @{b}regparm@{ub} attribute, together with the @{b}stkparm@{ub} attribute (see
+@{"stkparm" link "stkparm"}), can be used to fine-tune the way arguments are passed. It
+makes @{b}GCC@{ub} pass arguments in registers for the function for which it was
+used, regardless of whether the global @{b}-mregparm@{ub} option was used or not
+(see @{"-mregparm" link "-mregparm"}).
+
+   An optional integer argument ranging from 1 to 4 indicates how many
+arguments of each type should be passed in registers (see @{"-mregparm" link "-mregparm"}).
+The syntax is the following:
+
+     void __attribute__((regparm(3))) fun(int a, char *str, char b, int c);
+
+   This will make @{b}GCC@{ub} pass @{b}a@{ub}, @{b}b@{ub} and @{b}c@{ub} in @{b}d0@{ub}, @{b}d1@{ub} and @{b}d2@{ub}, respectively,
+and @{b}str@{ub} in @{b}a0@{ub}.
+
+   If the argument is not provided, the value given for @{b}-mregparm@{ub} will
+be used (or 2 if that option was not specified, see @{"-mregparm" link "-mregparm"}).
+
+@{i}     Note@{ui}: There is generally no need to use this attribute unless
+     files compiled with different calling conventions are linked
+     together.
+
+     For compatibility with other AmigaOS @{b}C@{ub} compilers, a preprocessor
+     symbol @{b}__regargs@{ub} is available, which expands to
+     @{b}__attribute__((regparm))@{ub} (see @{"Keyword macros" link "Keyword macros"}).
+
+     The @{b}regparm@{ub} attribute is mutually exclusive with the @{b}stkparm@{ub}
+     attribute (see @{"stkparm" link "stkparm"}).
+
+     This attribute is necessary both in function declarations
+     (prototypes) and definitions (function code).
+
+   This attribute was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+
+@endnode
+
+@node "stkparm" "gcc-amigaos.guide/stkparm"
+@prev "regparm"
+@toc "Attributes"
+
+stkparm
+=======
+
+   The @{b}stkparm@{ub} attribute, together with the @{b}regparm@{ub} attribute (see
+@{"regparm" link "regparm"}), can be used to fine-tune the way arguments are passed. It
+makes @{b}GCC@{ub} pass arguments on stack for the function for which it was
+used, regardless of whether the global @{b}-mregparm@{ub} option was used or not
+(see @{"-mregparm" link "-mregparm"}).
+
+@{i}     Note@{ui}: There is generally no need to use this attribute unless
+     files compiled with different calling conventions are linked
+     together.
+
+     For compatibility with other AmigaOS @{b}C@{ub} compilers, a preprocessor
+     symbol @{b}__stdargs@{ub} is available, which expands to
+     @{b}__attribute__((stkparm))@{ub} (see @{"Keyword macros" link "Keyword macros"}).
+
+     The @{b}stkparm@{ub} attribute is mutually exclusive with the @{b}regparm@{ub}
+     attribute (see @{"regparm" link "regparm"}).
+
+     This attribute is necessary both in function declarations
+     (prototypes) and definitions (function code).
+
+   This attribute was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+
+@endnode
+
+@node "Defines" "gcc-amigaos.guide/Defines"
+@next "Miscellaneous"
+@prev "Attributes"
+@toc "Main"
+
+Defines
+*******
+
+   The AmigaOS-specific preprocessor symbols available in @{b}GCC@{ub} can be
+divided into three groups:
+
+
+ @{" Identifying machine " link "Identifying machine"}  What machine is this?
+ @{" Options information " link "Options information"}  Which options have been specified?
+ @{" Keyword macros     " link "Keyword macros"}  Compatibility with other compilers.
+
+
+@endnode
+
+@node "Identifying machine" "gcc-amigaos.guide/Identifying machine"
+@next "Options information"
+@prev "Defines"
+@toc "Defines"
+
+Symbols identifying machine
+===========================
+
+   The following machine-identifying preprocessor symbols are available:
+
+@{b}mc68000@{ub}
+     This macro identifies the machine as having a CPU from the Motorola
+     68000 family.
+
+@{b}amiga@{ub}
+
+@{b}amigaos@{ub}
+
+@{b}amigados@{ub}
+     These macros identify the machine as being an Amiga, running the
+     AmigaOS.
+
+@{b}AMIGA@{ub}
+
+@{b}MCH_AMIGA@{ub}
+     These macros are provided for compatibility with other AmigaOS @{b}C@{ub}
+     compilers.
+
+@{i}     Note@{ui}: These symbols are available in three groups: plain (as
+     specified above), with two leading underscores, and with two
+     leading and two tailing underscores. The plain ones are not
+     available when compiling with the @{b}-ansi@{ub} option.
+
+     The @{b}amigados@{ub} symbol is obsolete and will be removed in future.
+     Please use @{b}amigaos@{ub}, which was first made available in the @{b}GCC@{ub}
+     2.7.2.1, @{b}Geek Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+
+@endnode
+
+@node "Options information" "gcc-amigaos.guide/Options information"
+@next "Keyword macros"
+@prev "Identifying machine"
+@toc "Defines"
+
+Symbols identifying specified options
+=====================================
+
+@{b}   GCC@{ub} has several options to choose the CPU model that the code should
+be generated for. The following preprocessor symbols identify which
+options have been specified on the command line:
+
+@{b}mc68020@{ub}
+     Either one of @{b}-m68020@{ub}, @{b}-mc68020@{ub} or @{b}-mc68020-40@{ub} has been specified.
+
+@{b}mc68030@{ub}
+@{b}     -m68030@{ub} has been specified.
+
+@{b}mc68040@{ub}
+@{b}     -m68040@{ub} has been specified.
+
+@{b}mc68060@{ub}
+@{b}     -m68060@{ub} @{i}[EXPERIMENTAL]@{ui} has been specified.
+
+@{b}__HAVE_68881__@{ub}
+@{b}     -m68881@{ub} has been specified.
+
+@{i}     Note@{ui}: The symbols beginning with @{b}mc@{ub} are available in three groups:
+     plain (as specified above), with two leading underscores, and with
+     two leading and two tailing underscores. The plain ones are not
+     available when compiling with the @{b}-ansi@{ub} option. The "underscored"
+     ones were first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek Gadgets@{ub}
+     snapshot @{b}970109@{ub}.
+
+@{b}     mc68000@{ub} is defined regardless of which @{b}-m680x0@{ub} options have been
+     used.
+
+   In addition to the above, a preprocessor symbol @{b}ixemul@{ub} (together
+with the "underscored" versions) is available when not compiling with
+@{b}-noixemul@{ub} (see @{"-noixemul" link "-noixemul"}) and identifies the runtime environment as
+@{b}IXEmul@{ub}. This symbol was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+Gadgets@{ub} snapshot @{b}970328@{ub}.
+
+
+@endnode
+
+@node "Keyword macros" "gcc-amigaos.guide/Keyword macros"
+@prev "Options information"
+@toc "Defines"
+
+"Keyword" macros
+================
+
+   Most AmigaOS-specific @{b}C@{ub} compilers have special "custom keywords",
+which make the AmigaOS-specific development easier.  Unfortunately, the
+idea of "custom keywords" is not available in @{b}GCC@{ub}. However, @{b}attributes@{ub}
+are available, and they provide virtually identical functionality. For
+compatibility with other AmigaOS @{b}C@{ub} compilers, preprocessor symbols are
+provided, which expand to the appropriate @{b}attributes@{ub} (see @{"Attributes" link "Attributes"}).
+
+@{b}__chip@{ub}
+     See @{"chip" link "chip"}.
+
+@{b}__saveds@{ub}
+     See @{"saveds" link "saveds"}.
+
+@{b}__interrupt@{ub}
+     See @{"interrupt" link "interrupt"}.
+
+@{b}__stackext@{ub}
+     See @{"stackext" link "stackext"}.
+
+@{b}__regargs@{ub}
+     See @{"regparm" link "regparm"}.
+
+@{b}__stdargs@{ub}
+     See @{"stkparm" link "stkparm"}.
+
+@{b}__aligned@{ub}
+     This expands to the standard @{b}GCC@{ub} @{b}__attribute__((aligned(4)))@{ub}.
+
+@{i}     Note@{ui}: With @{b}SAS/C@{ub}, these keywords may be specified either before or
+     after the type, so the following declaration is correct:
+
+          __saveds void func(void);
+
+     Unfortunately, the syntax rules of @{b}GCC@{ub} 2.7.2.1 do not allow to
+     specify the attributes before the type, so the above example must
+     be changed to:
+
+          void __saveds func(void);
+
+     This will be fixed in @{b}GCC@{ub} 2.8.0.
+
+
+@endnode
+
+@node "Miscellaneous" "gcc-amigaos.guide/Miscellaneous"
+@next "Index"
+@prev "Defines"
+@toc "Main"
+
+Miscellaneous
+*************
+
+   The following "hard to categorize" features are available in the
+AmigaOS port of @{b}GCC@{ub}:
+
+
+ @{" Explicit register specification " link "Explicit register specification"}  Specify registers for arguments.
+ @{" Case sensitive CPP             " link "Case sensitive CPP"}  <String.h> is not the same as <string.h>
+ @{" GCCPRIORITY                    " link "GCCPRIORITY"}  Set the priority of the compiler.
+ @{" Library flavors                " link "Library flavors"}  Linker libraries.
+
+
+@endnode
+
+@node "Explicit register specification" "gcc-amigaos.guide/Explicit register specification"
+@next "Case sensitive CPP"
+@prev "Miscellaneous"
+@toc "Miscellaneous"
+
+Explicit register specification
+===============================
+
+   In certain situations, like writing callback hooks, "patchers",
+standard shared libraries, etc., functions have to receive arguments in
+particular registers.
+
+@{b}   -mregparm@{ub} (see @{"-mregparm" link "-mregparm"}) is not appropriate in this case, since it
+does not give the programmer enough control on @{i}which@{ui} registers will be
+used.
+
+   To overcome this problem in the AmigaOS port of @{b}GCC@{ub}, explicit
+register specification has been extended to be available for function
+arguments, as well:
+
+     void myhook(struct Hook* hook __asm("a0"), APTR object __asm("a2"),
+                 APTR message __asm("a1"))
+     {
+     	...
+     }
+
+@{i}     Note@{ui}: This feature is currently not available in @{b}G++@{ub}.
+
+     Only the @{b}ANSI@{ub}-style declarations (prototypes) are supported.
+
+     Registers have to be specified both in function declarations
+     (prototypes) and definitions (function code).
+
+   This feature was first made available in the @{b}GCC@{ub} 2.7.2.1, @{b}Geek
+Gadgets@{ub} snapshot @{b}961012@{ub}.
+
+
+@endnode
+
+@node "Case sensitive CPP" "gcc-amigaos.guide/Case sensitive CPP"
+@next "GCCPRIORITY"
+@prev "Explicit register specification"
+@toc "Miscellaneous"
+
+Case sensitive CPP
+==================
+
+   The preprocessor available in the AmigaOS port of @{b}GCC@{ub} is case
+sensitive. This means, that the header names provided in the @{b}#include@{ub}
+directives have to be correct, including upper and lower case letters.
+This affects only the way the preprocessor works.  Currently available
+native AmigaOS file systems are case insensitive.
+
+@{i}     Note@{ui}: This might seem like a horrible hack and a crazy attempt to
+     implement a "ridiculous" UNIX feature on Amiga. However, this
+     feature has been introduced to terminate the endless @{b}G++@{ub} problems
+     with a standard @{b}ANSI C@{ub} header @{b}string.h@{ub}: under the AmigaOS, a @{b}C++@{ub}
+     header @{b}String.h@{ub} would be included, instead.
+
+
+@endnode
+
+@node "GCCPRIORITY" "gcc-amigaos.guide/GCCPRIORITY"
+@next "Library flavors"
+@prev "Case sensitive CPP"
+@toc "Miscellaneous"
+
+GCCPRIORITY
+===========
+
+@{b}   GCC@{ub} supports one AmigaOS-specific environment variable: @{b}GCCPRIORITY@{ub}.
+
+   This variable specifies the @{b}exec@{ub} priority of the compiler. If this
+variable is not set, the default Shell priority will be used.
+
+@{i}     Note@{ui}: By default, the AmigaOS assigns the priority @{b}0@{ub} to user
+     tasks. It is thus generally unwise to set @{b}GCCPRIORITY@{ub} higher than
+     @{b}0@{ub}.
+
+
+@endnode
+
+@node "Library flavors" "gcc-amigaos.guide/Library flavors"
+@prev "GCCPRIORITY"
+@toc "Miscellaneous"
+
+Library flavors
+===============
+
+   The AmigaOS port of @{b}GCC@{ub} may use different linker libraries depending
+upon the options used while invoking the compiler. These libraries
+reside in subdirectories of the standard locations, such as @{b}GG:lib/@{ub} or,
+with @{b}GCC@{ub} 2.7.2.1, @{b}GG:lib/gcc-lib/m68k-amigaos/2.7.2.1/@{ub}.
+
+   If you invoke @{b}gcc@{ub} with @{b}-v@{ub}, you'll see the precise flavor of
+libraries used as a @{b}-fl@{ub} option in the @{b}ld@{ub} invocation.  Here is a list of
+the available flavors (and hence the subdirectories names):
+
+   * @{b}libb@{ub} corresponds to the @{"-fbaserel" link "-fbaserel"} option.
+
+   * @{b}libb32@{ub} corresponds to the @{"-fbaserel32" link "-fbaserel32"} option.
+
+   * @{b}libm020@{ub} corresponds to the @{b}-m68020@{ub} (or higher) options.
+
+   * @{b}libm881@{ub} corresponds to the @{b}-m68881@{ub} option.
+
+   * @{b}libnix@{ub} corresponds to the @{"-noixemul" link "-noixemul"} option.
+
+   More than one flavor can be specified simultaneously. For example,
+when both @{"-fbaserel" link "-fbaserel"} and @{b}-m68020@{ub} are specified, the libraries will be
+searched in @{b}libb/libm020@{ub} subdirectory (as well as in @{b}libb@{ub} subdirectory
+and in the standard location).
+
+
+@endnode
+
+@node "Index" "gcc-amigaos.guide/Index"
+@prev "Miscellaneous"
+@toc "Main"
+
+Index
+*****
+
+@index "Index"
+
+
+
+ @{" -fbaserel                                " link "-fbaserel"}   -fbaserel
+ @{" -fbaserel32                              " link "-fbaserel32"}   -fbaserel32
+ @{" -fpic                                    " link "-fbaserel"}   -fbaserel
+ @{" -frepo                                   " link "-frepo"}   -frepo
+ @{" -malways-restore-a4                      " link "-malways-restore-a4"}   -malways-restore-a4
+ @{" -mfixedstack                             " link "-mfixedstack"}   -mfixedstack
+ @{" -mregparm                                " link "-mregparm"}   -mregparm
+ @{" -mrestore-a4                             " link "-mrestore-a4"}   -mrestore-a4
+ @{" -msmall-code                             " link "-msmall-code"}   -msmall-code
+ @{" -mstackcheck                             " link "-mstackcheck"}   -mstackcheck
+ @{" -mstackextend                            " link "-mstackextend"}   -mstackextend
+ @{" -noixemul                                " link "-noixemul"}   -noixemul
+ @{" -resident                                " link "-resident"}   -resident
+ @{" -resident32                              " link "-resident32"}   -resident32
+ @{" 32 KB code limit                         " link "-msmall-code"}   -msmall-code
+ @{" 64 KB data limit                         " link "-fbaserel"}   -fbaserel
+ @{" <String.h> is not the same as <string.h> " link "Case sensitive CPP"}   Case sensitive CPP
+ @{" a4                                       " link "-fbaserel"}   -fbaserel
+ @{" Attributes                               " link "Attributes"}   Attributes
+ @{" Case sensitive CPP                       " link "Case sensitive CPP"}   Case sensitive CPP
+ @{" chip                                     " link "chip"}   chip
+ @{" Command line options                     " link "Invocation"}   Invocation
+ @{" Compatibility with other compilers       " link "Keyword macros"}   Keyword macros
+ @{" Defines                                  " link "Defines"}   Defines
+ @{" Do not mess with the stack               " link "interrupt"}   interrupt
+ @{" Enable C++ Template Repository           " link "-frepo"}   -frepo
+ @{" Explicit register specification          " link "Explicit register specification"}   Explicit register specification
+ @{" GCCPRIORITY                              " link "GCCPRIORITY"}   GCCPRIORITY
+ @{" Generate stack extension                 " link "stackext"}   stackext
+ @{" interrupt                                " link "interrupt"}   interrupt
+ @{" Introduction                             " link "Introduction"}   Introduction
+ @{" Invocation                               " link "Invocation"}   Invocation
+ @{" IXEmul                                   " link "-noixemul"}   -noixemul
+ @{" Keyword macros                           " link "Keyword macros"}   Keyword macros
+ @{" LibNIX                                   " link "-noixemul"}   -noixemul
+ @{" Library flavors                          " link "Library flavors"}   Library flavors
+ @{" Link with LibNIX                         " link "-noixemul"}   -noixemul
+ @{" Linker libraries                         " link "Library flavors"}   Library flavors
+ @{" Miscellaneous                            " link "Miscellaneous"}   Miscellaneous
+ @{" Pass arguments in registers              " link "regparm"}   regparm
+ @{" Pass arguments on the stack              " link "stkparm"}   stkparm
+ @{" Pass function arguments in registers     " link "-mregparm"}   -mregparm
+ @{" Preprocessor symbols                     " link "Defines"}   Defines
+ @{" Produce a pure executable                " link "-resident"}   -resident
+ @{" Produce a pure executable with no size limits " link "-resident32"}   -resident32
+ @{" Produce a4-relative data                 " link "-fbaserel"}   -fbaserel
+ @{" Produce a4-relative data with no size limits " link "-fbaserel32"}   -fbaserel32
+ @{" Produce PC-relative code                 " link "-msmall-code"}   -msmall-code
+ @{" Produce plain code                       " link "-mfixedstack"}   -mfixedstack
+ @{" Produce stack-checking code              " link "-mstackcheck"}   -mstackcheck
+ @{" Produce stack-extending code             " link "-mstackextend"}   -mstackextend
+ @{" Purpose of this document                 " link "Introduction"}   Introduction
+ @{" Put object in chip memory                " link "chip"}   chip
+ @{" regparm                                  " link "regparm"}   regparm
+ @{" Reload a4                                " link "saveds"}   saveds
+ @{" Reload a4 in all functions               " link "-malways-restore-a4"}   -malways-restore-a4
+ @{" Reload a4 in public functions            " link "-mrestore-a4"}   -mrestore-a4
+ @{" saveds                                   " link "saveds"}   saveds
+ @{" Set the priority of the compiler         " link "GCCPRIORITY"}   GCCPRIORITY
+ @{" Specify registers for arguments          " link "Explicit register specification"}   Explicit register specification
+ @{" stackext                                 " link "stackext"}   stackext
+ @{" stkparm                                  " link "stkparm"}   stkparm
+ @{" Symbols identifying CPU                  " link "Options information"}   Options information
+ @{" Symbols identifying ixemul               " link "Options information"}   Options information
+ @{" Symbols identifying machine              " link "Identifying machine"}   Identifying machine
+ @{" Symbols identifying specified options    " link "Options information"}   Options information
+ @{" Uncategorizable                          " link "Miscellaneous"}   Miscellaneous
+ @{" Variable and function attributes         " link "Attributes"}   Attributes
+ @{" What machine is this                     " link "Identifying machine"}   Identifying machine
+ @{" Which CPU model options have been specified " link "Options information"}   Options information
+
+@endnode
+

@@ -1,0 +1,20 @@
+OUTPUT_FORMAT("amiga")
+OUTPUT_ARCH(m68k)
+SECTIONS
+{
+  .text :
+  {
+    *(.text)
+  }
+  .data :
+  {
+    CONSTRUCTORS
+    *(.data)
+  }
+  .bss :
+  {
+    *(.bss)
+    *(COMMON)
+    ;
+  }
+}

@@ -1,0 +1,2881 @@
+@database cpp.guide
+
+@Master /gg-src/gg/egcs/gcc/cpp.texi
+
+@Width 72
+
+
+This is the AmigaGuide®  file cpp.guide, produced by Makeinfo-1.68 from 
+the input file /gg-src/gg/egcs/gcc/cpp.texi.
+
+INFO-DIR-SECTION Programming
+START-INFO-DIR-ENTRY
+* Cpp: (cpp).		       The GNU C preprocessor.
+END-INFO-DIR-ENTRY
+
+   This file documents the GNU C Preprocessor.
+
+   Copyright 1987, 1989, 1991, 1992, 1993, 1994, 1995 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions.
+
+@node Main "cpp.guide"
+@next "Global Actions"
+
+The C Preprocessor
+******************
+
+   The C preprocessor is a @{i}macro processor@{ui} that is used automatically by
+the C compiler to transform your program before actual compilation.  It
+is called a macro processor because it allows you to define @{i}macros@{ui},
+which are brief abbreviations for longer constructs.
+
+   The C preprocessor provides four separate facilities that you can
+use as you see fit:
+
+   * Inclusion of header files.  These are files of declarations that
+     can be substituted into your program.
+
+   * Macro expansion.  You can define @{i}macros@{ui}, which are abbreviations
+     for arbitrary fragments of C code, and then the C preprocessor will
+     replace the macros with their definitions throughout the program.
+
+   * Conditional compilation.  Using special preprocessing directives,
+     you can include or exclude parts of the program according to
+     various conditions.
+
+   * Line control.  If you use a program to combine or rearrange source
+     files into an intermediate file which is then compiled, you can
+     use line control to inform the compiler of where each source line
+     originally came from.
+
+   C preprocessors vary in some details.  This manual discusses the GNU
+C preprocessor, the C Compatible Compiler Preprocessor.  The GNU C
+preprocessor provides a superset of the features of ANSI Standard C.
+
+   ANSI Standard C requires the rejection of many harmless constructs
+commonly used by today's C programs.  Such incompatibility would be
+inconvenient for users, so the GNU C preprocessor is configured to
+accept these constructs by default.  Strictly speaking, to get ANSI
+Standard C, you must use the options @{b}-trigraphs@{ub}, @{b}-undef@{ub} and @{b}-pedantic@{ub},
+but in practice the consequences of having strict ANSI Standard C make
+it undesirable to do this.  See @{"Invocation" link "Invocation"}.
+
+   The C preprocessor is designed for C-like languages; you may run into
+problems if you apply it to other kinds of languages, because it assumes
+that it is dealing with C.  For example, the C preprocessor sometimes
+outputs extra white space to avoid inadvertent C token concatenation,
+and this may cause problems with other languages.
+
+
+ @{" Global Actions   " link "Global Actions"}  Actions made uniformly on all input files.
+ @{" Directives       " link "Directives"}  General syntax of preprocessing directives.
+ @{" Header Files     " link "Header Files"}  How and why to use header files.
+ @{" Macros           " link "Macros"}  How and why to use macros.
+ @{" Conditionals     " link "Conditionals"}  How and why to use conditionals.
+ @{" Combining Sources " link "Combining Sources"}  Use of line control when you combine source files.
+ @{" Other Directives " link "Other Directives"}  Miscellaneous preprocessing directives.
+ @{" Output           " link "Output"}  Format of output from the C preprocessor.
+ @{" Invocation       " link "Invocation"}  How to invoke the preprocessor; command options.
+ @{" Concept Index    " link "Concept Index"}  Index of concepts and terms.
+ @{" Index            " link "Index"}  Index of directives, predefined macros and options.
+
+
+@endnode
+
+@node "Global Actions" "cpp.guide/Global Actions"
+@next "Directives"
+@prev "Main"
+@toc "Main"
+
+Transformations Made Globally
+=============================
+
+   Most C preprocessor features are inactive unless you give specific
+directives to request their use.  (Preprocessing directives are lines
+starting with @{b}#@{ub}; see @{"Directives" link "Directives"}).  But there are three transformations
+that the preprocessor always makes on all the input it receives, even
+in the absence of directives.
+
+   * All C comments are replaced with single spaces.
+
+   * Backslash-Newline sequences are deleted, no matter where.  This
+     feature allows you to break long lines for cosmetic purposes
+     without changing their meaning.
+
+   * Predefined macro names are replaced with their expansions (see
+     @{"Predefined" link "Predefined"}).
+
+   The first two transformations are done @{i}before@{ui} nearly all other
+parsing and before preprocessing directives are recognized.  Thus, for
+example, you can split a line cosmetically with Backslash-Newline
+anywhere (except when trigraphs are in use; see below).
+
+     /*
+     */ # /*
+     */ defi\\
+     ne FO\\
+     O 10\\
+     20
+
+is equivalent into @{b}#define FOO 1020@{ub}.  You can split even an escape
+sequence with Backslash-Newline.  For example, you can split @{b}"foo\\bar"@{ub}
+between the @{b}\\ @{ub} and the @{b}b@{ub} to get
+
+     "foo\\\\
+     bar"
+
+This behavior is unclean: in all other contexts, a Backslash can be
+inserted in a string constant as an ordinary character by writing a
+double Backslash, and this creates an exception.  But the ANSI C
+standard requires it.  (Strict ANSI C does not allow Newlines in string
+constants, so they do not consider this a problem.)
+
+   But there are a few exceptions to all three transformations.
+
+   * C comments and predefined macro names are not recognized inside a
+     @{b}#include@{ub} directive in which the file name is delimited with @{b}<@{ub} and
+     @{b}>@{ub}.
+
+   * C comments and predefined macro names are never recognized within a
+     character or string constant.  (Strictly speaking, this is the
+     rule, not an exception, but it is worth noting here anyway.)
+
+   * Backslash-Newline may not safely be used within an ANSI "trigraph".
+     Trigraphs are converted before Backslash-Newline is deleted.  If
+     you write what looks like a trigraph with a Backslash-Newline
+     inside, the Backslash-Newline is deleted as usual, but it is then
+     too late to recognize the trigraph.
+
+     This exception is relevant only if you use the @{b}-trigraphs@{ub} option
+     to enable trigraph processing.  See @{"Invocation" link "Invocation"}.
+
+
+@endnode
+
+@node "Directives" "cpp.guide/Directives"
+@next "Header Files"
+@prev "Global Actions"
+@toc "Main"
+
+Preprocessing Directives
+========================
+
+   Most preprocessor features are active only if you use preprocessing
+directives to request their use.
+
+   Preprocessing directives are lines in your program that start with @{b}#@{ub}.
+The @{b}#@{ub} is followed by an identifier that is the @{i}directive name@{ui}.  For
+example, @{b}#define@{ub} is the directive that defines a macro.  Whitespace is
+also allowed before and after the @{b}#@{ub}.
+
+   The set of valid directive names is fixed.  Programs cannot define
+new preprocessing directives.
+
+   Some directive names require arguments; these make up the rest of
+the directive line and must be separated from the directive name by
+whitespace.  For example, @{b}#define@{ub} must be followed by a macro name and
+the intended expansion of the macro.  See @{"Simple Macros" link "Simple Macros"}.
+
+   A preprocessing directive cannot be more than one line in normal
+circumstances.  It may be split cosmetically with Backslash-Newline,
+but that has no effect on its meaning.  Comments containing Newlines
+can also divide the directive into multiple lines, but the comments are
+changed to Spaces before the directive is interpreted.  The only way a
+significant Newline can occur in a preprocessing directive is within a
+string constant or character constant.  Note that most C compilers that
+might be applied to the output from the preprocessor do not accept
+string or character constants containing Newlines.
+
+   The @{b}#@{ub} and the directive name cannot come from a macro expansion.  For
+example, if @{b}foo@{ub} is defined as a macro expanding to @{b}define@{ub}, that does
+not make @{b}#foo@{ub} a valid preprocessing directive.
+
+
+@endnode
+
+@node "Header Files" "cpp.guide/Header Files"
+@next "Macros"
+@prev "Directives"
+@toc "Main"
+
+Header Files
+============
+
+   A header file is a file containing C declarations and macro
+definitions (see @{"Macros" link "Macros"}) to be shared between several source files.
+You request the use of a header file in your program with the C
+preprocessing directive @{b}#include@{ub}.
+
+
+ @{" Header Uses        " link "Header Uses"}  What header files are used for.
+ @{" Include Syntax     " link "Include Syntax"}  How to write @{b}#include@{ub} directives.
+ @{" Include Operation  " link "Include Operation"}  What @{b}#include@{ub} does.
+ @{" Once-Only          " link "Once-Only"}  Preventing multiple inclusion of one header file.
+ @{" Inheritance        " link "Inheritance"}  Including one header file in another header file.
+
+
+@endnode
+
+@node "Header Uses" "cpp.guide/Header Uses"
+@next "Include Syntax"
+@prev "Header Files"
+@toc "Header Files"
+
+Uses of Header Files
+--------------------
+
+   Header files serve two kinds of purposes.
+
+   * System header files declare the interfaces to parts of the
+     operating system.  You include them in your program to supply the
+     definitions and declarations you need to invoke system calls and
+     libraries.
+
+   * Your own header files contain declarations for interfaces between
+     the source files of your program.  Each time you have a group of
+     related declarations and macro definitions all or most of which
+     are needed in several different source files, it is a good idea to
+     create a header file for them.
+
+   Including a header file produces the same results in C compilation as
+copying the header file into each source file that needs it.  But such
+copying would be time-consuming and error-prone.  With a header file,
+the related declarations appear in only one place.  If they need to be
+changed, they can be changed in one place, and programs that include
+the header file will automatically use the new version when next
+recompiled.  The header file eliminates the labor of finding and
+changing all the copies as well as the risk that a failure to find one
+copy will result in inconsistencies within a program.
+
+   The usual convention is to give header files names that end with @{b}.h@{ub}.
+Avoid unusual characters in header file names, as they reduce
+portability.
+
+
+@endnode
+
+@node "Include Syntax" "cpp.guide/Include Syntax"
+@next "Include Operation"
+@prev "Header Uses"
+@toc "Header Files"
+
+The @{b}#include@{ub} Directive
+----------------------
+
+   Both user and system header files are included using the
+preprocessing directive @{b}#include@{ub}.  It has three variants:
+
+@{b}#include <FILE>@{ub}
+     This variant is used for system header files.  It searches for a
+     file named FILE in a list of directories specified by you, then in
+     a standard list of system directories.  You specify directories to
+     search for header files with the command option @{b}-I@{ub} (see
+     @{"Invocation" link "Invocation"}).  The option @{b}-nostdinc@{ub} inhibits searching the
+     standard system directories; in this case only the directories you
+     specify are searched.
+
+     The parsing of this form of @{b}#include@{ub} is slightly special because
+     comments are not recognized within the @{b}<...>@{ub}.  Thus, in @{b}#include
+     <x/*y>@{ub} the @{b}/*@{ub} does not start a comment and the directive specifies
+     inclusion of a system header file named @{b}x/*y@{ub}.  Of course, a header
+     file with such a name is unlikely to exist on Unix, where shell
+     wildcard features would make it hard to manipulate.
+
+     The argument FILE may not contain a @{b}>@{ub} character.  It may, however,
+     contain a @{b}<@{ub} character.
+
+@{b}#include "FILE"@{ub}
+     This variant is used for header files of your own program.  It
+     searches for a file named FILE first in the current directory,
+     then in the same directories used for system header files.  The
+     current directory is the directory of the current input file.  It
+     is tried first because it is presumed to be the location of the
+     files that the current input file refers to.  (If the @{b}-I-@{ub} option is
+     used, the special treatment of the current directory is inhibited.)
+
+     The argument FILE may not contain @{b}"@{ub} characters.  If backslashes
+     occur within FILE, they are considered ordinary text characters,
+     not escape characters.  None of the character escape sequences
+     appropriate to string constants in C are processed.  Thus,
+     @{b}#include "x\\n\\\\y"@{ub} specifies a filename containing three
+     backslashes.  It is not clear why this behavior is ever useful, but
+     the ANSI standard specifies it.
+
+@{b}#include ANYTHING ELSE@{ub}
+     This variant is called a @{i}computed #include@{ui}.  Any @{b}#include@{ub}
+     directive whose argument does not fit the above two forms is a
+     computed include.  The text ANYTHING ELSE is checked for macro
+     calls, which are expanded (see @{"Macros" link "Macros"}).  When this is done, the
+     result must fit one of the above two variants--in particular, the
+     expanded text must in the end be surrounded by either quotes or
+     angle braces.
+
+     This feature allows you to define a macro which controls the file
+     name to be used at a later point in the program.  One application
+     of this is to allow a site-specific configuration file for your
+     program to specify the names of the system include files to be
+     used.  This can help in porting the program to various operating
+     systems in which the necessary system header files are found in
+     different places.
+
+
+@endnode
+
+@node "Include Operation" "cpp.guide/Include Operation"
+@next "Once-Only"
+@prev "Include Syntax"
+@toc "Header Files"
+
+How @{b}#include@{ub} Works
+------------------
+
+   The @{b}#include@{ub} directive works by directing the C preprocessor to scan
+the specified file as input before continuing with the rest of the
+current file.  The output from the preprocessor contains the output
+already generated, followed by the output resulting from the included
+file, followed by the output that comes from the text after the @{b}#include@{ub}
+directive.  For example, given a header file @{b}header.h@{ub} as follows,
+
+     char *test ();
+
+and a main program called @{b}program.c@{ub} that uses the header file, like
+this,
+
+     int x;
+     #include "header.h"
+     
+     main ()
+     {
+       printf (test ());
+     }
+
+the output generated by the C preprocessor for @{b}program.c@{ub} as input would
+be
+
+     int x;
+     char *test ();
+     
+     main ()
+     {
+       printf (test ());
+     }
+
+   Included files are not limited to declarations and macro
+definitions; those are merely the typical uses.  Any fragment of a C
+program can be included from another file.  The include file could even
+contain the beginning of a statement that is concluded in the
+containing file, or the end of a statement that was started in the
+including file.  However, a comment or a string or character constant
+may not start in the included file and finish in the including file.
+An unterminated comment, string constant or character constant in an
+included file is considered to end (with an error message) at the end
+of the file.
+
+   It is possible for a header file to begin or end a syntactic unit
+such as a function definition, but that would be very confusing, so
+don't do it.
+
+   The line following the @{b}#include@{ub} directive is always treated as a
+separate line by the C preprocessor even if the included file lacks a
+final newline.
+
+
+@endnode
+
+@node "Once-Only" "cpp.guide/Once-Only"
+@next "Inheritance"
+@prev "Include Operation"
+@toc "Header Files"
+
+Once-Only Include Files
+-----------------------
+
+   Very often, one header file includes another.  It can easily result
+that a certain header file is included more than once.  This may lead
+to errors, if the header file defines structure types or typedefs, and
+is certainly wasteful.  Therefore, we often wish to prevent multiple
+inclusion of a header file.
+
+   The standard way to do this is to enclose the entire real contents
+of the file in a conditional, like this:
+
+     #ifndef FILE_FOO_SEEN
+     #define FILE_FOO_SEEN
+     
+     THE ENTIRE FILE
+     
+     #endif /* FILE_FOO_SEEN */
+
+   The macro @{b}FILE_FOO_SEEN@{ub} indicates that the file has been included
+once already.  In a user header file, the macro name should not begin
+with @{b}_@{ub}.  In a system header file, this name should begin with @{b}__@{ub} to
+avoid conflicts with user programs.  In any kind of header file, the
+macro name should contain the name of the file and some additional
+text, to avoid conflicts with other header files.
+
+   The GNU C preprocessor is programmed to notice when a header file
+uses this particular construct and handle it efficiently.  If a header
+file is contained entirely in a @{b}#ifndef@{ub} conditional, then it records
+that fact.  If a subsequent @{b}#include@{ub} specifies the same file, and the
+macro in the @{b}#ifndef@{ub} is already defined, then the file is entirely
+skipped, without even reading it.
+
+   There is also an explicit directive to tell the preprocessor that it
+need not include a file more than once.  This is called @{b}#pragma once@{ub},
+and was used @{i}in addition to@{ui} the @{b}#ifndef@{ub} conditional around the contents
+of the header file.  @{b}#pragma once@{ub} is now obsolete and should not be
+used at all.
+
+   In the Objective C language, there is a variant of @{b}#include@{ub} called
+@{b}#import@{ub} which includes a file, but does so at most once.  If you use
+@{b}#import@{ub} @{i}instead of@{ui} @{b}#include@{ub}, then you don't need the conditionals
+inside the header file to prevent multiple execution of the contents.
+
+@{b}   #import@{ub} is obsolete because it is not a well designed feature.  It
+requires the users of a header file--the applications programmers--to
+know that a certain header file should only be included once.  It is
+much better for the header file's implementor to write the file so that
+users don't need to know this.  Using @{b}#ifndef@{ub} accomplishes this goal.
+
+
+@endnode
+
+@node "Inheritance" "cpp.guide/Inheritance"
+@prev "Once-Only"
+@toc "Header Files"
+
+Inheritance and Header Files
+----------------------------
+
+@{i}   Inheritance@{ui} is what happens when one object or file derives some of
+its contents by virtual copying from another object or file.  In the
+case of C header files, inheritance means that one header file includes
+another header file and then replaces or adds something.
+
+   If the inheriting header file and the base header file have different
+names, then inheritance is straightforward: simply write @{b}#include
+"BASE"@{ub} in the inheriting file.
+
+   Sometimes it is necessary to give the inheriting file the same name
+as the base file.  This is less straightforward.
+
+   For example, suppose an application program uses the system header
+@{b}sys/signal.h@{ub}, but the version of @{b}/usr/include/sys/signal.h@{ub} on a
+particular system doesn't do what the application program expects.  It
+might be convenient to define a "local" version, perhaps under the name
+@{b}/usr/local/include/sys/signal.h@{ub}, to override or add to the one supplied
+by the system.
+
+   You can do this by compiling with the option @{b}-I.@{ub}, and writing a file
+@{b}sys/signal.h@{ub} that does what the application program expects.  But
+making this file include the standard @{b}sys/signal.h@{ub} is not so
+easy--writing @{b}#include <sys/signal.h>@{ub} in that file doesn't work,
+because it includes your own version of the file, not the standard
+system version.  Used in that file itself, this leads to an infinite
+recursion and a fatal error in compilation.
+
+@{b}   #include </usr/include/sys/signal.h>@{ub} would find the proper file, but
+that is not clean, since it makes an assumption about where the system
+header file is found.  This is bad for maintenance, since it means that
+any change in where the system's header files are kept requires a
+change somewhere else.
+
+   The clean way to solve this problem is to use @{b}#include_next@{ub}, which
+means, "Include the @{i}next@{ui} file with this name."  This directive works
+like @{b}#include@{ub} except in searching for the specified file: it starts
+searching the list of header file directories @{i}after@{ui} the directory in
+which the current file was found.
+
+   Suppose you specify @{b}-I /usr/local/include@{ub}, and the list of
+directories to search also includes @{b}/usr/include@{ub}; and suppose both
+directories contain @{b}sys/signal.h@{ub}.  Ordinary @{b}#include <sys/signal.h>@{ub}
+finds the file under @{b}/usr/local/include@{ub}.  If that file contains
+@{b}#include_next <sys/signal.h>@{ub}, it starts searching after that directory,
+and finds the file in @{b}/usr/include@{ub}.
+
+
+@endnode
+
+@node "Macros" "cpp.guide/Macros"
+@next "Conditionals"
+@prev "Header Files"
+@toc "Main"
+
+Macros
+======
+
+   A macro is a sort of abbreviation which you can define once and then
+use later.  There are many complicated features associated with macros
+in the C preprocessor.
+
+
+ @{" Simple Macros   " link "Simple Macros"}  Macros that always expand the same way.
+ @{" Argument Macros " link "Argument Macros"}  Macros that accept arguments that are substituted
+                       into the macro expansion.
+ @{" Predefined      " link "Predefined"}  Predefined macros that are always available.
+ @{" Stringification " link "Stringification"}  Macro arguments converted into string constants.
+ @{" Concatenation   " link "Concatenation"}  Building tokens from parts taken from macro arguments.
+ @{" Undefining      " link "Undefining"}  Cancelling a macro's definition.
+ @{" Redefining      " link "Redefining"}  Changing a macro's definition.
+ @{" Macro Pitfalls  " link "Macro Pitfalls"}  Macros can confuse the unwary.  Here we explain
+                       several common problems and strange features.
+
+
+@endnode
+
+@node "Simple Macros" "cpp.guide/Simple Macros"
+@next "Argument Macros"
+@prev "Macros"
+@toc "Macros"
+
+Simple Macros
+-------------
+
+   A @{i}simple macro@{ui} is a kind of abbreviation.  It is a name which stands
+for a fragment of code.  Some people refer to these as @{i}manifest
+constants@{ui}.
+
+   Before you can use a macro, you must @{i}define@{ui} it explicitly with the
+@{b}#define@{ub} directive.  @{b}#define@{ub} is followed by the name of the macro and
+then the code it should be an abbreviation for.  For example,
+
+     #define BUFFER_SIZE 1020
+
+defines a macro named @{b}BUFFER_SIZE@{ub} as an abbreviation for the text @{b}1020@{ub}.
+If somewhere after this @{b}#define@{ub} directive there comes a C statement of
+the form
+
+     foo = (char *) xmalloc (BUFFER_SIZE);
+
+then the C preprocessor will recognize and @{i}expand@{ui} the macro
+@{b}BUFFER_SIZE@{ub}, resulting in
+
+     foo = (char *) xmalloc (1020);
+
+   The use of all upper case for macro names is a standard convention.
+Programs are easier to read when it is possible to tell at a glance
+which names are macros.
+
+   Normally, a macro definition must be a single line, like all C
+preprocessing directives.  (You can split a long macro definition
+cosmetically with Backslash-Newline.)  There is one exception: Newlines
+can be included in the macro definition if within a string or character
+constant.  This is because it is not possible for a macro definition to
+contain an unbalanced quote character; the definition automatically
+extends to include the matching quote character that ends the string or
+character constant.  Comments within a macro definition may contain
+Newlines, which make no difference since the comments are entirely
+replaced with Spaces regardless of their contents.
+
+   Aside from the above, there is no restriction on what can go in a
+macro body.  Parentheses need not balance.  The body need not resemble
+valid C code.  (But if it does not, you may get error messages from the
+C compiler when you use the macro.)
+
+   The C preprocessor scans your program sequentially, so macro
+definitions take effect at the place you write them.  Therefore, the
+following input to the C preprocessor
+
+     foo = X;
+     #define X 4
+     bar = X;
+
+produces as output
+
+     foo = X;
+     
+     bar = 4;
+
+   After the preprocessor expands a macro name, the macro's definition
+body is appended to the front of the remaining input, and the check for
+macro calls continues.  Therefore, the macro body can contain calls to
+other macros.  For example, after
+
+     #define BUFSIZE 1020
+     #define TABLESIZE BUFSIZE
+
+the name @{b}TABLESIZE@{ub} when used in the program would go through two stages
+of expansion, resulting ultimately in @{b}1020@{ub}.
+
+   This is not at all the same as defining @{b}TABLESIZE@{ub} to be @{b}1020@{ub}.  The
+@{b}#define@{ub} for @{b}TABLESIZE@{ub} uses exactly the body you specify--in this case,
+@{b}BUFSIZE@{ub}--and does not check to see whether it too is the name of a
+macro.  It's only when you @{i}use@{ui} @{b}TABLESIZE@{ub} that the result of its
+expansion is checked for more macro names.  See @{"Cascaded Macros" link "Cascaded Macros"}.
+
+
+@endnode
+
+@node "Argument Macros" "cpp.guide/Argument Macros"
+@next "Predefined"
+@prev "Simple Macros"
+@toc "Macros"
+
+Macros with Arguments
+---------------------
+
+   A simple macro always stands for exactly the same text, each time it
+is used.  Macros can be more flexible when they accept @{i}arguments@{ui}.
+Arguments are fragments of code that you supply each time the macro is
+used.  These fragments are included in the expansion of the macro
+according to the directions in the macro definition.  A macro that
+accepts arguments is called a @{i}function-like macro@{ui} because the syntax
+for using it looks like a function call.
+
+   To define a macro that uses arguments, you write a @{b}#define@{ub} directive
+with a list of @{i}argument names@{ui} in parentheses after the name of the
+macro.  The argument names may be any valid C identifiers, separated by
+commas and optionally whitespace.  The open-parenthesis must follow the
+macro name immediately, with no space in between.
+
+   For example, here is a macro that computes the minimum of two numeric
+values, as it is defined in many C programs:
+
+     #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
+
+(This is not the best way to define a "minimum" macro in GNU C.  See
+@{"Side Effects" link "Side Effects"}, for more information.)
+
+   To use a macro that expects arguments, you write the name of the
+macro followed by a list of @{i}actual arguments@{ui} in parentheses, separated
+by commas.  The number of actual arguments you give must match the
+number of arguments the macro expects.   Examples of use of the macro
+@{b}min@{ub} include @{b}min (1, 2)@{ub} and @{b}min (x + 28, *p)@{ub}.
+
+   The expansion text of the macro depends on the arguments you use.
+Each of the argument names of the macro is replaced, throughout the
+macro definition, with the corresponding actual argument.  Using the
+same macro @{b}min@{ub} defined above, @{b}min (1, 2)@{ub} expands into
+
+     ((1) < (2) ? (1) : (2))
+
+where @{b}1@{ub} has been substituted for @{b}X@{ub} and @{b}2@{ub} for @{b}Y@{ub}.
+
+   Likewise, @{b}min (x + 28, *p)@{ub} expands into
+
+     ((x + 28) < (*p) ? (x + 28) : (*p))
+
+   Parentheses in the actual arguments must balance; a comma within
+parentheses does not end an argument.  However, there is no requirement
+for brackets or braces to balance, and they do not prevent a comma from
+separating arguments.  Thus,
+
+     macro (array[x = y, x + 1])
+
+passes two arguments to @{b}macro@{ub}: @{b}array[x = y@{ub} and @{b}x + 1]@{ub}.  If you want to
+supply @{b}array[x = y, x + 1]@{ub} as an argument, you must write it as
+@{b}array[(x = y, x + 1)]@{ub}, which is equivalent C code.
+
+   After the actual arguments are substituted into the macro body, the
+entire result is appended to the front of the remaining input, and the
+check for macro calls continues.  Therefore, the actual arguments can
+contain calls to other macros, either with or without arguments, or
+even to the same macro.  The macro body can also contain calls to other
+macros.  For example, @{b}min (min (a, b), c)@{ub} expands into this text:
+
+     ((((a) < (b) ? (a) : (b))) < (c)
+      ? (((a) < (b) ? (a) : (b)))
+      : (c))
+
+(Line breaks shown here for clarity would not actually be generated.)
+
+   If a macro @{b}foo@{ub} takes one argument, and you want to supply an empty
+argument, you must write at least some whitespace between the
+parentheses, like this: @{b}foo ( )@{ub}.  Just @{b}foo ()@{ub} is providing no
+arguments, which is an error if @{b}foo@{ub} expects an argument.  But @{b}foo0 ()@{ub}
+is the correct way to call a macro defined to take zero arguments, like
+this:
+
+     #define foo0() ...
+
+   If you use the macro name followed by something other than an
+open-parenthesis (after ignoring any spaces, tabs and comments that
+follow), it is not a call to the macro, and the preprocessor does not
+change what you have written.  Therefore, it is possible for the same
+name to be a variable or function in your program as well as a macro,
+and you can choose in each instance whether to refer to the macro (if
+an actual argument list follows) or the variable or function (if an
+argument list does not follow).
+
+   Such dual use of one name could be confusing and should be avoided
+except when the two meanings are effectively synonymous: that is, when
+the name is both a macro and a function and the two have similar
+effects.  You can think of the name simply as a function; use of the
+name for purposes other than calling it (such as, to take the address)
+will refer to the function, while calls will expand the macro and
+generate better but equivalent code.  For example, you can use a
+function named @{b}min@{ub} in the same source file that defines the macro.  If
+you write @{b}&min@{ub} with no argument list, you refer to the function.  If
+you write @{b}min (x, bb)@{ub}, with an argument list, the macro is expanded.
+If you write @{b}(min) (a, bb)@{ub}, where the name @{b}min@{ub} is not followed by an
+open-parenthesis, the macro is not expanded, so you wind up with a call
+to the function @{b}min@{ub}.
+
+   You may not define the same name as both a simple macro and a macro
+with arguments.
+
+   In the definition of a macro with arguments, the list of argument
+names must follow the macro name immediately with no space in between.
+If there is a space after the macro name, the macro is defined as
+taking no arguments, and all the rest of the line is taken to be the
+expansion.  The reason for this is that it is often useful to define a
+macro that takes no arguments and whose definition begins with an
+identifier in parentheses.  This rule about spaces makes it possible
+for you to do either this:
+
+     #define FOO(x) - 1 / (x)
+
+(which defines @{b}FOO@{ub} to take an argument and expand into minus the
+reciprocal of that argument) or this:
+
+     #define BAR (x) - 1 / (x)
+
+(which defines @{b}BAR@{ub} to take no argument and always expand into @{b}(x) - 1 /
+(x)@{ub}).
+
+   Note that the @{i}uses@{ui} of a macro with arguments can have spaces before
+the left parenthesis; it's the @{i}definition@{ui} where it matters whether
+there is a space.
+
+
+@endnode
+
+@node "Predefined" "cpp.guide/Predefined"
+@next "Stringification"
+@prev "Argument Macros"
+@toc "Macros"
+
+Predefined Macros
+-----------------
+
+   Several simple macros are predefined.  You can use them without
+giving definitions for them.  They fall into two classes: standard
+macros and system-specific macros.
+
+
+ @{" Standard Predefined    " link "Standard Predefined"}  Standard predefined macros.
+ @{" Nonstandard Predefined " link "Nonstandard Predefined"}  Nonstandard predefined macros.
+
+
+@endnode
+
+@node "Standard Predefined" "cpp.guide/Standard Predefined"
+@next "Nonstandard Predefined"
+@prev "Predefined"
+@toc "Predefined"
+
+Standard Predefined Macros
+..........................
+
+   The standard predefined macros are available with the same meanings
+regardless of the machine or operating system on which you are using
+GNU C.  Their names all start and end with double underscores.  Those
+preceding @{b}__GNUC__@{ub} in this table are standardized by ANSI C; the rest
+are GNU C extensions.
+
+@{b}__FILE__@{ub}
+     This macro expands to the name of the current input file, in the
+     form of a C string constant.  The precise name returned is the one
+     that was specified in @{b}#include@{ub} or as the input file name argument.
+
+@{b}__LINE__@{ub}
+     This macro expands to the current input line number, in the form
+     of a decimal integer constant.  While we call it a predefined
+     macro, it's a pretty strange macro, since its "definition" changes
+     with each new line of source code.
+
+     This and @{b}__FILE__@{ub} are useful in generating an error message to
+     report an inconsistency detected by the program; the message can
+     state the source line at which the inconsistency was detected.
+     For example,
+
+          fprintf (stderr, "Internal error: "
+                           "negative string length "
+                           "%d at %s, line %d.",
+                   length, __FILE__, __LINE__);
+
+     A @{b}#include@{ub} directive changes the expansions of @{b}__FILE__@{ub} and
+     @{b}__LINE__@{ub} to correspond to the included file.  At the end of that
+     file, when processing resumes on the input file that contained the
+     @{b}#include@{ub} directive, the expansions of @{b}__FILE__@{ub} and @{b}__LINE__@{ub} revert
+     to the values they had before the @{b}#include@{ub} (but @{b}__LINE__@{ub} is then
+     incremented by one as processing moves to the line after the
+     @{b}#include@{ub}).
+
+     The expansions of both @{b}__FILE__@{ub} and @{b}__LINE__@{ub} are altered if a
+     @{b}#line@{ub} directive is used.  See @{"Combining Sources" link "Combining Sources"}.
+
+@{b}__DATE__@{ub}
+     This macro expands to a string constant that describes the date on
+     which the preprocessor is being run.  The string constant contains
+     eleven characters and looks like @{b}"Feb  1 1996"@{ub}.
+
+@{b}__TIME__@{ub}
+     This macro expands to a string constant that describes the time at
+     which the preprocessor is being run.  The string constant contains
+     eight characters and looks like @{b}"23:59:01"@{ub}.
+
+@{b}__STDC__@{ub}
+     This macro expands to the constant 1, to signify that this is ANSI
+     Standard C.  (Whether that is actually true depends on what C
+     compiler will operate on the output from the preprocessor.)
+
+     On some hosts, system include files use a different convention,
+     where @{b}__STDC__@{ub} is normally 0, but is 1 if the user specifies strict
+     conformance to the C Standard.  The preprocessor follows the host
+     convention when processing system include files, but when
+     processing user files it follows the usual GNU C convention.
+
+     This macro is not defined if the @{b}-traditional@{ub} option is used.
+
+@{b}__STDC_VERSION__@{ub}
+     This macro expands to the C Standard's version number, a long
+     integer constant of the form @{b}YYYYMML@{ub} where YYYY and MM are the
+     year and month of the Standard version.  This signifies which
+     version of the C Standard the preprocessor conforms to.  Like
+     @{b}__STDC__@{ub}, whether this version number is accurate for the entire
+     implementation depends on what C compiler will operate on the
+     output from the preprocessor.
+
+     This macro is not defined if the @{b}-traditional@{ub} option is used.
+
+@{b}__GNUC__@{ub}
+     This macro is defined if and only if this is GNU C.  This macro is
+     defined only when the entire GNU C compiler is in use; if you
+     invoke the preprocessor directly, @{b}__GNUC__@{ub} is undefined.  The value
+     identifies the major version number of GNU CC (@{b}1@{ub} for GNU CC
+     version 1, which is now obsolete, and @{b}2@{ub} for version 2).
+
+@{b}__GNUC_MINOR__@{ub}
+     The macro contains the minor version number of the compiler.  This
+     can be used to work around differences between different releases
+     of the compiler (for example, if gcc 2.6.3 is known to support a
+     feature, you can test for @{b}__GNUC__ > 2 || (__GNUC__ == 2 &&
+     __GNUC_MINOR__ >= 6)@{ub}).  The last number, @{b}3@{ub} in the example above,
+     denotes the bugfix level of the compiler; no macro contains this
+     value.
+
+@{b}__GNUG__@{ub}
+     The GNU C compiler defines this when the compilation language is
+     C++; use @{b}__GNUG__@{ub} to distinguish between GNU C and GNU C++.
+
+@{b}__cplusplus@{ub}
+     The draft ANSI standard for C++ used to require predefining this
+     variable.  Though it is no longer required, GNU C++ continues to
+     define it, as do other popular C++ compilers.  You can use
+     @{b}__cplusplus@{ub} to test whether a header is compiled by a C compiler
+     or a C++ compiler.
+
+@{b}__STRICT_ANSI__@{ub}
+     GNU C defines this macro if and only if the @{b}-ansi@{ub} switch was
+     specified when GNU C was invoked.  Its definition is the null
+     string.  This macro exists primarily to direct certain GNU header
+     files not to define certain traditional Unix constructs which are
+     incompatible with ANSI C.
+
+@{b}__BASE_FILE__@{ub}
+     This macro expands to the name of the main input file, in the form
+     of a C string constant.  This is the source file that was specified
+     as an argument when the C compiler was invoked.
+
+@{b}__INCLUDE_LEVEL__@{ub}
+     This macro expands to a decimal integer constant that represents
+     the depth of nesting in include files.  The value of this macro is
+     incremented on every @{b}#include@{ub} directive and decremented at every
+     end of file.  For input files specified by command line arguments,
+     the nesting level is zero.
+
+@{b}__VERSION__@{ub}
+     This macro expands to a string constant which describes the
+     version number of GNU C.  The string is normally a sequence of
+     decimal numbers separated by periods, such as @{b}"2.6.0"@{ub}.
+
+@{b}__OPTIMIZE__@{ub}
+     GNU CC defines this macro in optimizing compilations.  It causes
+     certain GNU header files to define alternative macro definitions
+     for some system library functions.  You should not refer to or
+     test the definition of this macro unless you make very sure that
+     programs will execute with the same effect regardless.
+
+@{b}__CHAR_UNSIGNED__@{ub}
+     GNU C defines this macro if and only if the data type @{b}char@{ub} is
+     unsigned on the target machine.  It exists to cause the standard
+     header file @{b}limits.h@{ub} to work correctly.  You should not refer to
+     this macro yourself; instead, refer to the standard macros defined
+     in @{b}limits.h@{ub}.  The preprocessor uses this macro to determine whether
+     or not to sign-extend large character constants written in octal;
+     see @{"The #if Directive" link "#if Directive"}.
+
+@{b}__REGISTER_PREFIX__@{ub}
+     This macro expands to a string (not a string constant) describing
+     the prefix applied to CPU registers in assembler code.  You can
+     use it to write assembler code that is usable in multiple
+     environments.  For example, in the @{b}m68k-aout@{ub} environment it
+     expands to the null string, but in the @{b}m68k-coff@{ub} environment it
+     expands to the string @{b}%@{ub}.
+
+@{b}__USER_LABEL_PREFIX__@{ub}
+     Similar to @{b}__REGISTER_PREFIX__@{ub}, but describes the prefix applied
+     to user generated labels in assembler code.  For example, in the
+     @{b}m68k-aout@{ub} environment it expands to the string @{b}_@{ub}, but in the
+     @{b}m68k-coff@{ub} environment it expands to the null string.  This does
+     not work with the @{b}-mno-underscores@{ub} option that the i386 OSF/rose
+     and m88k targets provide nor with the @{b}-mcall*@{ub} options of the
+     rs6000 System V Release 4 target.
+
+
+@endnode
+
+@node "Nonstandard Predefined" "cpp.guide/Nonstandard Predefined"
+@prev "Standard Predefined"
+@toc "Predefined"
+
+Nonstandard Predefined Macros
+.............................
+
+   The C preprocessor normally has several predefined macros that vary
+between machines because their purpose is to indicate what type of
+system and machine is in use.  This manual, being for all systems and
+machines, cannot tell you exactly what their names are; instead, we
+offer a list of some typical ones.  You can use @{b}cpp -dM@{ub} to see the
+values of predefined macros; see @{"Invocation" link "Invocation"}.
+
+   Some nonstandard predefined macros describe the operating system in
+use, with more or less specificity.  For example,
+
+@{b}unix@{ub}
+@{b}     unix@{ub} is normally predefined on all Unix systems.
+
+@{b}BSD@{ub}
+@{b}     BSD@{ub} is predefined on recent versions of Berkeley Unix (perhaps
+     only in version 4.3).
+
+   Other nonstandard predefined macros describe the kind of CPU, with
+more or less specificity.  For example,
+
+@{b}vax@{ub}
+@{b}     vax@{ub} is predefined on Vax computers.
+
+@{b}mc68000@{ub}
+@{b}     mc68000@{ub} is predefined on most computers whose CPU is a Motorola
+     68000, 68010 or 68020.
+
+@{b}m68k@{ub}
+@{b}     m68k@{ub} is also predefined on most computers whose CPU is a 68000,
+     68010 or 68020; however, some makers use @{b}mc68000@{ub} and some use
+     @{b}m68k@{ub}.  Some predefine both names.  What happens in GNU C depends
+     on the system you are using it on.
+
+@{b}M68020@{ub}
+@{b}     M68020@{ub} has been observed to be predefined on some systems that use
+     68020 CPUs--in addition to @{b}mc68000@{ub} and @{b}m68k@{ub}, which are less
+     specific.
+
+@{b}_AM29K@{ub}
+@{b}_AM29000@{ub}
+     Both @{b}_AM29K@{ub} and @{b}_AM29000@{ub} are predefined for the AMD 29000 CPU
+     family.
+
+@{b}ns32000@{ub}
+@{b}     ns32000@{ub} is predefined on computers which use the National
+     Semiconductor 32000 series CPU.
+
+   Yet other nonstandard predefined macros describe the manufacturer of
+the system.  For example,
+
+@{b}sun@{ub}
+@{b}     sun@{ub} is predefined on all models of Sun computers.
+
+@{b}pyr@{ub}
+@{b}     pyr@{ub} is predefined on all models of Pyramid computers.
+
+@{b}sequent@{ub}
+@{b}     sequent@{ub} is predefined on all models of Sequent computers.
+
+   These predefined symbols are not only nonstandard, they are contrary
+to the ANSI standard because their names do not start with underscores.
+Therefore, the option @{b}-ansi@{ub} inhibits the definition of these symbols.
+
+   This tends to make @{b}-ansi@{ub} useless, since many programs depend on the
+customary nonstandard predefined symbols.  Even system header files
+check them and will generate incorrect declarations if they do not find
+the names that are expected.  You might think that the header files
+supplied for the Uglix computer would not need to test what machine
+they are running on, because they can simply assume it is the Uglix;
+but often they do, and they do so using the customary names.  As a
+result, very few C programs will compile with @{b}-ansi@{ub}.  We intend to
+avoid such problems on the GNU system.
+
+   What, then, should you do in an ANSI C program to test the type of
+machine it will run on?
+
+   GNU C offers a parallel series of symbols for this purpose, whose
+names are made from the customary ones by adding @{b}__@{ub} at the beginning
+and end.  Thus, the symbol @{b}__vax__@{ub} would be available on a Vax, and so
+on.
+
+   The set of nonstandard predefined names in the GNU C preprocessor is
+controlled (when @{b}cpp@{ub} is itself compiled) by the macro @{b}CPP_PREDEFINES@{ub},
+which should be a string containing @{b}-D@{ub} options, separated by spaces.
+For example, on the Sun 3, we use the following definition:
+
+     #define CPP_PREDEFINES "-Dmc68000 -Dsun -Dunix -Dm68k"
+
+This macro is usually specified in @{b}tm.h@{ub}.
+
+
+@endnode
+
+@node "Stringification" "cpp.guide/Stringification"
+@next "Concatenation"
+@prev "Predefined"
+@toc "Macros"
+
+Stringification
+---------------
+
+@{i}   Stringification@{ui} means turning a code fragment into a string constant
+whose contents are the text for the code fragment.  For example,
+stringifying @{b}foo (z)@{ub} results in @{b}"foo (z)"@{ub}.
+
+   In the C preprocessor, stringification is an option available when
+macro arguments are substituted into the macro definition.  In the body
+of the definition, when an argument name appears, the character @{b}#@{ub} before
+the name specifies stringification of the corresponding actual argument
+when it is substituted at that point in the definition.  The same
+argument may be substituted in other places in the definition without
+stringification if the argument name appears in those places with no @{b}#@{ub}.
+
+   Here is an example of a macro definition that uses stringification:
+
+     #define WARN_IF(EXP) \\
+     do { if (EXP) \\
+             fprintf (stderr, "Warning: " #EXP "\\n"); } \\
+     while (0)
+
+Here the actual argument for @{b}EXP@{ub} is substituted once as given, into the
+@{b}if@{ub} statement, and once as stringified, into the argument to @{b}fprintf@{ub}.
+The @{b}do@{ub} and @{b}while (0)@{ub} are a kludge to make it possible to write @{b}WARN_IF
+(ARG);@{ub}, which the resemblance of @{b}WARN_IF@{ub} to a function would make C
+programmers want to do; see @{"Swallow Semicolon" link "Swallow Semicolon"}.
+
+   The stringification feature is limited to transforming one macro
+argument into one string constant: there is no way to combine the
+argument with other text and then stringify it all together.  But the
+example above shows how an equivalent result can be obtained in ANSI
+Standard C using the feature that adjacent string constants are
+concatenated as one string constant.  The preprocessor stringifies the
+actual value of @{b}EXP@{ub} into a separate string constant, resulting in text
+like
+
+     do { if (x == 0) \\
+             fprintf (stderr, "Warning: " "x == 0" "\\n"); } \\
+     while (0)
+
+but the C compiler then sees three consecutive string constants and
+concatenates them into one, producing effectively
+
+     do { if (x == 0) \\
+             fprintf (stderr, "Warning: x == 0\\n"); } \\
+     while (0)
+
+   Stringification in C involves more than putting doublequote
+characters around the fragment; it is necessary to put backslashes in
+front of all doublequote characters, and all backslashes in string and
+character constants, in order to get a valid C string constant with the
+proper contents.  Thus, stringifying @{b}p = "foo\\n";@{ub} results in @{b}"p =
+\\"foo\\\\n\\";"@{ub}.  However, backslashes that are not inside of string
+or character constants are not duplicated: @{b}\\n@{ub} by itself stringifies to
+@{b}"\\n"@{ub}.
+
+   Whitespace (including comments) in the text being stringified is
+handled according to precise rules.  All leading and trailing
+whitespace is ignored.  Any sequence of whitespace in the middle of the
+text is converted to a single space in the stringified result.
+
+
+@endnode
+
+@node "Concatenation" "cpp.guide/Concatenation"
+@next "Undefining"
+@prev "Stringification"
+@toc "Macros"
+
+Concatenation
+-------------
+
+@{i}   Concatenation@{ui} means joining two strings into one.  In the context of
+macro expansion, concatenation refers to joining two lexical units into
+one longer one.  Specifically, an actual argument to the macro can be
+concatenated with another actual argument or with fixed text to produce
+a longer name.  The longer name might be the name of a function,
+variable or type, or a C keyword; it might even be the name of another
+macro, in which case it will be expanded.
+
+   When you define a macro, you request concatenation with the special
+operator @{b}##@{ub} in the macro body.  When the macro is called, after actual
+arguments are substituted, all @{b}##@{ub} operators are deleted, and so is any
+whitespace next to them (including whitespace that was part of an
+actual argument).  The result is to concatenate the syntactic tokens on
+either side of the @{b}##@{ub}.
+
+   Consider a C program that interprets named commands.  There probably
+needs to be a table of commands, perhaps an array of structures
+declared as follows:
+
+     struct command
+     {
+       char *name;
+       void (*function) ();
+     };
+     
+     struct command commands[] =
+     {
+       { "quit", quit_command},
+       { "help", help_command},
+       ...
+     };
+
+   It would be cleaner not to have to give each command name twice,
+once in the string constant and once in the function name.  A macro
+which takes the name of a command as an argument can make this
+unnecessary.  The string constant can be created with stringification,
+and the function name by concatenating the argument with @{b}_command@{ub}.
+Here is how it is done:
+
+     #define COMMAND(NAME)  { #NAME, NAME ## _command }
+     
+     struct command commands[] =
+     {
+       COMMAND (quit),
+       COMMAND (help),
+       ...
+     };
+
+   The usual case of concatenation is concatenating two names (or a
+name and a number) into a longer name.  But this isn't the only valid
+case.  It is also possible to concatenate two numbers (or a number and
+a name, such as @{b}1.5@{ub} and @{b}e3@{ub}) into a number.  Also, multi-character
+operators such as @{b}+=@{ub} can be formed by concatenation.  In some cases it
+is even possible to piece together a string constant.  However, two
+pieces of text that don't together form a valid lexical unit cannot be
+concatenated.  For example, concatenation with @{b}x@{ub} on one side and @{b}+@{ub} on
+the other is not meaningful because those two characters can't fit
+together in any lexical unit of C.  The ANSI standard says that such
+attempts at concatenation are undefined, but in the GNU C preprocessor
+it is well defined: it puts the @{b}x@{ub} and @{b}+@{ub} side by side with no particular
+special results.
+
+   Keep in mind that the C preprocessor converts comments to whitespace
+before macros are even considered.  Therefore, you cannot create a
+comment by concatenating @{b}/@{ub} and @{b}*@{ub}: the @{b}/*@{ub} sequence that starts a comment
+is not a lexical unit, but rather the beginning of a "long" space
+character.  Also, you can freely use comments next to a @{b}##@{ub} in a macro
+definition, or in actual arguments that will be concatenated, because
+the comments will be converted to spaces at first sight, and
+concatenation will later discard the spaces.
+
+
+@endnode
+
+@node "Undefining" "cpp.guide/Undefining"
+@next "Redefining"
+@prev "Concatenation"
+@toc "Macros"
+
+Undefining Macros
+-----------------
+
+   To @{i}undefine@{ui} a macro means to cancel its definition.  This is done
+with the @{b}#undef@{ub} directive.  @{b}#undef@{ub} is followed by the macro name to be
+undefined.
+
+   Like definition, undefinition occurs at a specific point in the
+source file, and it applies starting from that point.  The name ceases
+to be a macro name, and from that point on it is treated by the
+preprocessor as if it had never been a macro name.
+
+   For example,
+
+     #define FOO 4
+     x = FOO;
+     #undef FOO
+     x = FOO;
+
+expands into
+
+     x = 4;
+     
+     x = FOO;
+
+In this example, @{b}FOO@{ub} had better be a variable or function as well as
+(temporarily) a macro, in order for the result of the expansion to be
+valid C code.
+
+   The same form of @{b}#undef@{ub} directive will cancel definitions with
+arguments or definitions that don't expect arguments.  The @{b}#undef@{ub}
+directive has no effect when used on a name not currently defined as a
+macro.
+
+
+@endnode
+
+@node "Redefining" "cpp.guide/Redefining"
+@next "Macro Pitfalls"
+@prev "Undefining"
+@toc "Macros"
+
+Redefining Macros
+-----------------
+
+@{i}   Redefining@{ui} a macro means defining (with @{b}#define@{ub}) a name that is
+already defined as a macro.
+
+   A redefinition is trivial if the new definition is transparently
+identical to the old one.  You probably wouldn't deliberately write a
+trivial redefinition, but they can happen automatically when a header
+file is included more than once (see @{"Header Files" link "Header Files"}), so they are
+accepted silently and without effect.
+
+   Nontrivial redefinition is considered likely to be an error, so it
+provokes a warning message from the preprocessor.  However, sometimes it
+is useful to change the definition of a macro in mid-compilation.  You
+can inhibit the warning by undefining the macro with @{b}#undef@{ub} before the
+second definition.
+
+   In order for a redefinition to be trivial, the new definition must
+exactly match the one already in effect, with two possible exceptions:
+
+   * Whitespace may be added or deleted at the beginning or the end.
+
+   * Whitespace may be changed in the middle (but not inside strings).
+     However, it may not be eliminated entirely, and it may not be added
+     where there was no whitespace at all.
+
+   Recall that a comment counts as whitespace.
+
+
+@endnode
+
+@node "Macro Pitfalls" "cpp.guide/Macro Pitfalls"
+@prev "Redefining"
+@toc "Macros"
+
+Pitfalls and Subtleties of Macros
+---------------------------------
+
+   In this section we describe some special rules that apply to macros
+and macro expansion, and point out certain cases in which the rules have
+counterintuitive consequences that you must watch out for.
+
+
+ @{" Misnesting       " link "Misnesting"}  Macros can contain unmatched parentheses.
+ @{" Macro Parentheses " link "Macro Parentheses"}  Why apparently superfluous parentheses
+                         may be necessary to avoid incorrect grouping.
+ @{" Swallow Semicolon " link "Swallow Semicolon"}  Macros that look like functions
+                         but expand into compound statements.
+ @{" Side Effects     " link "Side Effects"}  Unsafe macros that cause trouble when
+                         arguments contain side effects.
+ @{" Self-Reference   " link "Self-Reference"}  Macros whose definitions use the macros' own names.
+ @{" Argument Prescan " link "Argument Prescan"}  Actual arguments are checked for macro calls
+                         before they are substituted.
+ @{" Cascaded Macros  " link "Cascaded Macros"}  Macros whose definitions use other macros.
+ @{" Newlines in Args " link "Newlines in Args"}  Sometimes line numbers get confused.
+
+
+@endnode
+
+@node "Misnesting" "cpp.guide/Misnesting"
+@next "Macro Parentheses"
+@prev "Macro Pitfalls"
+@toc "Macro Pitfalls"
+
+Improperly Nested Constructs
+............................
+
+   Recall that when a macro is called with arguments, the arguments are
+substituted into the macro body and the result is checked, together with
+the rest of the input file, for more macro calls.
+
+   It is possible to piece together a macro call coming partially from
+the macro body and partially from the actual arguments.  For example,
+
+     #define double(x) (2*(x))
+     #define call_with_1(x) x(1)
+
+would expand @{b}call_with_1 (double)@{ub} into @{b}(2*(1))@{ub}.
+
+   Macro definitions do not have to have balanced parentheses.  By
+writing an unbalanced open parenthesis in a macro body, it is possible
+to create a macro call that begins inside the macro body but ends
+outside of it.  For example,
+
+     #define strange(file) fprintf (file, "%s %d",
+     ...
+     strange(stderr) p, 35)
+
+This bizarre example expands to @{b}fprintf (stderr, "%s %d", p, 35)@{ub}!
+
+
+@endnode
+
+@node "Macro Parentheses" "cpp.guide/Macro Parentheses"
+@next "Swallow Semicolon"
+@prev "Misnesting"
+@toc "Macro Pitfalls"
+
+Unintended Grouping of Arithmetic
+.................................
+
+   You may have noticed that in most of the macro definition examples
+shown above, each occurrence of a macro argument name had parentheses
+around it.  In addition, another pair of parentheses usually surround
+the entire macro definition.  Here is why it is best to write macros
+that way.
+
+   Suppose you define a macro as follows,
+
+     #define ceil_div(x, y) (x + y - 1) / y
+
+whose purpose is to divide, rounding up.  (One use for this operation is
+to compute how many @{b}int@{ub} objects are needed to hold a certain number of
+@{b}char@{ub} objects.)  Then suppose it is used as follows:
+
+     a = ceil_div (b & c, sizeof (int));
+
+This expands into
+
+     a = (b & c + sizeof (int) - 1) / sizeof (int);
+
+which does not do what is intended.  The operator-precedence rules of C
+make it equivalent to this:
+
+     a = (b & (c + sizeof (int) - 1)) / sizeof (int);
+
+But what we want is this:
+
+     a = ((b & c) + sizeof (int) - 1)) / sizeof (int);
+
+Defining the macro as
+
+     #define ceil_div(x, y) ((x) + (y) - 1) / (y)
+
+provides the desired result.
+
+   Unintended grouping can result in another way.  Consider @{b}sizeof
+ceil_div(1, 2)@{ub}.  That has the appearance of a C expression that would
+compute the size of the type of @{b}ceil_div (1, 2)@{ub}, but in fact it means
+something very different.  Here is what it expands to:
+
+     sizeof ((1) + (2) - 1) / (2)
+
+This would take the size of an integer and divide it by two.  The
+precedence rules have put the division outside the @{b}sizeof@{ub} when it was
+intended to be inside.
+
+   Parentheses around the entire macro definition can prevent such
+problems.  Here, then, is the recommended way to define @{b}ceil_div@{ub}:
+
+     #define ceil_div(x, y) (((x) + (y) - 1) / (y))
+
+
+@endnode
+
+@node "Swallow Semicolon" "cpp.guide/Swallow Semicolon"
+@next "Side Effects"
+@prev "Macro Parentheses"
+@toc "Macro Pitfalls"
+
+Swallowing the Semicolon
+........................
+
+   Often it is desirable to define a macro that expands into a compound
+statement.  Consider, for example, the following macro, that advances a
+pointer (the argument @{b}p@{ub} says where to find it) across whitespace
+characters:
+
+     #define SKIP_SPACES (p, limit)  \\
+     { register char *lim = (limit); \\
+       while (p != lim) {            \\
+         if (*p++ != ' ') {          \\
+           p--; break; }}}
+
+Here Backslash-Newline is used to split the macro definition, which must
+be a single line, so that it resembles the way such C code would be
+laid out if not part of a macro definition.
+
+   A call to this macro might be @{b}SKIP_SPACES (p, lim)@{ub}.  Strictly
+speaking, the call expands to a compound statement, which is a complete
+statement with no need for a semicolon to end it.  But it looks like a
+function call.  So it minimizes confusion if you can use it like a
+function call, writing a semicolon afterward, as in @{b}SKIP_SPACES (p,
+lim);@{ub}
+
+   But this can cause trouble before @{b}else@{ub} statements, because the
+semicolon is actually a null statement.  Suppose you write
+
+     if (*p != 0)
+       SKIP_SPACES (p, lim);
+     else ...
+
+The presence of two statements--the compound statement and a null
+statement--in between the @{b}if@{ub} condition and the @{b}else@{ub} makes invalid C
+code.
+
+   The definition of the macro @{b}SKIP_SPACES@{ub} can be altered to solve this
+problem, using a @{b}do ... while@{ub} statement.  Here is how:
+
+     #define SKIP_SPACES (p, limit)     \\
+     do { register char *lim = (limit); \\
+          while (p != lim) {            \\
+            if (*p++ != ' ') {          \\
+              p--; break; }}}           \\
+     while (0)
+
+   Now @{b}SKIP_SPACES (p, lim);@{ub} expands into
+
+     do {...} while (0);
+
+which is one statement.
+
+
+@endnode
+
+@node "Side Effects" "cpp.guide/Side Effects"
+@next "Self-Reference"
+@prev "Swallow Semicolon"
+@toc "Macro Pitfalls"
+
+Duplication of Side Effects
+...........................
+
+   Many C programs define a macro @{b}min@{ub}, for "minimum", like this:
+
+     #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
+
+   When you use this macro with an argument containing a side effect,
+as shown here,
+
+     next = min (x + y, foo (z));
+
+it expands as follows:
+
+     next = ((x + y) < (foo (z)) ? (x + y) : (foo (z)));
+
+where @{b}x + y@{ub} has been substituted for @{b}X@{ub} and @{b}foo (z)@{ub} for @{b}Y@{ub}.
+
+   The function @{b}foo@{ub} is used only once in the statement as it appears in
+the program, but the expression @{b}foo (z)@{ub} has been substituted twice into
+the macro expansion.  As a result, @{b}foo@{ub} might be called two times when
+the statement is executed.  If it has side effects or if it takes a
+long time to compute, the results might not be what you intended.  We
+say that @{b}min@{ub} is an @{i}unsafe@{ui} macro.
+
+   The best solution to this problem is to define @{b}min@{ub} in a way that
+computes the value of @{b}foo (z)@{ub} only once.  The C language offers no
+standard way to do this, but it can be done with GNU C extensions as
+follows:
+
+     #define min(X, Y)                     \\
+     ({ typeof (X) __x = (X), __y = (Y);   \\
+        (__x < __y) ? __x : __y; })
+
+   If you do not wish to use GNU C extensions, the only solution is to
+be careful when @{i}using@{ui} the macro @{b}min@{ub}.  For example, you can calculate
+the value of @{b}foo (z)@{ub}, save it in a variable, and use that variable in
+@{b}min@{ub}:
+
+     #define min(X, Y)  ((X) < (Y) ? (X) : (Y))
+     ...
+     {
+       int tem = foo (z);
+       next = min (x + y, tem);
+     }
+
+(where we assume that @{b}foo@{ub} returns type @{b}int@{ub}).
+
+
+@endnode
+
+@node "Self-Reference" "cpp.guide/Self-Reference"
+@next "Argument Prescan"
+@prev "Side Effects"
+@toc "Macro Pitfalls"
+
+Self-Referential Macros
+.......................
+
+   A @{i}self-referential@{ui} macro is one whose name appears in its definition.
+A special feature of ANSI Standard C is that the self-reference is not
+considered a macro call.  It is passed into the preprocessor output
+unchanged.
+
+   Let's consider an example:
+
+     #define foo (4 + foo)
+
+where @{b}foo@{ub} is also a variable in your program.
+
+   Following the ordinary rules, each reference to @{b}foo@{ub} will expand into
+@{b}(4 + foo)@{ub}; then this will be rescanned and will expand into @{b}(4 + (4 +
+foo))@{ub}; and so on until it causes a fatal error (memory full) in the
+preprocessor.
+
+   However, the special rule about self-reference cuts this process
+short after one step, at @{b}(4 + foo)@{ub}.  Therefore, this macro definition
+has the possibly useful effect of causing the program to add 4 to the
+value of @{b}foo@{ub} wherever @{b}foo@{ub} is referred to.
+
+   In most cases, it is a bad idea to take advantage of this feature.  A
+person reading the program who sees that @{b}foo@{ub} is a variable will not
+expect that it is a macro as well.  The reader will come across the
+identifier @{b}foo@{ub} in the program and think its value should be that of the
+variable @{b}foo@{ub}, whereas in fact the value is four greater.
+
+   The special rule for self-reference applies also to @{i}indirect@{ui}
+self-reference.  This is the case where a macro X expands to use a
+macro @{b}y@{ub}, and the expansion of @{b}y@{ub} refers to the macro @{b}x@{ub}.  The resulting
+reference to @{b}x@{ub} comes indirectly from the expansion of @{b}x@{ub}, so it is a
+self-reference and is not further expanded.  Thus, after
+
+     #define x (4 + y)
+     #define y (2 * x)
+
+@{b}x@{ub} would expand into @{b}(4 + (2 * x))@{ub}.  Clear?
+
+   But suppose @{b}y@{ub} is used elsewhere, not from the definition of @{b}x@{ub}.  Then
+the use of @{b}x@{ub} in the expansion of @{b}y@{ub} is not a self-reference because @{b}x@{ub} is
+not "in progress".  So it does expand.  However, the expansion of @{b}x@{ub}
+contains a reference to @{b}y@{ub}, and that is an indirect self-reference now
+because @{b}y@{ub} is "in progress".  The result is that @{b}y@{ub} expands to @{b}(2 * (4 +
+y))@{ub}.
+
+   It is not clear that this behavior would ever be useful, but it is
+specified by the ANSI C standard, so you may need to understand it.
+
+
+@endnode
+
+@node "Argument Prescan" "cpp.guide/Argument Prescan"
+@next "Cascaded Macros"
+@prev "Self-Reference"
+@toc "Macro Pitfalls"
+
+Separate Expansion of Macro Arguments
+.....................................
+
+   We have explained that the expansion of a macro, including the
+substituted actual arguments, is scanned over again for macro calls to
+be expanded.
+
+   What really happens is more subtle: first each actual argument text
+is scanned separately for macro calls.  Then the results of this are
+substituted into the macro body to produce the macro expansion, and the
+macro expansion is scanned again for macros to expand.
+
+   The result is that the actual arguments are scanned @{i}twice@{ui} to expand
+macro calls in them.
+
+   Most of the time, this has no effect.  If the actual argument
+contained any macro calls, they are expanded during the first scan.
+The result therefore contains no macro calls, so the second scan does
+not change it.  If the actual argument were substituted as given, with
+no prescan, the single remaining scan would find the same macro calls
+and produce the same results.
+
+   You might expect the double scan to change the results when a
+self-referential macro is used in an actual argument of another macro
+(see @{"Self-Reference" link "Self-Reference"}): the self-referential macro would be expanded once
+in the first scan, and a second time in the second scan.  But this is
+not what happens.  The self-references that do not expand in the first
+scan are marked so that they will not expand in the second scan either.
+
+   The prescan is not done when an argument is stringified or
+concatenated.  Thus,
+
+     #define str(s) #s
+     #define foo 4
+     str (foo)
+
+expands to @{b}"foo"@{ub}.  Once more, prescan has been prevented from having
+any noticeable effect.
+
+   More precisely, stringification and concatenation use the argument as
+written, in un-prescanned form.  The same actual argument would be used
+in prescanned form if it is substituted elsewhere without
+stringification or concatenation.
+
+     #define str(s) #s lose(s)
+     #define foo 4
+     str (foo)
+
+   expands to @{b}"foo" lose(4)@{ub}.
+
+   You might now ask, "Why mention the prescan, if it makes no
+difference?  And why not skip it and make the preprocessor faster?"
+The answer is that the prescan does make a difference in three special
+cases:
+
+   * Nested calls to a macro.
+
+   * Macros that call other macros that stringify or concatenate.
+
+   * Macros whose expansions contain unshielded commas.
+
+   We say that @{i}nested@{ui} calls to a macro occur when a macro's actual
+argument contains a call to that very macro.  For example, if @{b}f@{ub} is a
+macro that expects one argument, @{b}f (f (1))@{ub} is a nested pair of calls to
+@{b}f@{ub}.  The desired expansion is made by expanding @{b}f (1)@{ub} and substituting
+that into the definition of @{b}f@{ub}.  The prescan causes the expected result
+to happen.  Without the prescan, @{b}f (1)@{ub} itself would be substituted as
+an actual argument, and the inner use of @{b}f@{ub} would appear during the main
+scan as an indirect self-reference and would not be expanded.  Here,
+the prescan cancels an undesirable side effect (in the medical, not
+computational, sense of the term) of the special rule for
+self-referential macros.
+
+   But prescan causes trouble in certain other cases of nested macro
+calls.  Here is an example:
+
+     #define foo  a,b
+     #define bar(x) lose(x)
+     #define lose(x) (1 + (x))
+     
+     bar(foo)
+
+We would like @{b}bar(foo)@{ub} to turn into @{b}(1 + (foo))@{ub}, which would then turn
+into @{b}(1 + (a,b))@{ub}.  But instead, @{b}bar(foo)@{ub} expands into @{b}lose(a,b)@{ub}, and
+you get an error because @{b}lose@{ub} requires a single argument.  In this
+case, the problem is easily solved by the same parentheses that ought
+to be used to prevent misnesting of arithmetic operations:
+
+     #define foo (a,b)
+     #define bar(x) lose((x))
+
+   The problem is more serious when the operands of the macro are not
+expressions; for example, when they are statements.  Then parentheses
+are unacceptable because they would make for invalid C code:
+
+     #define foo { int a, b; ... }
+
+In GNU C you can shield the commas using the @{b}({...})@{ub} construct which
+turns a compound statement into an expression:
+
+     #define foo ({ int a, b; ... })
+
+   Or you can rewrite the macro definition to avoid such commas:
+
+     #define foo { int a; int b; ... }
+
+   There is also one case where prescan is useful.  It is possible to
+use prescan to expand an argument and then stringify it--if you use two
+levels of macros.  Let's add a new macro @{b}xstr@{ub} to the example shown
+above:
+
+     #define xstr(s) str(s)
+     #define str(s) #s
+     #define foo 4
+     xstr (foo)
+
+   This expands into @{b}"4"@{ub}, not @{b}"foo"@{ub}.  The reason for the difference is
+that the argument of @{b}xstr@{ub} is expanded at prescan (because @{b}xstr@{ub} does not
+specify stringification or concatenation of the argument).  The result
+of prescan then forms the actual argument for @{b}str@{ub}.  @{b}str@{ub} uses its
+argument without prescan because it performs stringification; but it
+cannot prevent or undo the prescanning already done by @{b}xstr@{ub}.
+
+
+@endnode
+
+@node "Cascaded Macros" "cpp.guide/Cascaded Macros"
+@next "Newlines in Args"
+@prev "Argument Prescan"
+@toc "Macro Pitfalls"
+
+Cascaded Use of Macros
+......................
+
+   A @{i}cascade@{ui} of macros is when one macro's body contains a reference to
+another macro.  This is very common practice.  For example,
+
+     #define BUFSIZE 1020
+     #define TABLESIZE BUFSIZE
+
+   This is not at all the same as defining @{b}TABLESIZE@{ub} to be @{b}1020@{ub}.  The
+@{b}#define@{ub} for @{b}TABLESIZE@{ub} uses exactly the body you specify--in this case,
+@{b}BUFSIZE@{ub}--and does not check to see whether it too is the name of a
+macro.
+
+   It's only when you @{i}use@{ui} @{b}TABLESIZE@{ub} that the result of its expansion is
+checked for more macro names.
+
+   This makes a difference if you change the definition of @{b}BUFSIZE@{ub} at
+some point in the source file.  @{b}TABLESIZE@{ub}, defined as shown, will
+always expand using the definition of @{b}BUFSIZE@{ub} that is currently in
+effect:
+
+     #define BUFSIZE 1020
+     #define TABLESIZE BUFSIZE
+     #undef BUFSIZE
+     #define BUFSIZE 37
+
+Now @{b}TABLESIZE@{ub} expands (in two stages) to @{b}37@{ub}.  (The @{b}#undef@{ub} is to prevent
+any warning about the nontrivial redefinition of @{b}BUFSIZE@{ub}.)
+
+
+@endnode
+
+@node "Newlines in Args" "cpp.guide/Newlines in Args"
+@prev "Cascaded Macros"
+@toc "Macro Pitfalls"
+
+Newlines in Macro Arguments
+---------------------------
+
+   Traditional macro processing carries forward all newlines in macro
+arguments into the expansion of the macro.  This means that, if some of
+the arguments are substituted more than once, or not at all, or out of
+order, newlines can be duplicated, lost, or moved around within the
+expansion.  If the expansion consists of multiple statements, then the
+effect is to distort the line numbers of some of these statements.  The
+result can be incorrect line numbers, in error messages or displayed in
+a debugger.
+
+   The GNU C preprocessor operating in ANSI C mode adjusts appropriately
+for multiple use of an argument--the first use expands all the
+newlines, and subsequent uses of the same argument produce no newlines.
+But even in this mode, it can produce incorrect line numbering if
+arguments are used out of order, or not used at all.
+
+   Here is an example illustrating this problem:
+
+     #define ignore_second_arg(a,b,c) a; c
+     
+     ignore_second_arg (foo (),
+                        ignored (),
+                        syntax error);
+
+The syntax error triggered by the tokens @{b}syntax error@{ub} results in an
+error message citing line four, even though the statement text comes
+from line five.
+
+
+@endnode
+
+@node "Conditionals" "cpp.guide/Conditionals"
+@next "Combining Sources"
+@prev "Macros"
+@toc "Main"
+
+Conditionals
+============
+
+   In a macro processor, a @{i}conditional@{ui} is a directive that allows a part
+of the program to be ignored during compilation, on some conditions.
+In the C preprocessor, a conditional can test either an arithmetic
+expression or whether a name is defined as a macro.
+
+   A conditional in the C preprocessor resembles in some ways an @{b}if@{ub}
+statement in C, but it is important to understand the difference between
+them.  The condition in an @{b}if@{ub} statement is tested during the execution
+of your program.  Its purpose is to allow your program to behave
+differently from run to run, depending on the data it is operating on.
+The condition in a preprocessing conditional directive is tested when
+your program is compiled.  Its purpose is to allow different code to be
+included in the program depending on the situation at the time of
+compilation.
+
+
+ @{" Uses                       " link "Conditional Uses"}  What conditionals are for.
+ @{" Syntax                     " link "Conditional Syntax"}  How conditionals are written.
+ @{" Deletion                   " link "Deleted Code"}  Making code into a comment.
+ @{" Macros                     " link "Conditionals-Macros"}  Why conditionals are used with macros.
+ @{" Assertions                 " link "Assertions"}  How and why to use assertions.
+ @{" Errors                     " link "#error Directive"}  Detecting inconsistent compilation parameters.
+
+
+@endnode
+
+@node "Conditional Uses" "cpp.guide/Conditional Uses"
+@next "Conditional Syntax"
+@toc "Conditionals"
+
+Why Conditionals are Used
+-------------------------
+
+   Generally there are three kinds of reason to use a conditional.
+
+   * A program may need to use different code depending on the machine
+     or operating system it is to run on.  In some cases the code for
+     one operating system may be erroneous on another operating system;
+     for example, it might refer to library routines that do not exist
+     on the other system.  When this happens, it is not enough to avoid
+     executing the invalid code: merely having it in the program makes
+     it impossible to link the program and run it.  With a
+     preprocessing conditional, the offending code can be effectively
+     excised from the program when it is not valid.
+
+   * You may want to be able to compile the same source file into two
+     different programs.  Sometimes the difference between the programs
+     is that one makes frequent time-consuming consistency checks on its
+     intermediate data, or prints the values of those data for
+     debugging, while the other does not.
+
+   * A conditional whose condition is always false is a good way to
+     exclude code from the program but keep it as a sort of comment for
+     future reference.
+
+   Most simple programs that are intended to run on only one machine
+will not need to use preprocessing conditionals.
+
+
+@endnode
+
+@node "Conditional Syntax" "cpp.guide/Conditional Syntax"
+@next "Deleted Code"
+@prev "Conditional Uses"
+@toc "Conditionals"
+
+Syntax of Conditionals
+----------------------
+
+   A conditional in the C preprocessor begins with a @{i}conditional
+directive@{ui}: @{b}#if@{ub}, @{b}#ifdef@{ub} or @{b}#ifndef@{ub}.  See @{"Conditionals-Macros" link "Conditionals-Macros"}, for
+information on @{b}#ifdef@{ub} and @{b}#ifndef@{ub}; only @{b}#if@{ub} is explained here.
+
+
+ @{" If                  " link "#if Directive"}  Basic conditionals using @{b}#if@{ub} and @{b}#endif@{ub}.
+ @{" Else                " link "#else Directive"}  Including some text if the condition fails.
+ @{" Elif                " link "#elif Directive"}  Testing several alternative possibilities.
+
+
+@endnode
+
+@node "#if Directive" "cpp.guide/#if Directive"
+@next "#else Directive"
+@toc "Conditional Syntax"
+
+The @{b}#if@{ub} Directive
+.................
+
+   The @{b}#if@{ub} directive in its simplest form consists of
+
+     #if EXPRESSION
+     CONTROLLED TEXT
+     #endif /* EXPRESSION */
+
+   The comment following the @{b}#endif@{ub} is not required, but it is a good
+practice because it helps people match the @{b}#endif@{ub} to the corresponding
+@{b}#if@{ub}.  Such comments should always be used, except in short conditionals
+that are not nested.  In fact, you can put anything at all after the
+@{b}#endif@{ub} and it will be ignored by the GNU C preprocessor, but only
+comments are acceptable in ANSI Standard C.
+
+   EXPRESSION is a C expression of integer type, subject to stringent
+restrictions.  It may contain
+
+   * Integer constants, which are all regarded as @{b}long@{ub} or @{b}unsigned long@{ub}.
+
+   * Character constants, which are interpreted according to the
+     character set and conventions of the machine and operating system
+     on which the preprocessor is running.  The GNU C preprocessor uses
+     the C data type @{b}char@{ub} for these character constants; therefore,
+     whether some character codes are negative is determined by the C
+     compiler used to compile the preprocessor.  If it treats @{b}char@{ub} as
+     signed, then character codes large enough to set the sign bit will
+     be considered negative; otherwise, no character code is considered
+     negative.
+
+   * Arithmetic operators for addition, subtraction, multiplication,
+     division, bitwise operations, shifts, comparisons, and logical
+     operations (@{b}&&@{ub} and @{b}||@{ub}).
+
+   * Identifiers that are not macros, which are all treated as zero(!).
+
+   * Macro calls.  All macro calls in the expression are expanded before
+     actual computation of the expression's value begins.
+
+   Note that @{b}sizeof@{ub} operators and @{b}enum@{ub}-type values are not allowed.
+@{b}enum@{ub}-type values, like all other identifiers that are not taken as
+macro calls and expanded, are treated as zero.
+
+   The CONTROLLED TEXT inside of a conditional can include
+preprocessing directives.  Then the directives inside the conditional
+are obeyed only if that branch of the conditional succeeds.  The text
+can also contain other conditional groups.  However, the @{b}#if@{ub} and @{b}#endif@{ub}
+directives must balance.
+
+
+@endnode
+
+@node "#else Directive" "cpp.guide/#else Directive"
+@next "#elif Directive"
+@prev "#if Directive"
+@toc "Conditional Syntax"
+
+The @{b}#else@{ub} Directive
+...................
+
+   The @{b}#else@{ub} directive can be added to a conditional to provide
+alternative text to be used if the condition is false.  This is what it
+looks like:
+
+     #if EXPRESSION
+     TEXT-IF-TRUE
+     #else /* Not EXPRESSION */
+     TEXT-IF-FALSE
+     #endif /* Not EXPRESSION */
+
+   If EXPRESSION is nonzero, and thus the TEXT-IF-TRUE is active, then
+@{b}#else@{ub} acts like a failing conditional and the TEXT-IF-FALSE is ignored.
+Contrariwise, if the @{b}#if@{ub} conditional fails, the TEXT-IF-FALSE is
+considered included.
+
+
+@endnode
+
+@node "#elif Directive" "cpp.guide/#elif Directive"
+@prev "#else Directive"
+@toc "Conditional Syntax"
+
+The @{b}#elif@{ub} Directive
+...................
+
+   One common case of nested conditionals is used to check for more
+than two possible alternatives.  For example, you might have
+
+     #if X == 1
+     ...
+     #else /* X != 1 */
+     #if X == 2
+     ...
+     #else /* X != 2 */
+     ...
+     #endif /* X != 2 */
+     #endif /* X != 1 */
+
+   Another conditional directive, @{b}#elif@{ub}, allows this to be abbreviated
+as follows:
+
+     #if X == 1
+     ...
+     #elif X == 2
+     ...
+     #else /* X != 2 and X != 1*/
+     ...
+     #endif /* X != 2 and X != 1*/
+
+@{b}   #elif@{ub} stands for "else if".  Like @{b}#else@{ub}, it goes in the middle of a
+@{b}#if@{ub}-@{b}#endif@{ub} pair and subdivides it; it does not require a matching
+@{b}#endif@{ub} of its own.  Like @{b}#if@{ub}, the @{b}#elif@{ub} directive includes an
+expression to be tested.
+
+   The text following the @{b}#elif@{ub} is processed only if the original
+@{b}#if@{ub}-condition failed and the @{b}#elif@{ub} condition succeeds.  More than one
+@{b}#elif@{ub} can go in the same @{b}#if@{ub}-@{b}#endif@{ub} group.  Then the text after each
+@{b}#elif@{ub} is processed only if the @{b}#elif@{ub} condition succeeds after the
+original @{b}#if@{ub} and any previous @{b}#elif@{ub} directives within it have failed.
+@{b}#else@{ub} is equivalent to @{b}#elif 1@{ub}, and @{b}#else@{ub} is allowed after any number
+of @{b}#elif@{ub} directives, but @{b}#elif@{ub} may not follow @{b}#else@{ub}.
+
+
+@endnode
+
+@node "Deleted Code" "cpp.guide/Deleted Code"
+@next "Conditionals-Macros"
+@prev "Conditional Syntax"
+@toc "Conditionals"
+
+Keeping Deleted Code for Future Reference
+-----------------------------------------
+
+   If you replace or delete a part of the program but want to keep the
+old code around as a comment for future reference, the easy way to do
+this is to put @{b}#if 0@{ub} before it and @{b}#endif@{ub} after it.  This is better
+than using comment delimiters @{b}/*@{ub} and @{b}*/@{ub} since those won't work if the
+code already contains comments (C comments do not nest).
+
+   This works even if the code being turned off contains conditionals,
+but they must be entire conditionals (balanced @{b}#if@{ub} and @{b}#endif@{ub}).
+
+   Conversely, do not use @{b}#if 0@{ub} for comments which are not C code.  Use
+the comment delimiters @{b}/*@{ub} and @{b}*/@{ub} instead.  The interior of @{b}#if 0@{ub} must
+consist of complete tokens; in particular, singlequote characters must
+balance.  But comments often contain unbalanced singlequote characters
+(known in English as apostrophes).  These confuse @{b}#if 0@{ub}.  They do not
+confuse @{b}/*@{ub}.
+
+
+@endnode
+
+@node "Conditionals-Macros" "cpp.guide/Conditionals-Macros"
+@next "Assertions"
+@prev "Deleted Code"
+@toc "Conditionals"
+
+Conditionals and Macros
+-----------------------
+
+   Conditionals are useful in connection with macros or assertions,
+because those are the only ways that an expression's value can vary
+from one compilation to another.  A @{b}#if@{ub} directive whose expression uses
+no macros or assertions is equivalent to @{b}#if 1@{ub} or @{b}#if 0@{ub}; you might as
+well determine which one, by computing the value of the expression
+yourself, and then simplify the program.
+
+   For example, here is a conditional that tests the expression @{b}BUFSIZE
+== 1020@{ub}, where @{b}BUFSIZE@{ub} must be a macro.
+
+     #if BUFSIZE == 1020
+       printf ("Large buffers!\\n");
+     #endif /* BUFSIZE is large */
+
+   (Programmers often wish they could test the size of a variable or
+data type in @{b}#if@{ub}, but this does not work.  The preprocessor does not
+understand @{b}sizeof@{ub}, or typedef names, or even the type keywords such as
+@{b}int@{ub}.)
+
+   The special operator @{b}defined@{ub} is used in @{b}#if@{ub} expressions to test
+whether a certain name is defined as a macro.  Either @{b}defined NAME@{ub} or
+@{b}defined (NAME)@{ub} is an expression whose value is 1 if NAME is defined as
+macro at the current point in the program, and 0 otherwise.  For the
+@{b}defined@{ub} operator it makes no difference what the definition of the
+macro is; all that matters is whether there is a definition.  Thus, for
+example,
+
+     #if defined (vax) || defined (ns16000)
+
+would succeed if either of the names @{b}vax@{ub} and @{b}ns16000@{ub} is defined as a
+macro.  You can test the same condition using assertions (see
+@{"Assertions" link "Assertions"}), like this:
+
+     #if #cpu (vax) || #cpu (ns16000)
+
+   If a macro is defined and later undefined with @{b}#undef@{ub}, subsequent
+use of the @{b}defined@{ub} operator returns 0, because the name is no longer
+defined.  If the macro is defined again with another @{b}#define@{ub}, @{b}defined@{ub}
+will recommence returning 1.
+
+   Conditionals that test whether just one name is defined are very
+common, so there are two special short conditional directives for this
+case.
+
+@{b}#ifdef NAME@{ub}
+     is equivalent to @{b}#if defined (NAME)@{ub}.
+
+@{b}#ifndef NAME@{ub}
+     is equivalent to @{b}#if ! defined (NAME)@{ub}.
+
+   Macro definitions can vary between compilations for several reasons.
+
+   * Some macros are predefined on each kind of machine.  For example,
+     on a Vax, the name @{b}vax@{ub} is a predefined macro.  On other machines,
+     it would not be defined.
+
+   * Many more macros are defined by system header files.  Different
+     systems and machines define different macros, or give them
+     different values.  It is useful to test these macros with
+     conditionals to avoid using a system feature on a machine where it
+     is not implemented.
+
+   * Macros are a common way of allowing users to customize a program
+     for different machines or applications.  For example, the macro
+     @{b}BUFSIZE@{ub} might be defined in a configuration file for your program
+     that is included as a header file in each source file.  You would
+     use @{b}BUFSIZE@{ub} in a preprocessing conditional in order to generate
+     different code depending on the chosen configuration.
+
+   * Macros can be defined or undefined with @{b}-D@{ub} and @{b}-U@{ub} command options
+     when you compile the program.  You can arrange to compile the same
+     source file into two different programs by choosing a macro name
+     to specify which program you want, writing conditionals to test
+     whether or how this macro is defined, and then controlling the
+     state of the macro with compiler command options.  See @{"Invocation" link "Invocation"}.
+
+   Assertions are usually predefined, but can be defined with
+preprocessor directives or command-line options.
+
+
+@endnode
+
+@node "Assertions" "cpp.guide/Assertions"
+@next "#error Directive"
+@prev "Conditionals-Macros"
+@toc "Conditionals"
+
+Assertions
+----------
+
+@{i}   Assertions@{ui} are a more systematic alternative to macros in writing
+conditionals to test what sort of computer or system the compiled
+program will run on.  Assertions are usually predefined, but you can
+define them with preprocessing directives or command-line options.
+
+   The macros traditionally used to describe the type of target are not
+classified in any way according to which question they answer; they may
+indicate a hardware architecture, a particular hardware model, an
+operating system, a particular version of an operating system, or
+specific configuration options.  These are jumbled together in a single
+namespace.  In contrast, each assertion consists of a named question and
+an answer.  The question is usually called the @{i}predicate@{ui}.  An assertion
+looks like this:
+
+     #PREDICATE (ANSWER)
+
+You must use a properly formed identifier for PREDICATE.  The value of
+ANSWER can be any sequence of words; all characters are significant
+except for leading and trailing whitespace, and differences in internal
+whitespace sequences are ignored.  Thus, @{b}x + y@{ub} is different from @{b}x+y@{ub}
+but equivalent to @{b}x + y@{ub}.  @{b})@{ub} is not allowed in an answer.
+
+   Here is a conditional to test whether the answer ANSWER is asserted
+for the predicate PREDICATE:
+
+     #if #PREDICATE (ANSWER)
+
+There may be more than one answer asserted for a given predicate.  If
+you omit the answer, you can test whether @{i}any@{ui} answer is asserted for
+PREDICATE:
+
+     #if #PREDICATE
+
+   Most of the time, the assertions you test will be predefined
+assertions.  GNU C provides three predefined predicates: @{b}system@{ub}, @{b}cpu@{ub},
+and @{b}machine@{ub}.  @{b}system@{ub} is for assertions about the type of software, @{b}cpu@{ub}
+describes the type of computer architecture, and @{b}machine@{ub} gives more
+information about the computer.  For example, on a GNU system, the
+following assertions would be true:
+
+     #system (gnu)
+     #system (mach)
+     #system (mach 3)
+     #system (mach 3.SUBVERSION)
+     #system (hurd)
+     #system (hurd VERSION)
+
+and perhaps others.  The alternatives with more or less version
+information let you ask more or less detailed questions about the type
+of system software.
+
+   On a Unix system, you would find @{b}#system (unix)@{ub} and perhaps one of:
+@{b}#system (aix)@{ub}, @{b}#system (bsd)@{ub}, @{b}#system (hpux)@{ub}, @{b}#system (lynx)@{ub}, @{b}#system
+(mach)@{ub}, @{b}#system (posix)@{ub}, @{b}#system (svr3)@{ub}, @{b}#system (svr4)@{ub}, or @{b}#system
+(xpg4)@{ub} with possible version numbers following.
+
+   Other values for @{b}system@{ub} are @{b}#system (mvs)@{ub} and @{b}#system (vms)@{ub}.
+
+@{b}   Portability note:@{ub} Many Unix C compilers provide only one answer for
+the @{b}system@{ub} assertion: @{b}#system (unix)@{ub}, if they support assertions at
+all.  This is less than useful.
+
+   An assertion with a multi-word answer is completely different from
+several assertions with individual single-word answers.  For example,
+the presence of @{b}system (mach 3.0)@{ub} does not mean that @{b}system (3.0)@{ub} is
+true.  It also does not directly imply @{b}system (mach)@{ub}, but in GNU C, that
+last will normally be asserted as well.
+
+   The current list of possible assertion values for @{b}cpu@{ub} is: @{b}#cpu
+(a29k)@{ub}, @{b}#cpu (alpha)@{ub}, @{b}#cpu (arm)@{ub}, @{b}#cpu (clipper)@{ub}, @{b}#cpu (convex)@{ub}, @{b}#cpu
+(elxsi)@{ub}, @{b}#cpu (tron)@{ub}, @{b}#cpu (h8300)@{ub}, @{b}#cpu (i370)@{ub}, @{b}#cpu (i386)@{ub}, @{b}#cpu
+(i860)@{ub}, @{b}#cpu (i960)@{ub}, @{b}#cpu (m68k)@{ub}, @{b}#cpu (m88k)@{ub}, @{b}#cpu (mips)@{ub}, @{b}#cpu
+(ns32k)@{ub}, @{b}#cpu (hppa)@{ub}, @{b}#cpu (pyr)@{ub}, @{b}#cpu (ibm032)@{ub}, @{b}#cpu (rs6000)@{ub}, @{b}#cpu
+(sh)@{ub}, @{b}#cpu (sparc)@{ub}, @{b}#cpu (spur)@{ub}, @{b}#cpu (tahoe)@{ub}, @{b}#cpu (vax)@{ub}, @{b}#cpu
+(we32000)@{ub}.
+
+   You can create assertions within a C program using @{b}#assert@{ub}, like
+this:
+
+     #assert PREDICATE (ANSWER)
+
+(Note the absence of a @{b}#@{ub} before PREDICATE.)
+
+   Each time you do this, you assert a new true answer for PREDICATE.
+Asserting one answer does not invalidate previously asserted answers;
+they all remain true.  The only way to remove an assertion is with
+@{b}#unassert@{ub}.  @{b}#unassert@{ub} has the same syntax as @{b}#assert@{ub}.  You can also
+remove all assertions about PREDICATE like this:
+
+     #unassert PREDICATE
+
+   You can also add or cancel assertions using command options when you
+run @{b}gcc@{ub} or @{b}cpp@{ub}.  See @{"Invocation" link "Invocation"}.
+
+
+@endnode
+
+@node "#error Directive" "cpp.guide/#error Directive"
+@prev "Assertions"
+@toc "Conditionals"
+
+The @{b}#error@{ub} and @{b}#warning@{ub} Directives
+----------------------------------
+
+   The directive @{b}#error@{ub} causes the preprocessor to report a fatal
+error.  The rest of the line that follows @{b}#error@{ub} is used as the error
+message.  The line must consist of complete tokens.
+
+   You would use @{b}#error@{ub} inside of a conditional that detects a
+combination of parameters which you know the program does not properly
+support.  For example, if you know that the program will not run
+properly on a Vax, you might write
+
+     #ifdef __vax__
+     #error "Won't work on Vaxen.  See comments at get_last_object."
+     #endif
+
+See @{"Nonstandard Predefined" link "Nonstandard Predefined"}, for why this works.
+
+   If you have several configuration parameters that must be set up by
+the installation in a consistent way, you can use conditionals to detect
+an inconsistency and report it with @{b}#error@{ub}.  For example,
+
+     #if HASH_TABLE_SIZE % 2 == 0 || HASH_TABLE_SIZE % 3 == 0 \\
+         || HASH_TABLE_SIZE % 5 == 0
+     #error HASH_TABLE_SIZE should not be divisible by a small prime
+     #endif
+
+   The directive @{b}#warning@{ub} is like the directive @{b}#error@{ub}, but causes the
+preprocessor to issue a warning and continue preprocessing.  The rest of
+the line that follows @{b}#warning@{ub} is used as the warning message.
+
+   You might use @{b}#warning@{ub} in obsolete header files, with a message
+directing the user to the header file which should be used instead.
+
+
+@endnode
+
+@node "Combining Sources" "cpp.guide/Combining Sources"
+@next "Other Directives"
+@prev "Conditionals"
+@toc "Main"
+
+Combining Source Files
+======================
+
+   One of the jobs of the C preprocessor is to inform the C compiler of
+where each line of C code came from: which source file and which line
+number.
+
+   C code can come from multiple source files if you use @{b}#include@{ub}; both
+@{b}#include@{ub} and the use of conditionals and macros can cause the line
+number of a line in the preprocessor output to be different from the
+line's number in the original source file.  You will appreciate the
+value of making both the C compiler (in error messages) and symbolic
+debuggers such as GDB use the line numbers in your source file.
+
+   The C preprocessor builds on this feature by offering a directive by
+which you can control the feature explicitly.  This is useful when a
+file for input to the C preprocessor is the output from another program
+such as the @{b}bison@{ub} parser generator, which operates on another file that
+is the true source file.  Parts of the output from @{b}bison@{ub} are generated
+from scratch, other parts come from a standard parser file.  The rest
+are copied nearly verbatim from the source file, but their line numbers
+in the @{b}bison@{ub} output are not the same as their original line numbers.
+Naturally you would like compiler error messages and symbolic debuggers
+to know the original source file and line number of each line in the
+@{b}bison@{ub} input.
+
+@{b}   bison@{ub} arranges this by writing @{b}#line@{ub} directives into the output
+file.  @{b}#line@{ub} is a directive that specifies the original line number and
+source file name for subsequent input in the current preprocessor input
+file.  @{b}#line@{ub} has three variants:
+
+@{b}#line LINENUM@{ub}
+     Here LINENUM is a decimal integer constant.  This specifies that
+     the line number of the following line of input, in its original
+     source file, was LINENUM.
+
+@{b}#line LINENUM FILENAME@{ub}
+     Here LINENUM is a decimal integer constant and FILENAME is a
+     string constant.  This specifies that the following line of input
+     came originally from source file FILENAME and its line number there
+     was LINENUM.  Keep in mind that FILENAME is not just a file name;
+     it is surrounded by doublequote characters so that it looks like a
+     string constant.
+
+@{b}#line ANYTHING ELSE@{ub}
+     ANYTHING ELSE is checked for macro calls, which are expanded.  The
+     result should be a decimal integer constant followed optionally by
+     a string constant, as described above.
+
+@{b}   #line@{ub} directives alter the results of the @{b}__FILE__@{ub} and @{b}__LINE__@{ub}
+predefined macros from that point on.  See @{"Standard Predefined" link "Standard Predefined"}.
+
+   The output of the preprocessor (which is the input for the rest of
+the compiler) contains directives that look much like @{b}#line@{ub} directives.
+They start with just @{b}#@{ub} instead of @{b}#line@{ub}, but this is followed by a line
+number and file name as in @{b}#line@{ub}.  See @{"Output" link "Output"}.
+
+
+@endnode
+
+@node "Other Directives" "cpp.guide/Other Directives"
+@next "Output"
+@prev "Combining Sources"
+@toc "Main"
+
+Miscellaneous Preprocessing Directives
+======================================
+
+   This section describes three additional preprocessing directives.
+They are not very useful, but are mentioned for completeness.
+
+   The @{i}null directive@{ui} consists of a @{b}#@{ub} followed by a Newline, with only
+whitespace (including comments) in between.  A null directive is
+understood as a preprocessing directive but has no effect on the
+preprocessor output.  The primary significance of the existence of the
+null directive is that an input line consisting of just a @{b}#@{ub} will
+produce no output, rather than a line of output containing just a @{b}#@{ub}.
+Supposedly some old C programs contain such lines.
+
+   The ANSI standard specifies that the effect of the @{b}#pragma@{ub} directive
+is implementation-defined.  In the GNU C preprocessor, @{b}#pragma@{ub}
+directives are not used, except for @{b}#pragma once@{ub} (see @{"Once-Only" link "Once-Only"}).
+However, they are left in the preprocessor output, so they are
+available to the compilation pass.
+
+   The @{b}#ident@{ub} directive is supported for compatibility with certain
+other systems.  It is followed by a line of text.  On some systems, the
+text is copied into a special place in the object file; on most systems,
+the text is ignored and this directive has no effect.  Typically @{b}#ident@{ub}
+is only used in header files supplied with those systems where it is
+meaningful.
+
+
+@endnode
+
+@node "Output" "cpp.guide/Output"
+@next "Invocation"
+@prev "Other Directives"
+@toc "Main"
+
+C Preprocessor Output
+=====================
+
+   The output from the C preprocessor looks much like the input, except
+that all preprocessing directive lines have been replaced with blank
+lines and all comments with spaces.  Whitespace within a line is not
+altered; however, unless @{b}-traditional@{ub} is used, spaces may be inserted
+into the expansions of macro calls to prevent tokens from being
+concatenated.
+
+   Source file name and line number information is conveyed by lines of
+the form
+
+     # LINENUM FILENAME FLAGS
+
+which are inserted as needed into the middle of the input (but never
+within a string or character constant).  Such a line means that the
+following line originated in file FILENAME at line LINENUM.
+
+   After the file name comes zero or more flags, which are @{b}1@{ub}, @{b}2@{ub}, @{b}3@{ub}, or
+@{b}4@{ub}.  If there are multiple flags, spaces separate them.  Here is what
+the flags mean:
+
+@{b}1@{ub}
+     This indicates the start of a new file.
+
+@{b}2@{ub}
+     This indicates returning to a file (after having included another
+     file).
+
+@{b}3@{ub}
+     This indicates that the following text comes from a system header
+     file, so certain warnings should be suppressed.
+
+@{b}4@{ub}
+     This indicates that the following text should be treated as C.
+
+
+@endnode
+
+@node "Invocation" "cpp.guide/Invocation"
+@next "Concept Index"
+@prev "Output"
+@toc "Main"
+
+Invoking the C Preprocessor
+===========================
+
+   Most often when you use the C preprocessor you will not have to
+invoke it explicitly: the C compiler will do so automatically.
+However, the preprocessor is sometimes useful on its own.
+
+   The C preprocessor expects two file names as arguments, INFILE and
+OUTFILE.  The preprocessor reads INFILE together with any other files
+it specifies with @{b}#include@{ub}.  All the output generated by the combined
+input files is written in OUTFILE.
+
+   Either INFILE or OUTFILE may be @{b}-@{ub}, which as INFILE means to read
+from standard input and as OUTFILE means to write to standard output.
+Also, if OUTFILE or both file names are omitted, the standard output
+and standard input are used for the omitted file names.
+
+   Here is a table of command options accepted by the C preprocessor.
+These options can also be given when compiling a C program; they are
+passed along automatically to the preprocessor when it is invoked by the
+compiler.
+
+@{b}-P@{ub}
+     Inhibit generation of @{b}#@{ub}-lines with line-number information in the
+     output from the preprocessor (see @{"Output" link "Output"}).  This might be useful
+     when running the preprocessor on something that is not C code and
+     will be sent to a program which might be confused by the @{b}#@{ub}-lines.
+
+@{b}-C@{ub}
+     Do not discard comments: pass them through to the output file.
+     Comments appearing in arguments of a macro call will be copied to
+     the output before the expansion of the macro call.
+
+@{b}-traditional@{ub}
+     Try to imitate the behavior of old-fashioned C, as opposed to ANSI
+     C.
+
+        * Traditional macro expansion pays no attention to singlequote
+          or doublequote characters; macro argument symbols are
+          replaced by the argument values even when they appear within
+          apparent string or character constants.
+
+        * Traditionally, it is permissible for a macro expansion to end
+          in the middle of a string or character constant.  The
+          constant continues into the text surrounding the macro call.
+
+        * However, traditionally the end of the line terminates a
+          string or character constant, with no error.
+
+        * In traditional C, a comment is equivalent to no text at all.
+          (In ANSI C, a comment counts as whitespace.)
+
+        * Traditional C does not have the concept of a "preprocessing
+          number".  It considers @{b}1.0e+4@{ub} to be three tokens: @{b}1.0e@{ub}, @{b}+@{ub},
+          and @{b}4@{ub}.
+
+        * A macro is not suppressed within its own definition, in
+          traditional C.  Thus, any macro that is used recursively
+          inevitably causes an error.
+
+        * The character @{b}#@{ub} has no special meaning within a macro
+          definition in traditional C.
+
+        * In traditional C, the text at the end of a macro expansion
+          can run together with the text after the macro call, to
+          produce a single token.  (This is impossible in ANSI C.)
+
+        * Traditionally, @{b}\\ @{ub} inside a macro argument suppresses the
+          syntactic significance of the following character.
+
+@{b}-trigraphs@{ub}
+     Process ANSI standard trigraph sequences.  These are
+     three-character sequences, all starting with @{b}??@{ub}, that are defined
+     by ANSI C to stand for single characters.  For example, @{b}??/@{ub} stands
+     for @{b}\\ @{ub}, so @{b}'??/n'@{ub} is a character constant for a newline.
+     Strictly speaking, the GNU C preprocessor does not support all
+     programs in ANSI Standard C unless @{b}-trigraphs@{ub} is used, but if you
+     ever notice the difference it will be with relief.
+
+     You don't want to know any more about trigraphs.
+
+@{b}-pedantic@{ub}
+     Issue warnings required by the ANSI C standard in certain cases
+     such as when text other than a comment follows @{b}#else@{ub} or @{b}#endif@{ub}.
+
+@{b}-pedantic-errors@{ub}
+     Like @{b}-pedantic@{ub}, except that errors are produced rather than
+     warnings.
+
+@{b}-Wtrigraphs@{ub}
+     Warn if any trigraphs are encountered (assuming they are enabled).
+
+@{b}-Wcomment@{ub}
+     Warn whenever a comment-start sequence @{b}/*@{ub} appears in a @{b}/*@{ub} comment,
+     or whenever a Backslash-Newline appears in a @{b}//@{ub} comment.
+
+@{b}-Wall@{ub}
+     Requests both @{b}-Wtrigraphs@{ub} and @{b}-Wcomment@{ub} (but not @{b}-Wtraditional@{ub} or
+     @{b}-Wundef@{ub}).
+
+@{b}-Wtraditional@{ub}
+     Warn about certain constructs that behave differently in
+     traditional and ANSI C.
+
+@{b}-Wundef@{ub}
+     Warn if an undefined identifier is evaluated in an @{b}#if@{ub} directive.
+
+@{b}-I DIRECTORY@{ub}
+     Add the directory DIRECTORY to the head of the list of directories
+     to be searched for header files (see @{"Include Syntax" link "Include Syntax"}).  This can
+     be used to override a system header file, substituting your own
+     version, since these directories are searched before the system
+     header file directories.  If you use more than one @{b}-I@{ub} option, the
+     directories are scanned in left-to-right order; the standard
+     system directories come after.
+
+@{b}-I-@{ub}
+     Any directories specified with @{b}-I@{ub} options before the @{b}-I-@{ub} option
+     are searched only for the case of @{b}#include "FILE"@{ub}; they are not
+     searched for @{b}#include <FILE>@{ub}.
+
+     If additional directories are specified with @{b}-I@{ub} options after the
+     @{b}-I-@{ub}, these directories are searched for all @{b}#include@{ub} directives.
+
+     In addition, the @{b}-I-@{ub} option inhibits the use of the current
+     directory as the first search directory for @{b}#include "FILE"@{ub}.
+     Therefore, the current directory is searched only if it is
+     requested explicitly with @{b}-I.@{ub}.  Specifying both @{b}-I-@{ub} and @{b}-I.@{ub} allows
+     you to control precisely which directories are searched before the
+     current one and which are searched after.
+
+@{b}-nostdinc@{ub}
+     Do not search the standard system directories for header files.
+     Only the directories you have specified with @{b}-I@{ub} options (and the
+     current directory, if appropriate) are searched.
+
+@{b}-nostdinc++@{ub}
+     Do not search for header files in the C++-specific standard
+     directories, but do still search the other standard directories.
+     (This option is used when building the C++ library.)
+
+@{b}-remap@{ub}
+     When searching for a header file in a directory, remap file names
+     if a file named @{b}header.gcc@{ub} exists in that directory.  This can be
+     used to work around limitations of file systems with file name
+     restrictions.  The @{b}header.gcc@{ub} file should contain a series of
+     lines with two tokens on each line: the first token is the name to
+     map, and the second token is the actual name to use.
+
+@{b}-D NAME@{ub}
+     Predefine NAME as a macro, with definition @{b}1@{ub}.
+
+@{b}-D NAME=DEFINITION@{ub}
+     Predefine NAME as a macro, with definition DEFINITION.  There are
+     no restrictions on the contents of DEFINITION, but if you are
+     invoking the preprocessor from a shell or shell-like program you
+     may need to use the shell's quoting syntax to protect characters
+     such as spaces that have a meaning in the shell syntax.  If you
+     use more than one @{b}-D@{ub} for the same NAME, the rightmost definition
+     takes effect.
+
+@{b}-U NAME@{ub}
+     Do not predefine NAME.  If both @{b}-U@{ub} and @{b}-D@{ub} are specified for one
+     name, the @{b}-U@{ub} beats the @{b}-D@{ub} and the name is not predefined.
+
+@{b}-undef@{ub}
+     Do not predefine any nonstandard macros.
+
+@{b}-A PREDICATE(ANSWER)@{ub}
+     Make an assertion with the predicate PREDICATE and answer ANSWER.
+     See @{"Assertions" link "Assertions"}.
+
+     You can use @{b}-A-@{ub} to disable all predefined assertions; it also
+     undefines all predefined macros that identify the type of target
+     system.
+
+@{b}-dM@{ub}
+     Instead of outputting the result of preprocessing, output a list of
+     @{b}#define@{ub} directives for all the macros defined during the execution
+     of the preprocessor, including predefined macros.  This gives you
+     a way of finding out what is predefined in your version of the
+     preprocessor; assuming you have no file @{b}foo.h@{ub}, the command
+
+          touch foo.h; cpp -dM foo.h
+
+     will show the values of any predefined macros.
+
+@{b}-dD@{ub}
+     Like @{b}-dM@{ub} except in two respects: it does @{i}not@{ui} include the
+     predefined macros, and it outputs @{i}both@{ui} the @{b}#define@{ub} directives and
+     the result of preprocessing.  Both kinds of output go to the
+     standard output file.
+
+@{b}-dI@{ub}
+     Output @{b}#include@{ub} directives in addition to the result of
+     preprocessing.
+
+@{b}-M [-MG]@{ub}
+     Instead of outputting the result of preprocessing, output a rule
+     suitable for @{b}make@{ub} describing the dependencies of the main source
+     file.  The preprocessor outputs one @{b}make@{ub} rule containing the
+     object file name for that source file, a colon, and the names of
+     all the included files.  If there are many included files then the
+     rule is split into several lines using @{b}\\ @{ub}-newline.
+
+@{b}     -MG@{ub} says to treat missing header files as generated files and
+     assume they live in the same directory as the source file.  It
+     must be specified in addition to @{b}-M@{ub}.
+
+     This feature is used in automatic updating of makefiles.
+
+@{b}-MM [-MG]@{ub}
+     Like @{b}-M@{ub} but mention only the files included with @{b}#include "FILE"@{ub}.
+     System header files included with @{b}#include <FILE>@{ub} are omitted.
+
+@{b}-MD FILE@{ub}
+     Like @{b}-M@{ub} but the dependency information is written to FILE.  This
+     is in addition to compiling the file as specified--@{b}-MD@{ub} does not
+     inhibit ordinary compilation the way @{b}-M@{ub} does.
+
+     When invoking gcc, do not specify the FILE argument.  Gcc will
+     create file names made by replacing ".c" with ".d" at the end of
+     the input file names.
+
+     In Mach, you can use the utility @{b}md@{ub} to merge multiple dependency
+     files into a single dependency file suitable for using with the
+     @{b}make@{ub} command.
+
+@{b}-MMD FILE@{ub}
+     Like @{b}-MD@{ub} except mention only user header files, not system header
+     files.
+
+@{b}-H@{ub}
+     Print the name of each header file used, in addition to other
+     normal activities.
+
+@{b}-imacros FILE@{ub}
+     Process FILE as input, discarding the resulting output, before
+     processing the regular input file.  Because the output generated
+     from FILE is discarded, the only effect of @{b}-imacros FILE@{ub} is to
+     make the macros defined in FILE available for use in the main
+     input.
+
+@{b}-include FILE@{ub}
+     Process FILE as input, and include all the resulting output,
+     before processing the regular input file.
+
+@{b}-idirafter DIR@{ub}
+     Add the directory DIR to the second include path.  The directories
+     on the second include path are searched when a header file is not
+     found in any of the directories in the main include path (the one
+     that @{b}-I@{ub} adds to).
+
+@{b}-iprefix PREFIX@{ub}
+     Specify PREFIX as the prefix for subsequent @{b}-iwithprefix@{ub} options.
+
+@{b}-iwithprefix DIR@{ub}
+     Add a directory to the second include path.  The directory's name
+     is made by concatenating PREFIX and DIR, where PREFIX was
+     specified previously with @{b}-iprefix@{ub}.
+
+@{b}-isystem DIR@{ub}
+     Add a directory to the beginning of the second include path,
+     marking it as a system directory, so that it gets the same special
+     treatment as is applied to the standard system directories.
+
+@{b}-lang-c@{ub}
+@{b}-lang-c89@{ub}
+@{b}-lang-c++@{ub}
+@{b}-lang-objc@{ub}
+@{b}-lang-objc++@{ub}
+     Specify the source language.  @{b}-lang-c@{ub} is the default; it allows
+     recognition of C++ comments (comments that begin with @{b}//@{ub} and end
+     at end of line) and hexadecimal floating-point constants, since
+     these features will most likely appear in the next C standard.
+     @{b}-lang-c89@{ub} disables recognition of C++ comments and hexadecimal
+     floating-point constants.  @{b}-lang-c++@{ub} handles C++ comment syntax
+     and includes extra default include directories for C++.
+     @{b}-lang-objc@{ub} enables the Objective C @{b}#import@{ub} directive.
+     @{b}-lang-objc++@{ub} enables both C++ and Objective C extensions.
+
+     These options are generated by the compiler driver @{b}gcc@{ub}, but not
+     passed from the @{b}gcc@{ub} command line unless you use the driver's @{b}-Wp@{ub}
+     option.
+
+@{b}-lint@{ub}
+     Look for commands to the program checker @{b}lint@{ub} embedded in
+     comments, and emit them preceded by @{b}#pragma lint@{ub}.  For example,
+     the comment @{b}/* NOTREACHED */@{ub} becomes @{b}#pragma lint NOTREACHED@{ub}.
+
+     This option is available only when you call @{b}cpp@{ub} directly; @{b}gcc@{ub} will
+     not pass it from its command line.
+
+@{b}-$@{ub}
+     Forbid the use of @{b}$@{ub} in identifiers.  This was formerly required
+     for strict conformance to the C Standard before the standard was
+     corrected.
+
+     This option is available only when you call @{b}cpp@{ub} directly; @{b}gcc@{ub} will
+     not pass it from its command line.
+
+
+@endnode
+
+@node "Concept Index" "cpp.guide/Concept Index"
+@next "Index"
+@prev "Invocation"
+@toc "Main"
+
+Concept Index
+*************
+
+@index "Concept Index"
+
+
+
+ @{" ##                                       " link "Concatenation"}   Concatenation
+ @{" arguments in macro definitions           " link "Argument Macros"}   Argument Macros
+ @{" assertions                               " link "Assertions"}   Assertions
+ @{" assertions, undoing                      " link "Assertions"}   Assertions
+ @{" blank macro arguments                    " link "Argument Macros"}   Argument Macros
+ @{" cascaded macros                          " link "Cascaded Macros"}   Cascaded Macros
+ @{" commenting out code                      " link "Deleted Code"}   Deleted Code
+ @{" computed #include                        " link "Include Syntax"}   Include Syntax
+ @{" concatenation                            " link "Concatenation"}   Concatenation
+ @{" conditionals                             " link "Conditionals"}   Conditionals
+ @{" directives                               " link "Directives"}   Directives
+ @{" expansion of arguments                   " link "Argument Prescan"}   Argument Prescan
+ @{" function-like macro                      " link "Argument Macros"}   Argument Macros
+ @{" header file                              " link "Header Files"}   Header Files
+ @{" including just once                      " link "Once-Only"}   Once-Only
+ @{" inheritance                              " link "Inheritance"}   Inheritance
+ @{" invocation of the preprocessor           " link "Invocation"}   Invocation
+ @{" line control                             " link "Combining Sources"}   Combining Sources
+ @{" macro argument expansion                 " link "Argument Prescan"}   Argument Prescan
+ @{" macro body uses macro                    " link "Cascaded Macros"}   Cascaded Macros
+ @{" macros with argument                     " link "Argument Macros"}   Argument Macros
+ @{" manifest constant                        " link "Simple Macros"}   Simple Macros
+ @{" newlines in macro arguments              " link "Newlines in Args"}   Newlines in Args
+ @{" null directive                           " link "Other Directives"}   Other Directives
+ @{" options                                  " link "Invocation"}   Invocation
+ @{" output format                            " link "Output"}   Output
+ @{" overriding a header file                 " link "Inheritance"}   Inheritance
+ @{" parentheses in macro bodies              " link "Macro Parentheses"}   Macro Parentheses
+ @{" pitfalls of macros                       " link "Macro Pitfalls"}   Macro Pitfalls
+ @{" predefined macros                        " link "Predefined"}   Predefined
+ @{" predicates                               " link "Assertions"}   Assertions
+ @{" preprocessing directives                 " link "Directives"}   Directives
+ @{" prescan of macro arguments               " link "Argument Prescan"}   Argument Prescan
+ @{" problems with macros                     " link "Macro Pitfalls"}   Macro Pitfalls
+ @{" redefining macros                        " link "Redefining"}   Redefining
+ @{" repeated inclusion                       " link "Once-Only"}   Once-Only
+ @{" retracting assertions                    " link "Assertions"}   Assertions
+ @{" second include path                      " link "Invocation"}   Invocation
+ @{" self-reference                           " link "Self-Reference"}   Self-Reference
+ @{" semicolons (after macro calls)           " link "Swallow Semicolon"}   Swallow Semicolon
+ @{" side effects (in macro arguments)        " link "Side Effects"}   Side Effects
+ @{" simple macro                             " link "Simple Macros"}   Simple Macros
+ @{" space as macro argument                  " link "Argument Macros"}   Argument Macros
+ @{" standard predefined macros               " link "Standard Predefined"}   Standard Predefined
+ @{" stringification                          " link "Stringification"}   Stringification
+ @{" testing predicates                       " link "Assertions"}   Assertions
+ @{" unassert                                 " link "Assertions"}   Assertions
+ @{" undefining macros                        " link "Undefining"}   Undefining
+ @{" unsafe macros                            " link "Side Effects"}   Side Effects
+
+
+@endnode
+
+@node "Index" "cpp.guide/Index"
+@prev "Concept Index"
+@toc "Main"
+
+Index of Directives, Macros and Options
+***************************************
+
+
+
+ @{" #assert                                  " link "Assertions"}   Assertions
+ @{" #cpu                                     " link "Assertions"}   Assertions
+ @{" #define                                  " link "Argument Macros"}   Argument Macros
+ @{" #elif                                    " link "#elif Directive"}   #elif Directive
+ @{" #else                                    " link "#else Directive"}   #else Directive
+ @{" #error                                   " link "#error Directive"}   #error Directive
+ @{" #ident                                   " link "Other Directives"}   Other Directives
+ @{" #if                                      " link "Conditional Syntax"}   Conditional Syntax
+ @{" #ifdef                                   " link "Conditionals-Macros"}   Conditionals-Macros
+ @{" #ifndef                                  " link "Conditionals-Macros"}   Conditionals-Macros
+ @{" #import                                  " link "Once-Only"}   Once-Only
+ @{" #include                                 " link "Include Syntax"}   Include Syntax
+ @{" #include_next                            " link "Inheritance"}   Inheritance
+ @{" #line                                    " link "Combining Sources"}   Combining Sources
+ @{" #machine                                 " link "Assertions"}   Assertions
+ @{" #pragma                                  " link "Other Directives"}   Other Directives
+ @{" #pragma once                             " link "Once-Only"}   Once-Only
+ @{" #system                                  " link "Assertions"}   Assertions
+ @{" #unassert                                " link "Assertions"}   Assertions
+ @{" #warning                                 " link "#error Directive"}   #error Directive
+ @{" -$                                       " link "Invocation"}   Invocation
+ @{" -A                                       " link "Invocation"}   Invocation
+ @{" -C                                       " link "Invocation"}   Invocation
+ @{" -D                                       " link "Invocation"}   Invocation
+ @{" -dD                                      " link "Invocation"}   Invocation
+ @{" -dI                                      " link "Invocation"}   Invocation
+ @{" -dM                                      " link "Invocation"}   Invocation
+ @{" -H                                       " link "Invocation"}   Invocation
+ @{" -I                                       " link "Invocation"}   Invocation
+ @{" -idirafter                               " link "Invocation"}   Invocation
+ @{" -imacros                                 " link "Invocation"}   Invocation
+ @{" -include                                 " link "Invocation"}   Invocation
+ @{" -iprefix                                 " link "Invocation"}   Invocation
+ @{" -isystem                                 " link "Invocation"}   Invocation
+ @{" -iwithprefix                             " link "Invocation"}   Invocation
+ @{" -lang-c                                  " link "Invocation"}   Invocation
+ @{" -lang-c++                                " link "Invocation"}   Invocation
+ @{" -lang-c89                                " link "Invocation"}   Invocation
+ @{" -lang-objc                               " link "Invocation"}   Invocation
+ @{" -lang-objc++                             " link "Invocation"}   Invocation
+ @{" -M                                       " link "Invocation"}   Invocation
+ @{" -MD                                      " link "Invocation"}   Invocation
+ @{" -MM                                      " link "Invocation"}   Invocation
+ @{" -MMD                                     " link "Invocation"}   Invocation
+ @{" -nostdinc                                " link "Invocation"}   Invocation
+ @{" -nostdinc++                              " link "Invocation"}   Invocation
+ @{" -P                                       " link "Invocation"}   Invocation
+ @{" -pedantic                                " link "Invocation"}   Invocation
+ @{" -pedantic-errors                         " link "Invocation"}   Invocation
+ @{" -remap                                   " link "Invocation"}   Invocation
+ @{" -traditional                             " link "Invocation"}   Invocation
+ @{" -trigraphs                               " link "Invocation"}   Invocation
+ @{" -U                                       " link "Invocation"}   Invocation
+ @{" -undef                                   " link "Invocation"}   Invocation
+ @{" -Wall                                    " link "Invocation"}   Invocation
+ @{" -Wcomment                                " link "Invocation"}   Invocation
+ @{" -Wtraditional                            " link "Invocation"}   Invocation
+ @{" -Wtrigraphs                              " link "Invocation"}   Invocation
+ @{" -Wundef                                  " link "Invocation"}   Invocation
+ @{" __BASE_FILE__                            " link "Standard Predefined"}   Standard Predefined
+ @{" __CHAR_UNSIGNED__                        " link "Standard Predefined"}   Standard Predefined
+ @{" __cplusplus                              " link "Standard Predefined"}   Standard Predefined
+ @{" __DATE__                                 " link "Standard Predefined"}   Standard Predefined
+ @{" __FILE__                                 " link "Standard Predefined"}   Standard Predefined
+ @{" __GNUC__                                 " link "Standard Predefined"}   Standard Predefined
+ @{" __GNUC_MINOR__                           " link "Standard Predefined"}   Standard Predefined
+ @{" __GNUG__                                 " link "Standard Predefined"}   Standard Predefined
+ @{" __INCLUDE_LEVEL_                         " link "Standard Predefined"}   Standard Predefined
+ @{" __LINE__                                 " link "Standard Predefined"}   Standard Predefined
+ @{" __OPTIMIZE__                             " link "Standard Predefined"}   Standard Predefined
+ @{" __REGISTER_PREFIX__                      " link "Standard Predefined"}   Standard Predefined
+ @{" __STDC__                                 " link "Standard Predefined"}   Standard Predefined
+ @{" __STDC_VERSION__                         " link "Standard Predefined"}   Standard Predefined
+ @{" __STRICT_ANSI__                          " link "Standard Predefined"}   Standard Predefined
+ @{" __TIME__                                 " link "Standard Predefined"}   Standard Predefined
+ @{" __USER_LABEL_PREFIX__                    " link "Standard Predefined"}   Standard Predefined
+ @{" __VERSION__                              " link "Standard Predefined"}   Standard Predefined
+ @{" _AM29000                                 " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" _AM29K                                   " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" BSD                                      " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" defined                                  " link "Conditionals-Macros"}   Conditionals-Macros
+ @{" M68020                                   " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" m68k                                     " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" mc68000                                  " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" ns32000                                  " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" pyr                                      " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" sequent                                  " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" sun                                      " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" system header files                      " link "Header Uses"}   Header Uses
+ @{" unix                                     " link "Nonstandard Predefined"}   Nonstandard Predefined
+ @{" vax                                      " link "Nonstandard Predefined"}   Nonstandard Predefined
+
+@endnode
+

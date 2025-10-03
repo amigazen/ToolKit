@@ -1,0 +1,2178 @@
+@database binutils.guide
+
+@Master /gg-src/gg/fsf/binutils/binutils/binutils.texi
+
+@Width 72
+
+
+This is the AmigaGuide®  file binutils.guide, produced by Makeinfo-1.68 from 
+the input file /gg-src/gg/fsf/binutils/binutils/binutils.texi.
+
+START-INFO-DIR-ENTRY
+* Binutils: (binutils).         The GNU binary utilities "ar", "objcopy",
+				"objdump", "nm", "nlmconv", "size",
+                                "strings", "strip", and "ranlib".
+END-INFO-DIR-ENTRY
+
+   Copyright (C) 1991, 92, 93, 94, 95, 96, 1997 Free Software
+Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions.
+
+@node Main "binutils.guide"
+@next "ar"
+
+Introduction
+************
+
+   This brief manual contains preliminary documentation for the GNU
+binary utilities (collectively version 2.8.1):
+
+
+ @{" ar                         " link "ar"}  Create, modify, and extract from archives
+ @{" nm                         " link "nm"}  List symbols from object files
+ @{" objcopy                    " link "objcopy"}  Copy and translate object files
+ @{" objdump                    " link "objdump"}  Display information from object files
+ @{" ranlib                     " link "ranlib"}  Generate index to archive contents
+ @{" size                       " link "size"}  List section sizes and total size
+ @{" strings                    " link "strings"}  List printable strings from files
+ @{" strip                      " link "strip"}  Discard symbols
+ @{" c++filt                    " link "c++filt"}  Filter to demangle encoded C++ symbols
+ @{" addr2line                  " link "addr2line"}  Convert addresses to file and line
+ @{" nlmconv                    " link "nlmconv"}  Converts object code into an NLM
+ @{" Selecting The Target System " link "Selecting The Target System"}  How these utilities determine the target.
+ @{" Reporting Bugs             " link "Reporting Bugs"}  Reporting Bugs
+ @{" Index                      " link "Index"}  Index
+
+
+@endnode
+
+@node "ar" "binutils.guide/ar"
+@next "nm"
+@prev "Main"
+@toc "Main"
+
+ar
+**
+
+     ar [-]P[MOD [RELPOS]] ARCHIVE [MEMBER...]
+     ar -M [ <mri-script ]
+
+   The GNU @{b}ar@{ub} program creates, modifies, and extracts from archives.
+An @{i}archive@{ui} is a single file holding a collection of other files in a
+structure that makes it possible to retrieve the original individual
+files (called @{i}members@{ui} of the archive).
+
+   The original files' contents, mode (permissions), timestamp, owner,
+and group are preserved in the archive, and can be restored on
+extraction.
+
+   GNU @{b}ar@{ub} can maintain archives whose members have names of any length;
+however, depending on how @{b}ar@{ub} is configured on your system, a limit on
+member-name length may be imposed for compatibility with archive
+formats maintained with other tools.  If it exists, the limit is often
+15 characters (typical of formats related to a.out) or 16 characters
+(typical of formats related to coff).
+
+@{b}   ar@{ub} is considered a binary utility because archives of this sort are
+most often used as @{i}libraries@{ui} holding commonly needed subroutines.
+
+@{b}   ar@{ub} creates an index to the symbols defined in relocatable object
+modules in the archive when you specify the modifier @{b}s@{ub}.  Once created,
+this index is updated in the archive whenever @{b}ar@{ub} makes a change to its
+contents (save for the @{b}q@{ub} update operation).  An archive with such an
+index speeds up linking to the library, and allows routines in the
+library to call each other without regard to their placement in the
+archive.
+
+   You may use @{b}nm -s@{ub} or @{b}nm --print-armap@{ub} to list this index table.  If
+an archive lacks the table, another form of @{b}ar@{ub} called @{b}ranlib@{ub} can be
+used to add just the table.
+
+   GNU @{b}ar@{ub} is designed to be compatible with two different facilities.
+You can control its activity using command-line options, like the
+different varieties of @{b}ar@{ub} on Unix systems; or, if you specify the
+single command-line option @{b}-M@{ub}, you can control it with a script
+supplied via standard input, like the MRI "librarian" program.
+
+
+ @{" ar cmdline                 " link "ar cmdline"}  Controlling @{b}ar@{ub} on the command line
+ @{" ar scripts                 " link "ar scripts"}  Controlling @{b}ar@{ub} with a script
+
+
+@endnode
+
+@node "ar cmdline" "binutils.guide/ar cmdline"
+@next "ar scripts"
+@toc "ar"
+
+Controlling @{b}ar@{ub} on the command line
+==================================
+
+     ar [-]P[MOD [RELPOS]] ARCHIVE [MEMBER...]
+
+   When you use @{b}ar@{ub} in the Unix style, @{b}ar@{ub} insists on at least two
+arguments to execute: one keyletter specifying the @{i}operation@{ui}
+(optionally accompanied by other keyletters specifying @{i}modifiers@{ui}), and
+the archive name to act on.
+
+   Most operations can also accept further MEMBER arguments, specifying
+particular files to operate on.
+
+   GNU @{b}ar@{ub} allows you to mix the operation code P and modifier flags MOD
+in any order, within the first command-line argument.
+
+   If you wish, you may begin the first command-line argument with a
+dash.
+
+   The P keyletter specifies what operation to execute; it may be any
+of the following, but you must specify only one of them:
+
+@{b}d@{ub}
+@{i}     Delete@{ui} modules from the archive.  Specify the names of modules to
+     be deleted as MEMBER...; the archive is untouched if you specify
+     no files to delete.
+
+     If you specify the @{b}v@{ub} modifier, @{b}ar@{ub} lists each module as it is
+     deleted.
+
+@{b}m@{ub}
+     Use this operation to @{i}move@{ui} members in an archive.
+
+     The ordering of members in an archive can make a difference in how
+     programs are linked using the library, if a symbol is defined in
+     more than one member.
+
+     If no modifiers are used with @{b}m@{ub}, any members you name in the
+     MEMBER arguments are moved to the @{i}end@{ui} of the archive; you can use
+     the @{b}a@{ub}, @{b}b@{ub}, or @{b}i@{ub} modifiers to move them to a specified place instead.
+
+@{b}p@{ub}
+@{i}     Print@{ui} the specified members of the archive, to the standard output
+     file.  If the @{b}v@{ub} modifier is specified, show the member name before
+     copying its contents to standard output.
+
+     If you specify no MEMBER arguments, all the files in the archive
+     are printed.
+
+@{b}q@{ub}
+@{i}     Quick append@{ui}; add the files MEMBER... to the end of ARCHIVE,
+     without checking for replacement.
+
+     The modifiers @{b}a@{ub}, @{b}b@{ub}, and @{b}i@{ub} do @{i}not@{ui} affect this operation; new
+     members are always placed at the end of the archive.
+
+     The modifier @{b}v@{ub} makes @{b}ar@{ub} list each file as it is appended.
+
+     Since the point of this operation is speed, the archive's symbol
+     table index is not updated, even if it already existed; you can
+     use @{b}ar s@{ub} or @{b}ranlib@{ub} explicitly to update the symbol table index.
+
+@{b}r@{ub}
+     Insert the files MEMBER... into ARCHIVE (with @{i}replacement@{ui}). This
+     operation differs from @{b}q@{ub} in that any previously existing members
+     are deleted if their names match those being added.
+
+     If one of the files named in MEMBER... does not exist, @{b}ar@{ub} displays
+     an error message, and leaves undisturbed any existing members of
+     the archive matching that name.
+
+     By default, new members are added at the end of the file; but you
+     may use one of the modifiers @{b}a@{ub}, @{b}b@{ub}, or @{b}i@{ub} to request placement
+     relative to some existing member.
+
+     The modifier @{b}v@{ub} used with this operation elicits a line of output
+     for each file inserted, along with one of the letters @{b}a@{ub} or @{b}r@{ub} to
+     indicate whether the file was appended (no old member deleted) or
+     replaced.
+
+@{b}t@{ub}
+     Display a @{i}table@{ui} listing the contents of ARCHIVE, or those of the
+     files listed in MEMBER... that are present in the archive.
+     Normally only the member name is shown; if you also want to see
+     the modes (permissions), timestamp, owner, group, and size, you can
+     request that by also specifying the @{b}v@{ub} modifier.
+
+     If you do not specify a MEMBER, all files in the archive are
+     listed.
+
+     If there is more than one file with the same name (say, @{b}fie@{ub}) in an
+     archive (say @{b}b.a@{ub}), @{b}ar t b.a fie@{ub} lists only the first instance; to
+     see them all, you must ask for a complete listing--in our example,
+     @{b}ar t b.a@{ub}.
+
+@{b}x@{ub}
+@{i}     Extract@{ui} members (named MEMBER) from the archive.  You can use the
+     @{b}v@{ub} modifier with this operation, to request that @{b}ar@{ub} list each name
+     as it extracts it.
+
+     If you do not specify a MEMBER, all files in the archive are
+     extracted.
+
+   A number of modifiers (MOD) may immediately follow the P keyletter,
+to specify variations on an operation's behavior:
+
+@{b}a@{ub}
+     Add new files @{i}after@{ui} an existing member of the archive.  If you use
+     the modifier @{b}a@{ub}, the name of an existing archive member must be
+     present as the RELPOS argument, before the ARCHIVE specification.
+
+@{b}b@{ub}
+     Add new files @{i}before@{ui} an existing member of the archive.  If you
+     use the modifier @{b}b@{ub}, the name of an existing archive member must be
+     present as the RELPOS argument, before the ARCHIVE specification.
+     (same as @{b}i@{ub}).
+
+@{b}c@{ub}
+@{i}     Create@{ui} the archive.  The specified ARCHIVE is always created if it
+     did not exist, when you request an update.  But a warning is
+     issued unless you specify in advance that you expect to create it,
+     by using this modifier.
+
+@{b}f@{ub}
+     Truncate names in the archive.  GNU @{b}ar@{ub} will normally permit file
+     names of any length.  This will cause it to create archives which
+     are not compatible with the native @{b}ar@{ub} program on some systems.  If
+     this is a concern, the @{b}f@{ub} modifier may be used to truncate file
+     names when putting them in the archive.
+
+@{b}i@{ub}
+     Insert new files @{i}before@{ui} an existing member of the archive.  If you
+     use the modifier @{b}i@{ub}, the name of an existing archive member must be
+     present as the RELPOS argument, before the ARCHIVE specification.
+     (same as @{b}b@{ub}).
+
+@{b}l@{ub}
+     This modifier is accepted but not used.
+
+@{b}o@{ub}
+     Preserve the @{i}original@{ui} dates of members when extracting them.  If
+     you do not specify this modifier, files extracted from the archive
+     are stamped with the time of extraction.
+
+@{b}s@{ub}
+     Write an object-file index into the archive, or update an existing
+     one, even if no other change is made to the archive.  You may use
+     this modifier flag either with any operation, or alone.  Running
+     @{b}ar s@{ub} on an archive is equivalent to running @{b}ranlib@{ub} on it.
+
+@{b}u@{ub}
+     Normally, @{b}ar r@{ub}... inserts all files listed into the archive.  If
+     you would like to insert @{i}only@{ui} those of the files you list that are
+     newer than existing members of the same names, use this modifier.
+     The @{b}u@{ub} modifier is allowed only for the operation @{b}r@{ub} (replace).  In
+     particular, the combination @{b}qu@{ub} is not allowed, since checking the
+     timestamps would lose any speed advantage from the operation @{b}q@{ub}.
+
+@{b}v@{ub}
+     This modifier requests the @{i}verbose@{ui} version of an operation.  Many
+     operations display additional information, such as filenames
+     processed, when the modifier @{b}v@{ub} is appended.
+
+@{b}V@{ub}
+     This modifier shows the version number of @{b}ar@{ub}.
+
+
+@endnode
+
+@node "ar scripts" "binutils.guide/ar scripts"
+@prev "ar cmdline"
+@toc "ar"
+
+Controlling @{b}ar@{ub} with a script
+============================
+
+     ar -M [ <SCRIPT ]
+
+   If you use the single command-line option @{b}-M@{ub} with @{b}ar@{ub}, you can
+control its operation with a rudimentary command language.  This form
+of @{b}ar@{ub} operates interactively if standard input is coming directly from
+a terminal.  During interactive use, @{b}ar@{ub} prompts for input (the prompt
+is @{b}AR >@{ub}), and continues executing even after errors.  If you redirect
+standard input to a script file, no prompts are issued, and @{b}ar@{ub} abandons
+execution (with a nonzero exit code) on any error.
+
+   The @{b}ar@{ub} command language is @{i}not@{ui} designed to be equivalent to the
+command-line options; in fact, it provides somewhat less control over
+archives.  The only purpose of the command language is to ease the
+transition to GNU @{b}ar@{ub} for developers who already have scripts written
+for the MRI "librarian" program.
+
+   The syntax for the @{b}ar@{ub} command language is straightforward:
+   * commands are recognized in upper or lower case; for example, @{b}LIST@{ub}
+     is the same as @{b}list@{ub}.  In the following descriptions, commands are
+     shown in upper case for clarity.
+
+   * a single command may appear on each line; it is the first word on
+     the line.
+
+   * empty lines are allowed, and have no effect.
+
+   * comments are allowed; text after either of the characters @{b}*@{ub} or @{b};@{ub}
+     is ignored.
+
+   * Whenever you use a list of names as part of the argument to an @{b}ar@{ub}
+     command, you can separate the individual names with either commas
+     or blanks.  Commas are shown in the explanations below, for
+     clarity.
+
+   * @{b}+@{ub} is used as a line continuation character; if @{b}+@{ub} appears at the
+     end of a line, the text on the following line is considered part
+     of the current command.
+
+   Here are the commands you can use in @{b}ar@{ub} scripts, or when using @{b}ar@{ub}
+interactively.  Three of them have special significance:
+
+@{b}   OPEN@{ub} or @{b}CREATE@{ub} specify a @{i}current archive@{ui}, which is a temporary file
+required for most of the other commands.
+
+@{b}   SAVE@{ub} commits the changes so far specified by the script.  Prior to
+@{b}SAVE@{ub}, commands affect only the temporary copy of the current archive.
+
+@{b}ADDLIB ARCHIVE@{ub}
+@{b}ADDLIB ARCHIVE (MODULE, MODULE, ... MODULE)@{ub}
+     Add all the contents of ARCHIVE (or, if specified, each named
+     MODULE from ARCHIVE) to the current archive.
+
+     Requires prior use of @{b}OPEN@{ub} or @{b}CREATE@{ub}.
+
+@{b}ADDMOD MEMBER, MEMBER, ... MEMBER@{ub}
+     Add each named MEMBER as a module in the current archive.
+
+     Requires prior use of @{b}OPEN@{ub} or @{b}CREATE@{ub}.
+
+@{b}CLEAR@{ub}
+     Discard the contents of the current archive, cancelling the effect
+     of any operations since the last @{b}SAVE@{ub}.  May be executed (with no
+     effect) even if  no current archive is specified.
+
+@{b}CREATE ARCHIVE@{ub}
+     Creates an archive, and makes it the current archive (required for
+     many other commands).  The new archive is created with a temporary
+     name; it is not actually saved as ARCHIVE until you use @{b}SAVE@{ub}.  You
+     can overwrite existing archives; similarly, the contents of any
+     existing file named ARCHIVE will not be destroyed until @{b}SAVE@{ub}.
+
+@{b}DELETE MODULE, MODULE, ... MODULE@{ub}
+     Delete each listed MODULE from the current archive; equivalent to
+     @{b}ar -d ARCHIVE MODULE ... MODULE@{ub}.
+
+     Requires prior use of @{b}OPEN@{ub} or @{b}CREATE@{ub}.
+
+@{b}DIRECTORY ARCHIVE (MODULE, ... MODULE)@{ub}
+@{b}DIRECTORY ARCHIVE (MODULE, ... MODULE) OUTPUTFILE@{ub}
+     List each named MODULE present in ARCHIVE.  The separate command
+     @{b}VERBOSE@{ub} specifies the form of the output: when verbose output is
+     off, output is like that of @{b}ar -t ARCHIVE MODULE...@{ub}.  When verbose
+     output is on, the listing is like @{b}ar -tv ARCHIVE MODULE...@{ub}.
+
+     Output normally goes to the standard output stream; however, if you
+     specify OUTPUTFILE as a final argument, @{b}ar@{ub} directs the output to
+     that file.
+
+@{b}END@{ub}
+     Exit from @{b}ar@{ub}, with a @{b}0@{ub} exit code to indicate successful
+     completion.  This command does not save the output file; if you
+     have changed the current archive since the last @{b}SAVE@{ub} command, those
+     changes are lost.
+
+@{b}EXTRACT MODULE, MODULE, ... MODULE@{ub}
+     Extract each named MODULE from the current archive, writing them
+     into the current directory as separate files.  Equivalent to @{b}ar -x
+     ARCHIVE MODULE...@{ub}.
+
+     Requires prior use of @{b}OPEN@{ub} or @{b}CREATE@{ub}.
+
+@{b}LIST@{ub}
+     Display full contents of the current archive, in "verbose" style
+     regardless of the state of @{b}VERBOSE@{ub}.  The effect is like @{b}ar tv
+     ARCHIVE@{ub}).  (This single command is a GNU @{b}ld@{ub} enhancement, rather
+     than present for MRI compatibility.)
+
+     Requires prior use of @{b}OPEN@{ub} or @{b}CREATE@{ub}.
+
+@{b}OPEN ARCHIVE@{ub}
+     Opens an existing archive for use as the current archive (required
+     for many other commands).  Any changes as the result of subsequent
+     commands will not actually affect ARCHIVE until you next use @{b}SAVE@{ub}.
+
+@{b}REPLACE MODULE, MODULE, ... MODULE@{ub}
+     In the current archive, replace each existing MODULE (named in the
+     @{b}REPLACE@{ub} arguments) from files in the current working directory.
+     To execute this command without errors, both the file, and the
+     module in the current archive, must exist.
+
+     Requires prior use of @{b}OPEN@{ub} or @{b}CREATE@{ub}.
+
+@{b}VERBOSE@{ub}
+     Toggle an internal flag governing the output from @{b}DIRECTORY@{ub}.  When
+     the flag is on, @{b}DIRECTORY@{ub} output matches output from @{b}ar -tv @{ub}....
+
+@{b}SAVE@{ub}
+     Commit your changes to the current archive, and actually save it
+     as a file with the name specified in the last @{b}CREATE@{ub} or @{b}OPEN@{ub}
+     command.
+
+     Requires prior use of @{b}OPEN@{ub} or @{b}CREATE@{ub}.
+
+
+@endnode
+
+@node "nm" "binutils.guide/nm"
+@next "objcopy"
+@prev "ar"
+@toc "Main"
+
+nm
+**
+
+     nm [ -a | --debug-syms ]  [ -g | --extern-only ]
+        [ -B ]  [ -C | --demangle ] [ -D | --dynamic ]
+        [ -s | --print-armap ]  [ -A | -o | --print-file-name ]
+        [ -n | -v | --numeric-sort ]  [ -p | --no-sort ]
+        [ -r | --reverse-sort ]  [ --size-sort ] [ -u | --undefined-only ]
+        [ -t RADIX | --radix=RADIX ] [ -P | --portability ]
+        [ --target=BFDNAME ] [ -f FORMAT | --format=FORMAT ]
+        [ --defined-only ] [-l | --line-numbers ]
+        [ --no-demangle ] [ -V | --version ]  [ --help ]  [ OBJFILE... ]
+
+   GNU @{b}nm@{ub} lists the symbols from object files OBJFILE....  If no object
+files are listed as arguments, @{b}nm@{ub} assumes @{b}a.out@{ub}.
+
+   For each symbol, @{b}nm@{ub} shows:
+
+   * The symbol value, in the radix selected by options (see below), or
+     hexadecimal by default.
+
+   * The symbol type.  At least the following types are used; others
+     are, as well, depending on the object file format.  If lowercase,
+     the symbol is local; if uppercase, the symbol is global (external).
+
+    @{b}A@{ub}
+          The symbol's value is absolute, and will not be changed by
+          further linking.
+
+    @{b}B@{ub}
+          The symbol is in the uninitialized data section (known as
+          BSS).
+
+    @{b}C@{ub}
+          The symbol is common.  Common symbols are uninitialized data.
+          When linking, multiple common symbols may appear with the
+          same name.  If the symbol is defined anywhere, the common
+          symbols are treated as undefined references.  For more
+          details on common symbols, see the discussion of -warn-common
+          in @{"Linker options" link "ld.guide/Options"}.
+
+    @{b}D@{ub}
+          The symbol is in the initialized data section.
+
+    @{b}G@{ub}
+          The symbol is in an initialized data section for small
+          objects.  Some object file formats permit more efficient
+          access to small data objects, such as a global int variable
+          as opposed to a large global array.
+
+    @{b}I@{ub}
+          The symbol is an indirect reference to another symbol.  This
+          is a GNU extension to the a.out object file format which is
+          rarely used.
+
+    @{b}N@{ub}
+          The symbol is a debugging symbol.
+
+    @{b}R@{ub}
+          The symbol is in a read only data section.
+
+    @{b}S@{ub}
+          The symbol is in an uninitialized data section for small
+          objects.
+
+    @{b}T@{ub}
+          The symbol is in the text (code) section.
+
+    @{b}U@{ub}
+          The symbol is undefined.
+
+    @{b}W@{ub}
+          The symbol is weak.  When a weak defined symbol is linked
+          with a normal defined symbol, the normal defined symbol is
+          used with no error.  When a weak undefined symbol is linked
+          and the symbol is not defined, the value of the weak symbol
+          becomes zero with no error.
+
+    @{b}-@{ub}
+          The symbol is a stabs symbol in an a.out object file.  In
+          this case, the next values printed are the stabs other field,
+          the stabs desc field, and the stab type.  Stabs symbols are
+          used to hold debugging information; for more information, see
+          @{"Stabs" link "stabs.guide/Main"}.
+
+    @{b}?@{ub}
+          The symbol type is unknown, or object file format specific.
+
+   * The symbol name.
+
+   The long and short forms of options, shown here as alternatives, are
+equivalent.
+
+@{b}-A@{ub}
+@{b}-o@{ub}
+@{b}--print-file-name@{ub}
+     Precede each symbol by the name of the input file (or archive
+     element) in which it was found, rather than identifying the input
+     file once only, before all of its symbols.
+
+@{b}-a@{ub}
+@{b}--debug-syms@{ub}
+     Display all symbols, even debugger-only symbols; normally these
+     are not listed.
+
+@{b}-B@{ub}
+     The same as @{b}--format=bsd@{ub} (for compatibility with the MIPS @{b}nm@{ub}).
+
+@{b}-C@{ub}
+@{b}--demangle@{ub}
+     Decode (@{i}demangle@{ui}) low-level symbol names into user-level names.
+     Besides removing any initial underscore prepended by the system,
+     this makes C++ function names readable.  See @{"c++filt" link "c++filt"}, for more
+     information on demangling.
+
+@{b}--no-demangle@{ub}
+     Do not demangle low-level symbol names.  This is the default.
+
+@{b}-D@{ub}
+@{b}--dynamic@{ub}
+     Display the dynamic symbols rather than the normal symbols.  This
+     is only meaningful for dynamic objects, such as certain types of
+     shared libraries.
+
+@{b}-f FORMAT@{ub}
+@{b}--format=FORMAT@{ub}
+     Use the output format FORMAT, which can be @{b}bsd@{ub}, @{b}sysv@{ub}, or @{b}posix@{ub}.
+     The default is @{b}bsd@{ub}.  Only the first character of FORMAT is
+     significant; it can be either upper or lower case.
+
+@{b}-g@{ub}
+@{b}--extern-only@{ub}
+     Display only external symbols.
+
+@{b}-l@{ub}
+@{b}--line-numbers@{ub}
+     For each symbol, use debugging information to try to find a
+     filename and line number.  For a defined symbol, look for the line
+     number of the address of the symbol.  For an undefined symbol,
+     look for the line number of a relocation entry which refers to the
+     symbol.  If line number information can be found, print it after
+     the other symbol information.
+
+@{b}-n@{ub}
+@{b}-v@{ub}
+@{b}--numeric-sort@{ub}
+     Sort symbols numerically by their addresses, rather than
+     alphabetically by their names.
+
+@{b}-p@{ub}
+@{b}--no-sort@{ub}
+     Do not bother to sort the symbols in any order; print them in the
+     order encountered.
+
+@{b}-P@{ub}
+@{b}--portability@{ub}
+     Use the POSIX.2 standard output format instead of the default
+     format.  Equivalent to @{b}-f posix@{ub}.
+
+@{b}-s@{ub}
+@{b}--print-armap@{ub}
+     When listing symbols from archive members, include the index: a
+     mapping (stored in the archive by @{b}ar@{ub} or @{b}ranlib@{ub}) of which modules
+     contain definitions for which names.
+
+@{b}-r@{ub}
+@{b}--reverse-sort@{ub}
+     Reverse the order of the sort (whether numeric or alphabetic); let
+     the last come first.
+
+@{b}--size-sort@{ub}
+     Sort symbols by size.  The size is computed as the difference
+     between the value of the symbol and the value of the symbol with
+     the next higher value.  The size of the symbol is printed, rather
+     than the value.
+
+@{b}-t RADIX@{ub}
+@{b}--radix=RADIX@{ub}
+     Use RADIX as the radix for printing the symbol values.  It must be
+     @{b}d@{ub} for decimal, @{b}o@{ub} for octal, or @{b}x@{ub} for hexadecimal.
+
+@{b}--target=BFDNAME@{ub}
+     Specify an object code format other than your system's default
+     format.  See @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}-u@{ub}
+@{b}--undefined-only@{ub}
+     Display only undefined symbols (those external to each object
+     file).
+
+@{b}--defined-only@{ub}
+     Display only defined symbols for each object file.
+
+@{b}-V@{ub}
+@{b}--version@{ub}
+     Show the version number of @{b}nm@{ub} and exit.
+
+@{b}--help@{ub}
+     Show a summary of the options to @{b}nm@{ub} and exit.
+
+
+@endnode
+
+@node "objcopy" "binutils.guide/objcopy"
+@next "objdump"
+@prev "nm"
+@toc "Main"
+
+objcopy
+*******
+
+     objcopy [ -F BFDNAME | --target=BFDNAME ]
+             [ -I BFDNAME | --input-target=BFDNAME ]
+             [ -O BFDNAME | --output-target=BFDNAME ]
+             [ -S | --strip-all ]  [ -g | --strip-debug ]
+             [ -K SYMBOLNAME | --keep-symbol=SYMBOLNAME ]
+             [ -N SYMBOLNAME | --strip-symbol=SYMBOLNAME ]
+             [ -x | --discard-all ]  [ -X | --discard-locals ]
+             [ -b BYTE | --byte=BYTE ]
+             [ -i INTERLEAVE | --interleave=INTERLEAVE ]
+             [ -R SECTIONNAME | --remove-section=SECTIONNAME ]
+             [ -p | --preserve-dates ] [ --debugging ]
+             [ --gap-fill=VAL ] [ --pad-to=ADDRESS ]
+             [ --set-start=VAL ] [ --adjust-start=INCR ]
+             [ --adjust-vma=INCR ]
+             [ --adjust-section-vma=SECTION{=,+,-}VAL ]
+             [ --adjust-warnings ] [ --no-adjust-warnings ]
+             [ --set-section-flags=SECTION=FLAGS ]
+             [ --add-section=SECTIONNAME=FILENAME ]
+             [ --change-leading-char ] [ --remove-leading-char ]
+             [ --weaken ]
+             [ -v | --verbose ] [ -V | --version ]  [ --help ]
+             INFILE [OUTFILE]
+
+   The GNU @{b}objcopy@{ub} utility copies the contents of an object file to
+another.  @{b}objcopy@{ub} uses the GNU BFD Library to read and write the object
+files.  It can write the destination object file in a format different
+from that of the source object file.  The exact behavior of @{b}objcopy@{ub} is
+controlled by command-line options.
+
+@{b}   objcopy@{ub} creates temporary files to do its translations and deletes
+them afterward.  @{b}objcopy@{ub} uses BFD to do all its translation work; it
+has access to all the formats described in BFD and thus is able to
+recognize most formats without being told explicitly.  See @{"BFD" link "ld.guide/BFD"}.
+
+@{b}   objcopy@{ub} can be used to generate S-records by using an output target
+of @{b}srec@{ub} (e.g., use @{b}-O srec@{ub}).
+
+@{b}   objcopy@{ub} can be used to generate a raw binary file by using an output
+target of @{b}binary@{ub} (e.g., use @{b}-O binary@{ub}).  When @{b}objcopy@{ub} generates a raw
+binary file, it will essentially produce a memory dump of the contents
+of the input object file.  All symbols and relocation information will
+be discarded.  The memory dump will start at the load address of the
+lowest section copied into the output file.
+
+   When generating an S-record or a raw binary file, it may be helpful
+to use @{b}-S@{ub} to remove sections containing debugging information.  In some
+cases @{b}-R@{ub} will be useful to remove sections which contain information
+which is not needed by the binary file.
+
+@{b}INFILE@{ub}
+@{b}OUTFILE@{ub}
+     The source and output files, respectively.  If you do not specify
+     OUTFILE, @{b}objcopy@{ub} creates a temporary file and destructively
+     renames the result with the name of INFILE.
+
+@{b}-I BFDNAME@{ub}
+@{b}--input-target=BFDNAME@{ub}
+     Consider the source file's object format to be BFDNAME, rather than
+     attempting to deduce it.  See @{"Target Selection" link "Target Selection"}, for more
+     information.
+
+@{b}-O BFDNAME@{ub}
+@{b}--output-target=BFDNAME@{ub}
+     Write the output file using the object format BFDNAME.  See
+     @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}-F BFDNAME@{ub}
+@{b}--target=BFDNAME@{ub}
+     Use BFDNAME as the object format for both the input and the output
+     file; i.e., simply transfer data from source to destination with no
+     translation.  See @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}-R SECTIONNAME@{ub}
+@{b}--remove-section=SECTIONNAME@{ub}
+     Remove any section named SECTIONNAME from the output file.  This
+     option may be given more than once.  Note that using this option
+     inappropriately may make the output file unusable.
+
+@{b}-S@{ub}
+@{b}--strip-all@{ub}
+     Do not copy relocation and symbol information from the source file.
+
+@{b}-g@{ub}
+@{b}--strip-debug@{ub}
+     Do not copy debugging symbols from the source file.
+
+@{b}--strip-unneeded@{ub}
+     Strip all symbols that are not needed for relocation processing.
+
+@{b}-K SYMBOLNAME@{ub}
+@{b}--keep-symbol=SYMBOLNAME@{ub}
+     Copy only symbol SYMBOLNAME from the source file.  This option may
+     be given more than once.
+
+@{b}-N SYMBOLNAME@{ub}
+@{b}--strip-symbol=SYMBOLNAME@{ub}
+     Do not copy symbol SYMBOLNAME from the source file.  This option
+     may be given more than once, and may be combined with strip options
+     other than @{b}-K@{ub}.
+
+@{b}-x@{ub}
+@{b}--discard-all@{ub}
+     Do not copy non-global symbols from the source file.
+
+@{b}-X@{ub}
+@{b}--discard-locals@{ub}
+     Do not copy compiler-generated local symbols.  (These usually
+     start with @{b}L@{ub} or @{b}.@{ub}.)
+
+@{b}-b BYTE@{ub}
+@{b}--byte=BYTE@{ub}
+     Keep only every BYTEth byte of the input file (header data is not
+     affected).  BYTE can be in the range from 0 to INTERLEAVE-1, where
+     INTERLEAVE is given by the @{b}-i@{ub} or @{b}--interleave@{ub} option, or the
+     default of 4.  This option is useful for creating files to program
+     ROM.  It is typically used with an @{b}srec@{ub} output target.
+
+@{b}-i INTERLEAVE@{ub}
+@{b}--interleave=INTERLEAVE@{ub}
+     Only copy one out of every INTERLEAVE bytes.  Select which byte to
+     copy with the -B or @{b}--byte@{ub} option.  The default is 4.  @{b}objcopy@{ub}
+     ignores this option if you do not specify either @{b}-b@{ub} or @{b}--byte@{ub}.
+
+@{b}-p@{ub}
+@{b}--preserve-dates@{ub}
+     Set the access and modification dates of the output file to be the
+     same as those of the input file.
+
+@{b}--debugging@{ub}
+     Convert debugging information, if possible.  This is not the
+     default because only certain debugging formats are supported, and
+     the conversion process can be time consuming.
+
+@{b}--gap-fill VAL@{ub}
+     Fill gaps between sections with VAL.  This is done by increasing
+     the size of the section with the lower address, and filling in the
+     extra space created with VAL.
+
+@{b}--pad-to ADDRESS@{ub}
+     Pad the output file up to the virtual address ADDRESS.  This is
+     done by increasing the size of the last section.  The extra space
+     is filled in with the value specified by @{b}--gap-fill@{ub} (default zero).
+
+@{b}--set-start VAL@{ub}
+     Set the address of the new file to VAL.  Not all object file
+     formats support setting the start address.
+
+@{b}--adjust-start INCR@{ub}
+     Adjust the start address by adding INCR.  Not all object file
+     formats support setting the start address.
+
+@{b}--adjust-vma INCR@{ub}
+     Adjust the address of all sections, as well as the start address,
+     by adding INCR.  Some object file formats do not permit section
+     addresses to be changed arbitrarily.  Note that this does not
+     relocate the sections; if the program expects sections to be
+     loaded at a certain address, and this option is used to change the
+     sections such that they are loaded at a different address, the
+     program may fail.
+
+@{b}--adjust-section-vma SECTION{=,+,-}VAL@{ub}
+     Set or adjust the address of the named SECTION.  If @{b}=@{ub} is used, the
+     section address is set to VAL.  Otherwise, VAL is added to or
+     subtracted from the section address.  See the comments under
+     @{b}--adjust-vma@{ub}, above.  If SECTION does not exist in the input file,
+     a warning will be issued, unless @{b}--no-adjust-warnings@{ub} is used.
+
+@{b}--adjust-warnings@{ub}
+     If @{b}--adjust-section-vma@{ub} is used, and the named section does not
+     exist, issue a warning.  This is the default.
+
+@{b}--no-adjust-warnings@{ub}
+     Do not issue a warning if @{b}--adjust-section-vma@{ub} is used, even if
+     the named section does not exist.
+
+@{b}--set-section-flags SECTION=FLAGS@{ub}
+     Set the flags for the named section.  The FLAGS argument is a
+     comma separated string of flag names.  The recognized names are
+     @{b}alloc@{ub}, @{b}load@{ub}, @{b}readonly@{ub}, @{b}code@{ub}, @{b}data@{ub}, and @{b}rom@{ub}.  Not all flags are
+     meaningful for all object file formats.
+
+@{b}--add-section SECTIONNAME=FILENAME@{ub}
+     Add a new section named SECTIONNAME while copying the file.  The
+     contents of the new section are taken from the file FILENAME.  The
+     size of the section will be the size of the file.  This option only
+     works on file formats which can support sections with arbitrary
+     names.
+
+@{b}--change-leading-char@{ub}
+     Some object file formats use special characters at the start of
+     symbols.  The most common such character is underscore, which
+     compilers often add before every symbol.  This option tells
+     @{b}objcopy@{ub} to change the leading character of every symbol when it
+     converts between object file formats.  If the object file formats
+     use the same leading character, this option has no effect.
+     Otherwise, it will add a character, or remove a character, or
+     change a character, as appropriate.
+
+@{b}--remove-leading-char@{ub}
+     If the first character of a global symbol is a special symbol
+     leading character used by the object file format, remove the
+     character.  The most common symbol leading character is
+     underscore.  This option will remove a leading underscore from all
+     global symbols.  This can be useful if you want to link together
+     objects of different file formats with different conventions for
+     symbol names.  This is different from @{b}--change-leading-char@{ub}
+     because it always changes the symbol name when appropriate,
+     regardless of the object file format of the output file.
+
+@{b}--weaken@{ub}
+     Change all global symbols in the file to be weak.  This can be
+     useful when building an object which will be linked against other
+     objects using the @{b}-R@{ub} option to the linker.  This option is only
+     effective when using an object file format which supports weak
+     symbols.
+
+@{b}-V@{ub}
+@{b}--version@{ub}
+     Show the version number of @{b}objcopy@{ub}.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Verbose output: list all object files modified.  In the case of
+     archives, @{b}objcopy -V@{ub} lists all members of the archive.
+
+@{b}--help@{ub}
+     Show a summary of the options to @{b}objcopy@{ub}.
+
+
+@endnode
+
+@node "objdump" "binutils.guide/objdump"
+@next "ranlib"
+@prev "objcopy"
+@toc "Main"
+
+objdump
+*******
+
+     objdump [ -a | --archive-headers ]
+             [ -b BFDNAME | --target=BFDNAME ] [ --debugging ]
+             [ -C | --demangle ] [ -d | --disassemble ]
+             [ -D | --disassemble-all ] [ --disassemble-zeroes ]
+             [ -EB | -EL | --endian={big | little } ]
+             [ -f | --file-headers ]
+             [ -h | --section-headers | --headers ]  [ -i | --info ]
+             [ -j SECTION | --section=SECTION ]
+             [ -l | --line-numbers ] [ -S | --source ]
+             [ -m MACHINE | --architecture=MACHINE ]
+             [ -r | --reloc ] [ -R | --dynamic-reloc ]
+             [ -s | --full-contents ]  [ --stabs ]
+             [ -t | --syms ] [ -T | --dynamic-syms ] [ -x | --all-headers ]
+             [ -w | --wide ] [ --start-address=ADDRESS ]
+             [ --stop-address=ADDRESS ]
+             [ --prefix-addresses] [ --[no-]show-raw-insn ]
+             [ --adjust-vma=OFFSET ]
+             [ --version ]  [ --help ]
+             OBJFILE...
+
+@{b}   objdump@{ub} displays information about one or more object files.  The
+options control what particular information to display.  This
+information is mostly useful to programmers who are working on the
+compilation tools, as opposed to programmers who just want their
+program to compile and work.
+
+   OBJFILE... are the object files to be examined.  When you specify
+archives, @{b}objdump@{ub} shows information on each of the member object files.
+
+   The long and short forms of options, shown here as alternatives, are
+equivalent.  At least one option besides @{b}-l@{ub} must be given.
+
+@{b}-a@{ub}
+@{b}--archive-header@{ub}
+     If any of the OBJFILE files are archives, display the archive
+     header information (in a format similar to @{b}ls -l@{ub}).  Besides the
+     information you could list with @{b}ar tv@{ub}, @{b}objdump -a@{ub} shows the object
+     file format of each archive member.
+
+@{b}--adjust-vma=OFFSET@{ub}
+     When dumping information, first add OFFSET to all the section
+     addresses.  This is useful if the section addresses do not
+     correspond to the symbol table, which can happen when putting
+     sections at particular addresses when using a format which can not
+     represent section addresses, such as a.out.
+
+@{b}-b BFDNAME@{ub}
+@{b}--target=BFDNAME@{ub}
+     Specify that the object-code format for the object files is
+     BFDNAME.  This option may not be necessary; OBJDUMP can
+     automatically recognize many formats.
+
+     For example,
+          objdump -b oasys -m vax -h fu.o
+
+     displays summary information from the section headers (@{b}-h@{ub}) of
+     @{b}fu.o@{ub}, which is explicitly identified (@{b}-m@{ub}) as a VAX object file in
+     the format produced by Oasys compilers.  You can list the formats
+     available with the @{b}-i@{ub} option.  See @{"Target Selection" link "Target Selection"}, for more
+     information.
+
+@{b}-C@{ub}
+@{b}--demangle@{ub}
+     Decode (@{i}demangle@{ui}) low-level symbol names into user-level names.
+     Besides removing any initial underscore prepended by the system,
+     this makes C++ function names readable.  See @{"c++filt" link "c++filt"}, for more
+     information on demangling.
+
+@{b}--debugging@{ub}
+     Display debugging information.  This attempts to parse debugging
+     information stored in the file and print it out using a C like
+     syntax.  Only certain types of debugging information have been
+     implemented.
+
+@{b}-d@{ub}
+@{b}--disassemble@{ub}
+     Display the assembler mnemonics for the machine instructions from
+     OBJFILE.  This option only disassembles those sections which are
+     expected to contain instructions.
+
+@{b}-D@{ub}
+@{b}--disassemble-all@{ub}
+     Like @{b}-d@{ub}, but disassemble the contents of all sections, not just
+     those expected to contain instructions.
+
+@{b}--prefix-addresses@{ub}
+     When disassembling, print the complete address on each line.  This
+     is the older disassembly format.
+
+@{b}--disassemble-zeroes@{ub}
+     Normally the disassembly output will skip blocks of zeroes.  This
+     option directs the disassembler to disassemble those blocks, just
+     like any other data.
+
+@{b}-EB@{ub}
+@{b}-EL@{ub}
+@{b}--endian={big|little}@{ub}
+     Specify the endianness of the object files.  This only affects
+     disassembly.  This can be useful when disassembling a file format
+     which does not describe endianness information, such as S-records.
+
+@{b}-f@{ub}
+@{b}--file-header@{ub}
+     Display summary information from the overall header of each of the
+     OBJFILE files.
+
+@{b}-h@{ub}
+@{b}--section-header@{ub}
+@{b}--header@{ub}
+     Display summary information from the section headers of the object
+     file.
+
+     File segments may be relocated to nonstandard addresses, for
+     example by using the @{b}-Ttext@{ub}, @{b}-Tdata@{ub}, or @{b}-Tbss@{ub} options to @{b}ld@{ub}.
+     However, some object file formats, such as a.out, do not store the
+     starting address of the file segments.  In those situations,
+     although @{b}ld@{ub} relocates the sections correctly, using @{b}objdump -h@{ub} to
+     list the file section headers cannot show the correct addresses.
+     Instead, it shows the usual addresses, which are implicit for the
+     target.
+
+@{b}--help@{ub}
+     Print a summary of the options to @{b}objdump@{ub} and exit.
+
+@{b}-i@{ub}
+@{b}--info@{ub}
+     Display a list showing all architectures and object formats
+     available for specification with @{b}-b@{ub} or @{b}-m@{ub}.
+
+@{b}-j NAME@{ub}
+@{b}--section=NAME@{ub}
+     Display information only for section NAME.
+
+@{b}-l@{ub}
+@{b}--line-numbers@{ub}
+     Label the display (using debugging information) with the filename
+     and source line numbers corresponding to the object code or relocs
+     shown.  Only useful with @{b}-d@{ub}, @{b}-D@{ub}, or @{b}-r@{ub}.
+
+@{b}-m MACHINE@{ub}
+@{b}--architecture=MACHINE@{ub}
+     Specify the architecture to use when disassembling object files.
+     This can be useful when disasembling object files which do not
+     describe architecture information, such as S-records.  You can
+     list the available architectures with the @{b}-i@{ub} option.
+
+@{b}-r@{ub}
+@{b}--reloc@{ub}
+     Print the relocation entries of the file.  If used with @{b}-d@{ub} or @{b}-D@{ub},
+     the relocations are printed interspersed with the disassembly.
+
+@{b}-R@{ub}
+@{b}--dynamic-reloc@{ub}
+     Print the dynamic relocation entries of the file.  This is only
+     meaningful for dynamic objects, such as certain types of shared
+     libraries.
+
+@{b}-s@{ub}
+@{b}--full-contents@{ub}
+     Display the full contents of any sections requested.
+
+@{b}-S@{ub}
+@{b}--source@{ub}
+     Display source code intermixed with disassembly, if possible.
+     Implies @{b}-d@{ub}.
+
+@{b}--show-raw-insn@{ub}
+     When disassembling instructions, print the instruction in hex as
+     well as in symbolic form.  This is the default except when
+     @{b}--prefix-addresses@{ub} is used.
+
+@{b}--no-show-raw-insn@{ub}
+     When disassembling instructions, do not print the instruction
+     bytes.  This is the default when @{b}--prefix-addresses@{ub} is used.
+
+@{b}--stabs@{ub}
+     Display the full contents of any sections requested.  Display the
+     contents of the .stab and .stab.index and .stab.excl sections from
+     an ELF file.  This is only useful on systems (such as Solaris 2.0)
+     in which @{b}.stab@{ub} debugging symbol-table entries are carried in an ELF
+     section.  In most other file formats, debugging symbol-table
+     entries are interleaved with linkage symbols, and are visible in
+     the @{b}--syms@{ub} output.  For more information on stabs symbols, see
+     @{"Stabs" link "stabs.guide/Main"}.
+
+@{b}--start-address=ADDRESS@{ub}
+     Start displaying data at the specified address.  This affects the
+     output of the @{b}-d@{ub}, @{b}-r@{ub} and @{b}-s@{ub} options.
+
+@{b}--stop-address=ADDRESS@{ub}
+     Stop displaying data at the specified address.  This affects the
+     output of the @{b}-d@{ub}, @{b}-r@{ub} and @{b}-s@{ub} options.
+
+@{b}-t@{ub}
+@{b}--syms@{ub}
+     Print the symbol table entries of the file.  This is similar to
+     the information provided by the @{b}nm@{ub} program.
+
+@{b}-T@{ub}
+@{b}--dynamic-syms@{ub}
+     Print the dynamic symbol table entries of the file.  This is only
+     meaningful for dynamic objects, such as certain types of shared
+     libraries.  This is similar to the information provided by the @{b}nm@{ub}
+     program when given the @{b}-D@{ub} (@{b}--dynamic@{ub}) option.
+
+@{b}--version@{ub}
+     Print the version number of @{b}objdump@{ub} and exit.
+
+@{b}-x@{ub}
+@{b}--all-header@{ub}
+     Display all available header information, including the symbol
+     table and relocation entries.  Using @{b}-x@{ub} is equivalent to
+     specifying all of @{b}-a -f -h -r -t@{ub}.
+
+@{b}-w@{ub}
+
+@{b}--wide@{ub}
+     Format some lines for output devices that have more than 80
+     columns.
+
+
+@endnode
+
+@node "ranlib" "binutils.guide/ranlib"
+@next "size"
+@prev "objdump"
+@toc "Main"
+
+ranlib
+******
+
+     ranlib [-vV] ARCHIVE
+
+@{b}   ranlib@{ub} generates an index to the contents of an archive and stores
+it in the archive.  The index lists each symbol defined by a member of
+an archive that is a relocatable object file.
+
+   You may use @{b}nm -s@{ub} or @{b}nm --print-armap@{ub} to list this index.
+
+   An archive with such an index speeds up linking to the library and
+allows routines in the library to call each other without regard to
+their placement in the archive.
+
+   The GNU @{b}ranlib@{ub} program is another form of GNU @{b}ar@{ub}; running @{b}ranlib@{ub} is
+completely equivalent to executing @{b}ar -s@{ub}.  See @{"ar" link "ar"}.
+
+@{b}-v@{ub}
+@{b}-V@{ub}
+     Show the version number of @{b}ranlib@{ub}.
+
+
+@endnode
+
+@node "size" "binutils.guide/size"
+@next "strings"
+@prev "ranlib"
+@toc "Main"
+
+size
+****
+
+     size [ -A | -B | --format=COMPATIBILITY ]
+          [ --help ]  [ -d | -o | -x | --radix=NUMBER ]
+          [ --target=BFDNAME ]  [ -V | --version ]
+          OBJFILE...
+
+   The GNU @{b}size@{ub} utility lists the section sizes--and the total
+size--for each of the object or archive files OBJFILE in its argument
+list.  By default, one line of output is generated for each object file
+or each module in an archive.
+
+   OBJFILE... are the object files to be examined.
+
+   The command line options have the following meanings:
+
+@{b}-A@{ub}
+@{b}-B@{ub}
+@{b}--format=COMPATIBILITY@{ub}
+     Using one of these options, you can choose whether the output from
+     GNU @{b}size@{ub} resembles output from System V @{b}size@{ub} (using @{b}-A@{ub}, or
+     @{b}--format=sysv@{ub}), or Berkeley @{b}size@{ub} (using @{b}-B@{ub}, or @{b}--format=berkeley@{ub}).
+     The default is the one-line format similar to Berkeley's.
+
+     Here is an example of the Berkeley (default) format of output from
+     @{b}size@{ub}:
+          size --format=Berkeley ranlib size
+          text    data    bss     dec     hex     filename
+          294880  81920   11592   388392  5ed28   ranlib
+          294880  81920   11888   388688  5ee50   size
+
+     This is the same data, but displayed closer to System V
+     conventions:
+
+          size --format=SysV ranlib size
+          ranlib  :
+          section         size         addr
+          .text         294880         8192
+          .data          81920       303104
+          .bss           11592       385024
+          Total         388392
+          
+          
+          size  :
+          section         size         addr
+          .text         294880         8192
+          .data          81920       303104
+          .bss           11888       385024
+          Total         388688
+
+@{b}--help@{ub}
+     Show a summary of acceptable arguments and options.
+
+@{b}-d@{ub}
+@{b}-o@{ub}
+@{b}-x@{ub}
+@{b}--radix=NUMBER@{ub}
+     Using one of these options, you can control whether the size of
+     each section is given in decimal (@{b}-d@{ub}, or @{b}--radix=10@{ub}); octal (@{b}-o@{ub},
+     or @{b}--radix=8@{ub}); or hexadecimal (@{b}-x@{ub}, or @{b}--radix=16@{ub}).  In
+     @{b}--radix=NUMBER@{ub}, only the three values (8, 10, 16) are supported.
+     The total size is always given in two radices; decimal and
+     hexadecimal for @{b}-d@{ub} or @{b}-x@{ub} output, or octal and hexadecimal if
+     you're using @{b}-o@{ub}.
+
+@{b}--target=BFDNAME@{ub}
+     Specify that the object-code format for OBJFILE is BFDNAME.  This
+     option may not be necessary; @{b}size@{ub} can automatically recognize many
+     formats.  See @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}-V@{ub}
+@{b}--version@{ub}
+     Display the version number of @{b}size@{ub}.
+
+
+@endnode
+
+@node "strings" "binutils.guide/strings"
+@next "strip"
+@prev "size"
+@toc "Main"
+
+strings
+*******
+
+     strings [-afov] [-MIN-LEN] [-n MIN-LEN] [-t RADIX] [-]
+             [--all] [--print-file-name] [--bytes=MIN-LEN]
+             [--radix=RADIX] [--target=BFDNAME]
+             [--help] [--version] FILE...
+
+   For each FILE given, GNU @{b}strings@{ub} prints the printable character
+sequences that are at least 4 characters long (or the number given with
+the options below) and are followed by an unprintable character.  By
+default, it only prints the strings from the initialized and loaded
+sections of object files; for other types of files, it prints the
+strings from the whole file.
+
+@{b}   strings@{ub} is mainly useful for determining the contents of non-text
+files.
+
+@{b}-a@{ub}
+@{b}--all@{ub}
+@{b}-@{ub}
+     Do not scan only the initialized and loaded sections of object
+     files; scan the whole files.
+
+@{b}-f@{ub}
+@{b}--print-file-name@{ub}
+     Print the name of the file before each string.
+
+@{b}--help@{ub}
+     Print a summary of the program usage on the standard output and
+     exit.
+
+@{b}-MIN-LEN@{ub}
+
+@{b}-n MIN-LEN@{ub}
+@{b}--bytes=MIN-LEN@{ub}
+     Print sequences of characters that are at least MIN-LEN characters
+     long, instead of the default 4.
+
+@{b}-o@{ub}
+     Like @{b}-t o@{ub}.  Some other versions of @{b}strings@{ub} have @{b}-o@{ub} act like @{b}-t d@{ub}
+     instead.  Since we can not be compatible with both ways, we simply
+     chose one.
+
+@{b}-t RADIX@{ub}
+@{b}--radix=RADIX@{ub}
+     Print the offset within the file before each string.  The single
+     character argument specifies the radix of the offset--@{b}o@{ub} for octal,
+     @{b}x@{ub} for hexadecimal, or @{b}d@{ub} for decimal.
+
+@{b}--target=BFDNAME@{ub}
+     Specify an object code format other than your system's default
+     format.  See @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}-v@{ub}
+@{b}--version@{ub}
+     Print the program version number on the standard output and exit.
+
+
+@endnode
+
+@node "strip" "binutils.guide/strip"
+@next "c++filt"
+@prev "strings"
+@toc "Main"
+
+strip
+*****
+
+     strip [ -F BFDNAME | --target=BFDNAME | --target=BFDNAME ]
+           [ -I BFDNAME | --input-target=BFDNAME ]
+           [ -O BFDNAME | --output-target=BFDNAME ]
+           [ -s | --strip-all ] [ -S | -g | --strip-debug ]
+           [ -K SYMBOLNAME | --keep-symbol=SYMBOLNAME ]
+           [ -N SYMBOLNAME | --strip-symbol=SYMBOLNAME ]
+           [ -x | --discard-all ] [ -X | --discard-locals ]
+           [ -R SECTIONNAME | --remove-section=SECTIONNAME ]
+           [ -o FILE ] [ -p | --preserve-dates ]
+           [ -v | --verbose ]  [ -V | --version ]  [ --help ]
+           OBJFILE...
+
+   GNU @{b}strip@{ub} discards all symbols from object files OBJFILE.  The list
+of object files may include archives.  At least one object file must be
+given.
+
+@{b}   strip@{ub} modifies the files named in its argument, rather than writing
+modified copies under different names.
+
+@{b}-F BFDNAME@{ub}
+@{b}--target=BFDNAME@{ub}
+     Treat the original OBJFILE as a file with the object code format
+     BFDNAME, and rewrite it in the same format.  See
+     @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}--help@{ub}
+     Show a summary of the options to @{b}strip@{ub} and exit.
+
+@{b}-I BFDNAME@{ub}
+@{b}--input-target=BFDNAME@{ub}
+     Treat the original OBJFILE as a file with the object code format
+     BFDNAME.  See @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}-O BFDNAME@{ub}
+@{b}--output-target=BFDNAME@{ub}
+     Replace OBJFILE with a file in the output format BFDNAME.  See
+     @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}-R SECTIONNAME@{ub}
+@{b}--remove-section=SECTIONNAME@{ub}
+     Remove any section named SECTIONNAME from the output file.  This
+     option may be given more than once.  Note that using this option
+     inappropriately may make the output file unusable.
+
+@{b}-s@{ub}
+@{b}--strip-all@{ub}
+     Remove all symbols.
+
+@{b}-g@{ub}
+@{b}-S@{ub}
+@{b}--strip-debug@{ub}
+     Remove debugging symbols only.
+
+@{b}--strip-unneeded@{ub}
+     Remove all symbols that are not needed for relocation processing.
+
+@{b}-K SYMBOLNAME@{ub}
+@{b}--keep-symbol=SYMBOLNAME@{ub}
+     Keep only symbol SYMBOLNAME from the source file.  This option may
+     be given more than once.
+
+@{b}-N SYMBOLNAME@{ub}
+@{b}--strip-symbol=SYMBOLNAME@{ub}
+     Remove symbol SYMBOLNAME from the source file. This option may be
+     given more than once, and may be combined with strip options other
+     than @{b}-K@{ub}.
+
+@{b}-o FILE@{ub}
+     Put the stripped output in FILE, rather than replacing the
+     existing file.  When this argument is used, only one OBJFILE
+     argument may be specified.
+
+@{b}-p@{ub}
+@{b}--preserve-dates@{ub}
+     Preserve the access and modification dates of the file.
+
+@{b}-x@{ub}
+@{b}--discard-all@{ub}
+     Remove non-global symbols.
+
+@{b}-X@{ub}
+@{b}--discard-locals@{ub}
+     Remove compiler-generated local symbols.  (These usually start
+     with @{b}L@{ub} or @{b}.@{ub}.)
+
+@{b}-V@{ub}
+@{b}--version@{ub}
+     Show the version number for @{b}strip@{ub}.
+
+@{b}-v@{ub}
+@{b}--verbose@{ub}
+     Verbose output: list all object files modified.  In the case of
+     archives, @{b}strip -v@{ub} lists all members of the archive.
+
+
+@endnode
+
+@node "c++filt" "binutils.guide/c++filt"
+@next "addr2line"
+@prev "strip"
+@toc "Main"
+
+c++filt
+*******
+
+     c++filt [ -_ | --strip-underscores ]
+     	[ -n | --no-strip-underscores ]
+             [ -s FORMAT | --format=FORMAT ]
+             [ --help ]  [ --version ]  [ SYMBOL... ]
+
+   The C++ language provides function overloading, which means that you
+can write many functions with the same name (providing each takes
+parameters of different types).  All C++ function names are encoded
+into a low-level assembly label (this process is known as @{i}mangling@{ui}).
+The @{b}c++filt@{ub} program does the inverse mapping: it decodes (@{i}demangles@{ui})
+low-level names into user-level names so that the linker can keep these
+overloaded functions from clashing.
+
+   Every alphanumeric word (consisting of letters, digits, underscores,
+dollars, or periods) seen in the input is a potential label.  If the
+label decodes into a C++ name, the C++ name replaces the low-level name
+in the output.
+
+   You can use @{b}c++filt@{ub} to decipher individual symbols:
+
+     c++filt SYMBOL
+
+   If no SYMBOL arguments are given, @{b}c++filt@{ub} reads symbol names from
+the standard input and writes the demangled names to the standard
+output.  All results are printed on the standard output.
+
+@{b}-_@{ub}
+@{b}--strip-underscores@{ub}
+     On some systems, both the C and C++ compilers put an underscore in
+     front of every name.  For example, the C name @{b}foo@{ub} gets the
+     low-level name @{b}_foo@{ub}.  This option removes the initial underscore.
+     Whether @{b}c++filt@{ub} removes the underscore by default is target
+     dependent.
+
+@{b}-n@{ub}
+@{b}--no-strip-underscores@{ub}
+     Do not remove the initial underscore.
+
+@{b}-s FORMAT@{ub}
+@{b}--format=FORMAT@{ub}
+     GNU @{b}nm@{ub} can decode three different methods of mangling, used by
+     different C++ compilers.  The argument to this option selects which
+     method it uses:
+
+    @{b}gnu@{ub}
+          the one used by the GNU compiler (the default method)
+
+    @{b}lucid@{ub}
+          the one used by the Lucid compiler
+
+    @{b}arm@{ub}
+          the one specified by the C++ Annotated Reference Manual
+
+@{b}--help@{ub}
+     Print a summary of the options to @{b}c++filt@{ub} and exit.
+
+@{b}--version@{ub}
+     Print the version number of @{b}c++filt@{ub} and exit.
+
+@{i}     Warning:@{ui} @{b}c++filt@{ub} is a new utility, and the details of its user
+     interface are subject to change in future releases.  In particular,
+     a command-line option may be required in the the future to decode
+     a name passed as an argument on the command line; in other words,
+
+          c++filt SYMBOL
+
+     may in a future release become
+
+          c++filt OPTION SYMBOL
+
+
+@endnode
+
+@node "addr2line" "binutils.guide/addr2line"
+@next "nlmconv"
+@prev "c++filt"
+@toc "Main"
+
+addr2line
+*********
+
+     addr2line [ -b BFDNAME | --target=BFDNAME ]
+               [ -C | --demangle ]
+               [ -e FILENAME | --exe=FILENAME ]
+               [ -f | --functions ] [ -s | --basename ]
+               [ -H | --help ] [ -V | --version ]
+               [ addr addr ... ]
+
+@{b}   addr2line@{ub} translates program addresses into file names and line
+numbers.  Given an address and an executable, it uses the debugging
+information in the executable to figure out which file name and line
+number are associated with a given address.
+
+   The executable to use is specified with the @{b}-e@{ub} option.  The default
+is @{b}a.out@{ub}.
+
+@{b}   addr2line@{ub} has two modes of operation.
+
+   In the first, hexadecimal addresses are specified on the command
+line, and @{b}addr2line@{ub} displays the file name and line number for each
+address.
+
+   In the second, @{b}addr2line@{ub} reads hexadecimal addresses from standard
+input, and prints the file name and line number for each address on
+standard output.  In this mode, @{b}addr2line@{ub} may be used in a pipe to
+convert dynamically chosen addresses.
+
+   The format of the output is @{b}FILENAME:LINENO@{ub}.  The file name and line
+number for each address is printed on a separate line.  If the @{b}-f@{ub}
+option is used, then each @{b}FILENAME:LINENO@{ub} line is preceded by a
+@{b}FUNCTIONNAME@{ub} line which is the name of the function containing the
+address.
+
+   If the file name or function name can not be determined, @{b}addr2line@{ub}
+will print two question marks in their place.  If the line number can
+not be determined, @{b}addr2line@{ub} will print 0.
+
+   The long and short forms of options, shown here as alternatives, are
+equivalent.
+
+@{b}-b BFDNAME@{ub}
+@{b}--target=BFDNAME@{ub}
+     Specify that the object-code format for the object files is
+     BFDNAME.
+
+@{b}-C@{ub}
+@{b}--demangle@{ub}
+     Decode (@{i}demangle@{ui}) low-level symbol names into user-level names.
+     Besides removing any initial underscore prepended by the system,
+     this makes C++ function names readable.  See @{"c++filt" link "c++filt"}, for more
+     information on demangling.
+
+@{b}-e FILENAME@{ub}
+@{b}--exe=FILENAME@{ub}
+     Specify the name of the executable for which addresses should be
+     translated.  The default file is @{b}a.out@{ub}.
+
+@{b}-f@{ub}
+@{b}--functions@{ub}
+     Display function names as well as file and line number information.
+
+@{b}-s@{ub}
+@{b}--basenames@{ub}
+     Display only the base of each file name.
+
+
+@endnode
+
+@node "nlmconv" "binutils.guide/nlmconv"
+@next "Selecting The Target System"
+@prev "addr2line"
+@toc "Main"
+
+nlmconv
+*******
+
+@{b}   nlmconv@{ub} converts a relocatable object file into a NetWare Loadable
+Module.
+
+@{i}     Warning:@{ui} @{b}nlmconv@{ub} is not always built as part of the binary
+     utilities, since it is only useful for NLM targets.
+
+     nlmconv [ -I BFDNAME | --input-target=BFDNAME ]
+             [ -O BFDNAME | --output-target=BFDNAME ]
+             [ -T HEADERFILE | --header-file=HEADERFILE ]
+             [ -d | --debug]  [ -l LINKER | --linker=LINKER ]
+             [ -h | --help ]  [ -V | --version ]
+             INFILE OUTFILE
+
+@{b}   nlmconv@{ub} converts the relocatable @{b}i386@{ub} object file INFILE into the
+NetWare Loadable Module OUTFILE, optionally reading HEADERFILE for NLM
+header information.  For instructions on writing the NLM command file
+language used in header files, see the @{b}linkers@{ub} section, @{b}NLMLINK@{ub} in
+particular, of the `NLM Development and Tools Overview', which is part
+of the NLM Software Developer's Kit ("NLM SDK"), available from Novell,
+Inc.  @{b}nlmconv@{ub} uses the GNU Binary File Descriptor library to read
+INFILE; see @{"BFD" link "ld.guide/BFD"}, for more information.
+
+@{b}   nlmconv@{ub} can perform a link step.  In other words, you can list more
+than one object file for input if you list them in the definitions file
+(rather than simply specifying one input file on the command line).  In
+this case, @{b}nlmconv@{ub} calls the linker for you.
+
+@{b}-I BFDNAME@{ub}
+@{b}--input-target=BFDNAME@{ub}
+     Object format of the input file.  @{b}nlmconv@{ub} can usually determine
+     the format of a given file (so no default is necessary).  See
+     @{"Target Selection" link "Target Selection"}, for more information.
+
+@{b}-O BFDNAME@{ub}
+@{b}--output-target=BFDNAME@{ub}
+     Object format of the output file.  @{b}nlmconv@{ub} infers the output
+     format based on the input format, e.g. for a @{b}i386@{ub} input file the
+     output format is @{b}nlm32-i386@{ub}.  See @{"Target Selection" link "Target Selection"}, for more
+     information.
+
+@{b}-T HEADERFILE@{ub}
+@{b}--header-file=HEADERFILE@{ub}
+     Reads HEADERFILE for NLM header information.  For instructions on
+     writing the NLM command file language used in header files, see
+     see the @{b}linkers@{ub} section, of the `NLM Development and Tools
+     Overview', which is part of the NLM Software Developer's Kit,
+     available from Novell, Inc.
+
+@{b}-d@{ub}
+@{b}--debug@{ub}
+     Displays (on standard error) the linker command line used by
+     @{b}nlmconv@{ub}.
+
+@{b}-l LINKER@{ub}
+@{b}--linker=LINKER@{ub}
+     Use LINKER for any linking.  LINKER can be an abosolute or a
+     relative pathname.
+
+@{b}-h@{ub}
+@{b}--help@{ub}
+     Prints a usage summary.
+
+@{b}-V@{ub}
+@{b}--version@{ub}
+     Prints the version number for @{b}nlmconv@{ub}.
+
+
+@endnode
+
+@node "Selecting The Target System" "binutils.guide/Selecting The Target System"
+@next "Reporting Bugs"
+@prev "nlmconv"
+@toc "Main"
+
+Selecting the target system
+***************************
+
+   You can specify three aspects of the target system to the GNU binary
+file utilities, each in several ways:
+
+   * the target
+
+   * the architecture
+
+   * the linker emulation (which applies to the linker only)
+
+   In the following summaries, the lists of ways to specify values are
+in order of decreasing precedence.  The ways listed first override those
+listed later.
+
+   The commands to list valid values only list the values for which the
+programs you are running were configured.  If they were configured with
+@{b}--enable-targets=all@{ub}, the commands list most of the available values,
+but a few are left out; not all targets can be configured in at once
+because some of them can only be configured @{i}native@{ui} (on hosts with the
+same type as the target system).
+
+
+ @{" Target Selection           " link "Target Selection"}  
+ @{" Architecture Selection     " link "Architecture Selection"}  
+ @{" Linker Emulation Selection " link "Linker Emulation Selection"}
+
+
+@endnode
+
+@node "Target Selection" "binutils.guide/Target Selection"
+@next "Architecture Selection"
+@toc "Selecting The Target System"
+
+Target Selection
+================
+
+   A @{i}target@{ui} is an object file format.  A given target may be supported
+for multiple architectures (see @{"Architecture Selection" link "Architecture Selection"}).  A target
+selection may also have variations for different operating systems or
+architectures.
+
+   The command to list valid target values is @{b}objdump -i@{ub} (the first
+column of output contains the relevant information).
+
+   Some sample values are: @{b}a.out-hp300bsd@{ub}, @{b}ecoff-littlemips@{ub},
+@{b}a.out-sunos-big@{ub}.
+
+   You can also specify a target using a configuration triplet.  This is
+the same sort of name that is passed to configure to specify a target.
+When you use a configuration triplet as an argument, it must be fully
+canonicalized.  You can see the canonical version of a triplet by
+running the shell script @{b}config.sub@{ub} which is included with the sources.
+
+   Some sample configuration triplets are: @{b}m68k-hp-bsd@{ub},
+@{b}mips-dec-ultrix@{ub}, @{b}sparc-sun-sunos@{ub}.
+
+@{b}objdump@{ub} Target
+--------------
+
+   Ways to specify:
+
+  1. command line option: @{b}-b@{ub} or @{b}--target@{ub}
+
+  2. environment variable @{b}GNUTARGET@{ub}
+
+  3. deduced from the input file
+
+@{b}objcopy@{ub} and @{b}strip@{ub} Input Target
+------------------------------
+
+   Ways to specify:
+
+  1. command line options: @{b}-I@{ub} or @{b}--input-target@{ub}, or @{b}-F@{ub} or @{b}--target@{ub}
+
+  2. environment variable @{b}GNUTARGET@{ub}
+
+  3. deduced from the input file
+
+@{b}objcopy@{ub} and @{b}strip@{ub} Output Target
+-------------------------------
+
+   Ways to specify:
+
+  1. command line options: @{b}-O@{ub} or @{b}--output-target@{ub}, or @{b}-F@{ub} or @{b}--target@{ub}
+
+  2. the input target (see "@{b}objcopy@{ub} and @{b}strip@{ub} Input Target" above)
+
+  3. environment variable @{b}GNUTARGET@{ub}
+
+  4. deduced from the input file
+
+@{b}nm@{ub}, @{b}size@{ub}, and @{b}strings@{ub} Target
+----------------------------
+
+   Ways to specify:
+
+  1. command line option: @{b}--target@{ub}
+
+  2. environment variable @{b}GNUTARGET@{ub}
+
+  3. deduced from the input file
+
+Linker Input Target
+-------------------
+
+   Ways to specify:
+
+  1. command line option: @{b}-b@{ub} or @{b}--format@{ub} (see @{"Options" link "ld.guide/Options"})
+
+  2. script command @{b}TARGET@{ub} (see @{"Option Commands" link "ld.guide/Option Commands"})
+
+  3. environment variable @{b}GNUTARGET@{ub} (see @{"Environment" link "ld.guide/Environment"})
+
+  4. the default target of the selected linker emulation (see
+     @{"Linker Emulation Selection" link "Linker Emulation Selection"})
+
+Linker Output Target
+--------------------
+
+   Ways to specify:
+
+  1. command line option: @{b}-oformat@{ub} (see @{"Options" link "ld.guide/Options"})
+
+  2. script command @{b}OUTPUT_FORMAT@{ub} (see @{"Option Commands" link "ld.guide/Option Commands"})
+
+  3. the linker input target (see "Linker Input Target" above)
+
+
+@endnode
+
+@node "Architecture Selection" "binutils.guide/Architecture Selection"
+@next "Linker Emulation Selection"
+@prev "Target Selection"
+@toc "Selecting The Target System"
+
+Architecture selection
+======================
+
+   An @{i}architecture@{ui} is a type of CPU on which an object file is to run.
+Its name may contain a colon, separating the name of the processor
+family from the name of the particular CPU.
+
+   The command to list valid architecture values is @{b}objdump -i@{ub} (the
+second column contains the relevant information).
+
+   Sample values: @{b}m68k:68020@{ub}, @{b}mips:3000@{ub}, @{b}sparc@{ub}.
+
+@{b}objdump@{ub} Architecture
+--------------------
+
+   Ways to specify:
+
+  1. command line option: @{b}-m@{ub} or @{b}--architecture@{ub}
+
+  2. deduced from the input file
+
+@{b}objcopy@{ub}, @{b}nm@{ub}, @{b}size@{ub}, @{b}strings@{ub} Architecture
+---------------------------------------
+
+   Ways to specify:
+
+  1. deduced from the input file
+
+Linker Input Architecture
+-------------------------
+
+   Ways to specify:
+
+  1. deduced from the input file
+
+Linker Output Architecture
+--------------------------
+
+   Ways to specify:
+
+  1. script command @{b}OUTPUT_ARCH@{ub} (see @{"Option Commands" link "ld.guide/Option Commands"})
+
+  2. the default architecture from the linker output target (see
+     @{"Target Selection" link "Target Selection"})
+
+
+@endnode
+
+@node "Linker Emulation Selection" "binutils.guide/Linker Emulation Selection"
+@prev "Architecture Selection"
+@toc "Selecting The Target System"
+
+Linker emulation selection
+==========================
+
+   A linker @{i}emulation@{ui} is a "personality" of the linker, which gives the
+linker default values for the other aspects of the target system.  In
+particular, it consists of
+
+   * the linker script
+
+   * the target
+
+   * several "hook" functions that are run at certain stages of the
+     linking process to do special things that some targets require
+
+   The command to list valid linker emulation values is @{b}ld -V@{ub}.
+
+   Sample values: @{b}hp300bsd@{ub}, @{b}mipslit@{ub}, @{b}sun4@{ub}.
+
+   Ways to specify:
+
+  1. command line option: @{b}-m@{ub} (see @{"Options" link "ld.guide/Options"})
+
+  2. environment variable @{b}LDEMULATION@{ub}
+
+  3. compiled-in @{b}DEFAULT_EMULATION@{ub} from @{b}Makefile@{ub}, which comes from @{b}EMUL@{ub}
+     in @{b}config/TARGET.mt@{ub}
+
+
+@endnode
+
+@node "Reporting Bugs" "binutils.guide/Reporting Bugs"
+@next "Index"
+@prev "Selecting The Target System"
+@toc "Main"
+
+Reporting Bugs
+**************
+
+   Your bug reports play an essential role in making the binary
+utilities reliable.
+
+   Reporting a bug may help you by bringing a solution to your problem,
+or it may not.  But in any case the principal function of a bug report
+is to help the entire community by making the next version of the binary
+utilities work better.  Bug reports are your contribution to their
+maintenance.
+
+   In order for a bug report to serve its purpose, you must include the
+information that enables us to fix the bug.
+
+
+ @{" Bug Criteria               " link "Bug Criteria"}  Have you found a bug?
+ @{" Bug Reporting              " link "Bug Reporting"}  How to report bugs
+
+
+@endnode
+
+@node "Bug Criteria" "binutils.guide/Bug Criteria"
+@next "Bug Reporting"
+@toc "Reporting Bugs"
+
+Have you found a bug?
+=====================
+
+   If you are not sure whether you have found a bug, here are some
+guidelines:
+
+   * If a binary utility gets a fatal signal, for any input whatever,
+     that is a bug.  Reliable utilities never crash.
+
+   * If a binary utility produces an error message for valid input,
+     that is a bug.
+
+   * If you are an experienced user of binary utilities, your
+     suggestions for improvement are welcome in any case.
+
+
+@endnode
+
+@node "Bug Reporting" "binutils.guide/Bug Reporting"
+@prev "Bug Criteria"
+@toc "Reporting Bugs"
+
+How to report bugs
+==================
+
+   A number of companies and individuals offer support for GNU
+products.  If you obtained the binary utilities from a support
+organization, we recommend you contact that organization first.
+
+   You can find contact information for many support companies and
+individuals in the file @{b}etc/SERVICE@{ub} in the GNU Emacs distribution.
+
+   In any event, we also recommend that you send bug reports for the
+binary utilities to @{b}bug-gnu-utils@prep.ai.mit.edu@{ub}.
+
+   The fundamental principle of reporting bugs usefully is this: @{b}report
+all the facts@{ub}.  If you are not sure whether to state a fact or leave it
+out, state it!
+
+   Often people omit facts because they think they know what causes the
+problem and assume that some details do not matter.  Thus, you might
+assume that the name of a file you use in an example does not matter.
+Well, probably it does not, but one cannot be sure.  Perhaps the bug is
+a stray memory reference which happens to fetch from the location where
+that pathname is stored in memory; perhaps, if the pathname were
+different, the contents of that location would fool the utility into
+doing the right thing despite the bug.  Play it safe and give a
+specific, complete example.  That is the easiest thing for you to do,
+and the most helpful.
+
+   Keep in mind that the purpose of a bug report is to enable us to fix
+the bug if it is new to us.  Therefore, always write your bug reports
+on the assumption that the bug has not been reported previously.
+
+   Sometimes people give a few sketchy facts and ask, "Does this ring a
+bell?"  Those bug reports are useless, and we urge everyone to @{i}refuse
+to respond to them@{ui} except to chide the sender to report bugs properly.
+
+   To enable us to fix the bug, you should include all these things:
+
+   * The version of the utility.  Each utility announces it if you
+     start it with the @{b}--version@{ub} argument.
+
+     Without this, we will not know whether there is any point in
+     looking for the bug in the current version of the binary utilities.
+
+   * Any patches you may have applied to the source, including any
+     patches made to the @{b}BFD@{ub} library.
+
+   * The type of machine you are using, and the operating system name
+     and version number.
+
+   * What compiler (and its version) was used to compile the
+     utilities--e.g.  "@{b}gcc-2.7@{ub}".
+
+   * The command arguments you gave the utility to observe the bug.  To
+     guarantee you will not omit something important, list them all.  A
+     copy of the Makefile (or the output from make) is sufficient.
+
+     If we were to try to guess the arguments, we would probably guess
+     wrong and then we might not encounter the bug.
+
+   * A complete input file, or set of input files, that will reproduce
+     the bug.  If the utility is reading an object file or files, then
+     it is generally most helpful to send the actual object files,
+     uuencoded if necessary to get them through the mail system.
+     Making them available for anonymous FTP is not as good, but may be
+     the only reasonable choice for large object files.
+
+     If the source files were produced exclusively using GNU programs
+     (e.g., @{b}gcc@{ub}, @{b}gas@{ub}, and/or the GNU @{b}ld@{ub}), then it may be OK to send the
+     source files rather than the object files.  In this case, be sure
+     to say exactly what version of @{b}gcc@{ub}, or whatever, was used to
+     produce the object files.  Also say how @{b}gcc@{ub}, or whatever, was
+     configured.
+
+   * A description of what behavior you observe that you believe is
+     incorrect.  For example, "It gets a fatal signal."
+
+     Of course, if the bug is that the utility gets a fatal signal,
+     then we will certainly notice it.  But if the bug is incorrect
+     output, we might not notice unless it is glaringly wrong.  You
+     might as well not give us a chance to make a mistake.
+
+     Even if the problem you experience is a fatal signal, you should
+     still say so explicitly.  Suppose something strange is going on,
+     such as, your copy of the utility is out of synch, or you have
+     encountered a bug in the C library on your system.  (This has
+     happened!)  Your copy might crash and ours would not.  If you told
+     us to expect a crash, then when ours fails to crash, we would know
+     that the bug was not happening for us.  If you had not told us to
+     expect a crash, then we would not be able to draw any conclusion
+     from our observations.
+
+   * If you wish to suggest changes to the source, send us context
+     diffs, as generated by @{b}diff@{ub} with the @{b}-u@{ub}, @{b}-c@{ub}, or @{b}-p@{ub} option.  Always
+     send diffs from the old file to the new file.  If you even discuss
+     something in the @{b}ld@{ub} source, refer to it by context, not by line
+     number.
+
+     The line numbers in our development sources will not match those
+     in your sources.  Your line numbers would convey no useful
+     information to us.
+
+   Here are some things that are not necessary:
+
+   * A description of the envelope of the bug.
+
+     Often people who encounter a bug spend a lot of time investigating
+     which changes to the input file will make the bug go away and which
+     changes will not affect it.
+
+     This is often time consuming and not very useful, because the way
+     we will find the bug is by running a single example under the
+     debugger with breakpoints, not by pure deduction from a series of
+     examples.  We recommend that you save your time for something else.
+
+     Of course, if you can find a simpler example to report @{i}instead@{ui} of
+     the original one, that is a convenience for us.  Errors in the
+     output will be easier to spot, running under the debugger will take
+     less time, and so on.
+
+     However, simplification is not vital; if you do not want to do
+     this, report the bug anyway and send us the entire test case you
+     used.
+
+   * A patch for the bug.
+
+     A patch for the bug does help us if it is a good one.  But do not
+     omit the necessary information, such as the test case, on the
+     assumption that a patch is all we need.  We might see problems
+     with your patch and decide to fix the problem another way, or we
+     might not understand it at all.
+
+     Sometimes with programs as complicated as the binary utilities it
+     is very hard to construct an example that will make the program
+     follow a certain path through the code.  If you do not send us the
+     example, we will not be able to construct one, so we will not be
+     able to verify that the bug is fixed.
+
+     And if we cannot understand what bug you are trying to fix, or why
+     your patch should be an improvement, we will not install it.  A
+     test case will help us to understand.
+
+   * A guess about what the bug is or what it depends on.
+
+     Such guesses are usually wrong.  Even we cannot guess right about
+     such things without first using the debugger to find the facts.
+
+
+@endnode
+
+@node "Index" "binutils.guide/Index"
+@prev "Reporting Bugs"
+@toc "Main"
+
+Index
+*****
+
+@index "Index"
+
+
+
+ @{" .stab                                    " link "objdump"}   objdump
+ @{" addr2line                                " link "addr2line"}   addr2line
+ @{" address to file name and line number     " link "addr2line"}   addr2line
+ @{" all header information, object file      " link "objdump"}   objdump
+ @{" ar                                       " link "ar"}   ar
+ @{" ar compatibility                         " link "ar"}   ar
+ @{" architecture                             " link "objdump"}   objdump
+ @{" architectures available                  " link "objdump"}   objdump
+ @{" archive contents                         " link "ranlib"}   ranlib
+ @{" archive headers                          " link "objdump"}   objdump
+ @{" archives                                 " link "ar"}   ar
+ @{" bug criteria                             " link "Bug Criteria"}   Bug Criteria
+ @{" bug reports                              " link "Bug Reporting"}   Bug Reporting
+ @{" bugs                                     " link "Reporting Bugs"}   Reporting Bugs
+ @{" bugs, reporting                          " link "Bug Reporting"}   Bug Reporting
+ @{" c++filt                                  " link "c++filt"}   c++filt
+ @{" collections of files                     " link "ar"}   ar
+ @{" compatibility, ar                        " link "ar"}   ar
+ @{" contents of archive                      " link "ar cmdline"}   ar cmdline
+ @{" crash                                    " link "Bug Criteria"}   Bug Criteria
+ @{" creating archives                        " link "ar cmdline"}   ar cmdline
+ @{" dates in archive                         " link "ar cmdline"}   ar cmdline
+ @{" debug symbols                            " link "objdump"}   objdump
+ @{" debugging symbols                        " link "nm"}   nm
+ @{" deleting from archive                    " link "ar cmdline"}   ar cmdline
+ @{" demangling C++ symbols                   " link "c++filt"}   c++filt
+ @{" demangling in nm                         " link "nm"}   nm
+ @{" demangling in objdump <1>                " link "objdump"}   objdump
+ @{" demangling in objdump                    " link "addr2line"}   addr2line
+ @{" disassembling object code                " link "objdump"}   objdump
+ @{" disassembly architecture                 " link "objdump"}   objdump
+ @{" disassembly endianness                   " link "objdump"}   objdump
+ @{" disassembly, with source                 " link "objdump"}   objdump
+ @{" discarding symbols                       " link "strip"}   strip
+ @{" dynamic relocation entries, in object file " link "objdump"}   objdump
+ @{" dynamic symbol table entries, printing   " link "objdump"}   objdump
+ @{" dynamic symbols                          " link "nm"}   nm
+ @{" ELF object file format                   " link "objdump"}   objdump
+ @{" endianness                               " link "objdump"}   objdump
+ @{" error on valid input                     " link "Bug Criteria"}   Bug Criteria
+ @{" external symbols                         " link "nm"}   nm
+ @{" extract from archive                     " link "ar cmdline"}   ar cmdline
+ @{" fatal signal                             " link "Bug Criteria"}   Bug Criteria
+ @{" file name                                " link "nm"}   nm
+ @{" header information, all                  " link "objdump"}   objdump
+ @{" input file name                          " link "nm"}   nm
+ @{" libraries                                " link "ar"}   ar
+ @{" listings strings                         " link "strings"}   strings
+ @{" machine instructions                     " link "objdump"}   objdump
+ @{" moving in archive                        " link "ar cmdline"}   ar cmdline
+ @{" MRI compatibility, ar                    " link "ar scripts"}   ar scripts
+ @{" name duplication in archive              " link "ar cmdline"}   ar cmdline
+ @{" name length                              " link "ar"}   ar
+ @{" nm                                       " link "nm"}   nm
+ @{" nm compatibility                         " link "nm"}   nm
+ @{" nm format                                " link "nm"}   nm
+ @{" objdump                                  " link "objdump"}   objdump
+ @{" object code format <1>                   " link "objdump"}   objdump
+ @{" object code format <2>                   " link "nm"}   nm
+ @{" object code format <3>                   " link "strings"}   strings
+ @{" object code format <4>                   " link "addr2line"}   addr2line
+ @{" object code format                       " link "size"}   size
+ @{" object file header                       " link "objdump"}   objdump
+ @{" object file information                  " link "objdump"}   objdump
+ @{" object file sections                     " link "objdump"}   objdump
+ @{" object formats available                 " link "objdump"}   objdump
+ @{" operations on archive                    " link "ar cmdline"}   ar cmdline
+ @{" printing from archive                    " link "ar cmdline"}   ar cmdline
+ @{" printing strings                         " link "strings"}   strings
+ @{" quick append to archive                  " link "ar cmdline"}   ar cmdline
+ @{" radix for section sizes                  " link "size"}   size
+ @{" ranlib                                   " link "ranlib"}   ranlib
+ @{" relative placement in archive            " link "ar cmdline"}   ar cmdline
+ @{" relocation entries, in object file       " link "objdump"}   objdump
+ @{" removing symbols                         " link "strip"}   strip
+ @{" repeated names in archive                " link "ar cmdline"}   ar cmdline
+ @{" replacement in archive                   " link "ar cmdline"}   ar cmdline
+ @{" reporting bugs                           " link "Reporting Bugs"}   Reporting Bugs
+ @{" scripts, ar                              " link "ar scripts"}   ar scripts
+ @{" section addresses in objdump             " link "objdump"}   objdump
+ @{" section headers                          " link "objdump"}   objdump
+ @{" section information                      " link "objdump"}   objdump
+ @{" section sizes                            " link "size"}   size
+ @{" sections, full contents                  " link "objdump"}   objdump
+ @{" size                                     " link "size"}   size
+ @{" size display format                      " link "size"}   size
+ @{" size number format                       " link "size"}   size
+ @{" sorting symbols                          " link "nm"}   nm
+ @{" source disassembly                       " link "objdump"}   objdump
+ @{" source file name                         " link "nm"}   nm
+ @{" source filenames for object files        " link "objdump"}   objdump
+ @{" stab                                     " link "objdump"}   objdump
+ @{" start-address                            " link "objdump"}   objdump
+ @{" stop-address                             " link "objdump"}   objdump
+ @{" strings                                  " link "strings"}   strings
+ @{" strings, printing                        " link "strings"}   strings
+ @{" strip                                    " link "strip"}   strip
+ @{" symbol index <1>                         " link "ar"}   ar
+ @{" symbol index                             " link "ranlib"}   ranlib
+ @{" symbol index, listing                    " link "nm"}   nm
+ @{" symbol line numbers                      " link "nm"}   nm
+ @{" symbol table entries, printing           " link "objdump"}   objdump
+ @{" symbols                                  " link "nm"}   nm
+ @{" symbols, discarding                      " link "strip"}   strip
+ @{" undefined symbols                        " link "nm"}   nm
+ @{" Unix compatibility, ar                   " link "ar cmdline"}   ar cmdline
+ @{" updating an archive                      " link "ar cmdline"}   ar cmdline
+ @{" version                                  " link "Top"}   Top
+ @{" VMA in objdump                           " link "objdump"}   objdump
+ @{" wide output, printing                    " link "objdump"}   objdump
+ @{" writing archive index                    " link "ar cmdline"}   ar cmdline
+
+@endnode
+

@@ -1,0 +1,1151 @@
+@database gasp.guide
+
+@Master /gg-src/gg/fsf/binutils/gas/doc/gasp.texi
+
+@Width 72
+
+
+This is the AmigaGuide®  file gasp.guide, produced by Makeinfo-1.68 from 
+the input file /gg-src/gg/fsf/binutils/gas/doc/gasp.texi.
+
+START-INFO-DIR-ENTRY
+* gasp: (gasp).                     The GNU Assembler Preprocessor
+END-INFO-DIR-ENTRY
+
+   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions.
+
+@node Main "gasp.guide"
+@next "Overview"
+
+GASP
+****
+
+   GASP is a preprocessor for assembly programs.
+
+   This file describes version 1 of GASP.
+
+   Steve Chamberlain wrote GASP; Roland Pesch wrote this manual.
+
+
+ @{" Overview                   " link "Overview"}  What is GASP?
+ @{" Invoking GASP              " link "Invoking GASP"}  Command line options.
+ @{" Commands                   " link "Commands"}  Preprocessor commands.
+ @{" Index                      " link "Index"}  Index.
+
+
+@endnode
+
+@node "Overview" "gasp.guide/Overview"
+@next "Invoking GASP"
+@prev "Main"
+@toc "Main"
+
+What is GASP?
+*************
+
+   The primary purpose of the GNU assembler is to assemble the output of
+other programs--notably compilers.  When you have to hand-code
+specialized routines in assembly, that means the GNU assembler is an
+unfriendly processor: it has no directives for macros, conditionals, or
+many other conveniences that you might expect.
+
+   In some cases you can simply use the C preprocessor, or a generalized
+preprocessor like M4; but this can be awkward, since none of these
+things are designed with assembly in mind.
+
+   GASP fills this need.  It is expressly designed to provide the
+facilities you need with hand-coded assembly code.  Implementing it as a
+preprocessor, rather than part of the assembler, allows the maximum
+flexibility: you can use it with hand-coded assembly, without paying a
+penalty of added complexity in the assembler you use for compiler
+output.
+
+   Here is a small example to give the flavor of GASP.  This input to
+GASP
+
+             .MACRO  saveregs from=8 to=14
+     count   .ASSIGNA \\from
+             ! save r\\from..r\\to
+             .AWHILE  \\&count LE \\to
+             mov     r\\&count,@-sp
+     count   .ASSIGNA  \\&count + 1
+             .AENDW
+             .ENDM
+     
+             saveregs from=12
+     
+     bar:    mov     #H'dead+10,r0
+     foo     .SDATAC "hello"<10>
+             .END
+
+generates this assembly program:
+
+             ! save r12..r14
+             mov     r12,@-sp
+             mov     r13,@-sp
+             mov     r14,@-sp
+     
+     bar:    mov     #57005+10,r0
+     foo:    .byte   6,104,101,108,108,111,10
+
+
+@endnode
+
+@node "Invoking GASP" "gasp.guide/Invoking GASP"
+@next "Commands"
+@prev "Overview"
+@toc "Main"
+
+Command Line Options
+********************
+
+   The simplest way to use GASP is to run it as a filter and assemble
+its output.  In Unix and its ilk, you can do this, for example:
+
+     $ gasp prog.asm | as -o prog.o
+
+   Naturally, there are also a few command-line options to allow you to
+request variations on this basic theme.  Here is the full set of
+possibilities for the GASP command line.
+
+     gasp  [ -a | --alternate ]
+           [ -c CHAR | --commentchar CHAR ]
+           [ -d | --debug ]  [ -h | --help ] [ -M | --mri ]
+           [ -o OUTFILE | --output OUTFILE ]
+           [ -p | --print ]  [ -s | --copysource ]
+           [ -u | --unreasonable ]  [ -v | --version ]
+           INFILE ...
+
+@{b}INFILE ...@{ub}
+     The input file names.  You must specify at least one input file;
+     if you specify more, GASP preprocesses them all, concatenating the
+     output in the order you list the INFILE arguments.
+
+     Mark the end of each input file with the preprocessor command
+     @{b}.END@{ub}.  See @{"Miscellaneous commands" link "Other Commands"}.
+
+@{b}-a@{ub}
+@{b}--alternate@{ub}
+     Use alternative macro syntax.  See @{"Alternate macro syntax" link "Alternate"}, for a
+     discussion of how this syntax differs from the default GASP syntax.
+
+@{b}-c 'CHAR'@{ub}
+@{b}--commentchar 'CHAR'@{ub}
+     Use CHAR as the comment character.  The default comment character
+     is @{b}!@{ub}.  For example, to use a semicolon as the comment character,
+     specify @{b}-c ';'@{ub} on the GASP command line.  Since assembler command
+     characters often have special significance to command shells, it
+     is a good idea to quote or escape CHAR when you specify a comment
+     character.
+
+     For the sake of simplicity, all examples in this manual use the
+     default comment character @{b}!@{ub}.
+
+@{b}-d@{ub}
+@{b}--debug@{ub}
+     Show debugging statistics.  In this version of GASP, this option
+     produces statistics about the string buffers that GASP allocates
+     internally.  For each defined buffersize S, GASP shows the number
+     of strings N that it allocated, with a line like this:
+
+          strings size S : N
+
+     GASP displays these statistics on the standard error stream, when
+     done preprocessing.
+
+@{b}-h@{ub}
+@{b}--help@{ub}
+     Display a summary of the GASP command line options.
+
+@{b}-M@{ub}
+@{b}--mri@{ub}
+     Use MRI compatibility mode.  Using this option causes GASP to
+     accept the syntax and pseudo-ops used by the Microtec Research
+     @{b}ASM68K@{ub} assembler.
+
+@{b}-o OUTFILE@{ub}
+@{b}--output OUTFILE@{ub}
+     Write the output in a file called OUTFILE.  If you do not use the
+     @{b}-o@{ub} option, GASP writes its output on the standard output stream.
+
+@{b}-p@{ub}
+@{b}--print@{ub}
+     Print line numbers.  GASP obeys this option @{i}only@{ui} if you also
+     specify @{b}-s@{ub} to copy source lines to its output.  With @{b}-s -p@{ub}, GASP
+     displays the line number of each source line copied (immediately
+     after the comment character at the beginning of the line).
+
+@{b}-s@{ub}
+@{b}--copysource@{ub}
+     Copy the source lines to the output file.  Use this option to see
+     the effect of each preprocessor line on the GASP output.  GASP
+     places a comment character (@{b}!@{ub} by default) at the beginning of each
+     source line it copies, so that you can use this option and still
+     assemble the result.
+
+@{b}-u@{ub}
+@{b}--unreasonable@{ub}
+     Bypass "unreasonable expansion" limit.  Since you can define GASP
+     macros inside other macro definitions, the preprocessor normally
+     includes a sanity check.  If your program requires more than 1,000
+     nested expansions, GASP normally exits with an error message.  Use
+     this option to turn off this check, allowing unlimited nested
+     expansions.
+
+@{b}-v@{ub}
+@{b}--version@{ub}
+     Display the GASP version number.
+
+
+@endnode
+
+@node "Commands" "gasp.guide/Commands"
+@next "Index"
+@prev "Invoking GASP"
+@toc "Main"
+
+Preprocessor Commands
+*********************
+
+   GASP commands have a straightforward syntax that fits in well with
+assembly conventions.  In general, a command extends for a line, and may
+have up to three fields: an optional label, the command itself, and
+optional arguments to the command.  You can write commands in upper or
+lower case, though this manual shows them in upper case.  See
+@{"Details of the GASP syntax" link "Syntax Details"}, for more information.
+
+
+ @{" Conditionals " link "Conditionals"}  
+ @{" Loops      " link "Loops"}  
+ @{" Variables  " link "Variables"}  
+ @{" Macros     " link "Macros"}  
+ @{" Data       " link "Data"}  
+ @{" Listings   " link "Listings"}  
+ @{" Other Commands " link "Other Commands"}  
+ @{" Syntax Details " link "Syntax Details"}  
+ @{" Alternate  " link "Alternate"}
+
+
+@endnode
+
+@node "Conditionals" "gasp.guide/Conditionals"
+@next "Loops"
+@toc "Commands"
+
+Conditional assembly
+====================
+
+   The conditional-assembly directives allow you to include or exclude
+portions of an assembly depending on how a pair of expressions, or a
+pair of strings, compare.
+
+   The overall structure of conditionals is familiar from many other
+contexts.  @{b}.AIF@{ub} marks the start of a conditional, and precedes assembly
+for the case when the condition is true.   An optional @{b}.AELSE@{ub} precedes
+assembly for the converse case, and an @{b}.AENDI@{ub} marks the end of the
+condition.
+
+   You may nest conditionals up to a depth of 100; GASP rejects nesting
+beyond that, because it may indicate a bug in your macro structure.
+
+   Conditionals are primarily useful inside macro definitions, where you
+often need different effects depending on argument values.  See
+@{"Defining your own directives" link "Macros"}, for details about defining macros.
+
+@{b}.AIF EXPRA CMP EXPRB@{ub}
+@{b}.AIF "STRA" CMP "STRB"@{ub}
+     The governing condition goes on the same line as the @{b}.AIF@{ub}
+     preprocessor command.  You may compare either two strings, or two
+     expressions.
+
+     When you compare strings, only two conditional CMP comparison
+     operators are available: @{b}EQ@{ub} (true if STRA and STRB are identical),
+     and @{b}NE@{ub} (the opposite).
+
+     When you compare two expressions, @{i}both expressions must be
+     absolute@{ui} (see @{"Arithmetic expressions in GASP" link "Expressions"}).  You can use these
+     CMP comparison operators with expressions:
+
+    @{b}EQ@{ub}
+          Are EXPRA and EXPRB equal?  (For strings, are STRA and STRB
+          identical?)
+
+    @{b}NE@{ub}
+          Are EXPRA and EXPRB different?  (For strings, are STRA and
+          STRB different?
+
+    @{b}LT@{ub}
+          Is EXPRA less than EXPRB?  (Not allowed for strings.)
+
+    @{b}LE@{ub}
+          Is EXPRA less than or equal to EXPRB?  (Not allowed for
+          strings.)
+
+    @{b}GT@{ub}
+          Is EXPRA greater than EXPRB?  (Not allowed for strings.)
+
+    @{b}GE@{ub}
+          Is EXPRA greater than or equal to EXPRB?  (Not allowed for
+          strings.)
+
+@{b}.AELSE@{ub}
+     Marks the start of assembly code to be included if the condition
+     fails.  Optional, and only allowed within a conditional (between
+     @{b}.AIF@{ub} and @{b}.AENDI@{ub}).
+
+@{b}.AENDI@{ub}
+     Marks the end of a conditional assembly.
+
+
+@endnode
+
+@node "Loops" "gasp.guide/Loops"
+@next "Variables"
+@prev "Conditionals"
+@toc "Commands"
+
+Repetitive sections of assembly
+===============================
+
+   Two preprocessor directives allow you to repeatedly issue copies of
+the same block of assembly code.
+
+@{b}.AREPEAT AEXP@{ub}
+@{b}.AENDR@{ub}
+     If you simply need to repeat the same block of assembly over and
+     over a fixed number of times, sandwich one instance of the
+     repeated block between @{b}.AREPEAT@{ub} and @{b}.AENDR@{ub}.  Specify the number of
+     copies as AEXP (which must be an absolute expression).  For
+     example, this repeats two assembly statements three times in
+     succession:
+
+                  .AREPEAT        3
+                  rotcl   r2
+                  div1    r0,r1
+                  .AENDR
+
+@{b}.AWHILE EXPRA CMP EXPRB@{ub}
+@{b}.AENDW@{ub}
+@{b}.AWHILE STRA CMP STRB@{ub}
+@{b}.AENDW@{ub}
+     To repeat a block of assembly depending on a conditional test,
+     rather than repeating it for a specific number of times, use
+     @{b}.AWHILE@{ub}.  @{b}.AENDW@{ub} marks the end of the repeated block.  The
+     conditional comparison works exactly the same way as for @{b}.AIF@{ub},
+     with the same comparison operators (see @{"Conditional assembly" link "Conditionals"}).
+
+     Since the terms of the comparison must be absolute expression,
+     @{b}.AWHILE@{ub} is primarily useful within macros.  See
+     @{"Defining your own directives" link "Macros"}.
+
+   You can use the @{b}.EXITM@{ub} preprocessor directive to break out of loops
+early (as well as to break out of macros).  See
+@{"Defining your own directives" link "Macros"}.
+
+
+@endnode
+
+@node "Variables" "gasp.guide/Variables"
+@next "Macros"
+@prev "Loops"
+@toc "Commands"
+
+Preprocessor variables
+======================
+
+   You can use variables in GASP to represent strings, registers, or
+the results of expressions.
+
+   You must distinguish two kinds of variables:
+  1. Variables defined with @{b}.EQU@{ub} or @{b}.ASSIGN@{ub}.  To evaluate this kind of
+     variable in your assembly output, simply mention its name.  For
+     example, these two lines define and use a variable @{b}eg@{ub}:
+
+          eg     .EQU   FLIP-64
+                 ...
+                 mov.l  eg,r0
+
+@{i}     Do not use@{ui} this kind of variable in conditional expressions or
+     while loops; GASP only evaluates these variables when writing
+     assembly output.
+
+  2. Variables for use during preprocessing.  You can define these with
+     @{b}.ASSIGNC@{ub} or @{b}.ASSIGNA@{ub}.  To evaluate this kind of variable, write
+     @{b}\\&@{ub} before the variable name; for example,
+
+          opcit  .ASSIGNA  47
+                 ...
+                 .AWHILE  \\&opcit GT 0
+                 ...
+                 .AENDW
+
+     GASP treats macro arguments almost the same way, but to evaluate
+     them you use the prefix @{b}\\ @{ub} rather than @{b}\\&@{ub}.  See
+     @{"Defining your own directives" link "Macros"}.
+
+@{b}PVAR .EQU EXPR@{ub}
+     Assign preprocessor variable PVAR the value of the expression
+     EXPR.  There are no restrictions on redefinition; use @{b}.EQU@{ub} with
+     the same PVAR as often as you find it convenient.
+
+@{b}PVAR .ASSIGN EXPR@{ub}
+     Almost the same as @{b}.EQU@{ub}, save that you may not redefine PVAR using
+     @{b}.ASSIGN@{ub} once it has a value.
+
+@{b}PVAR .ASSIGNA AEXPR@{ub}
+     Define a variable with a numeric value, for use during
+     preprocessing.  AEXPR must be an absolute expression.  You can
+     redefine variables with @{b}.ASSIGNA@{ub} at any time.
+
+@{b}PVAR .ASSIGNC "STR"@{ub}
+     Define a variable with a string value, for use during
+     preprocessing.  You can redefine variables with @{b}.ASSIGNC@{ub} at any
+     time.
+
+@{b}PVAR .REG (REGISTER)@{ub}
+     Use @{b}.REG@{ub} to define a variable that represents a register.  In
+     particular, REGISTER is @{i}not evaluated@{ui} as an expression.  You may
+     use @{b}.REG@{ub} at will to redefine register variables.
+
+   All these directives accept the variable name in the "label"
+position, that is at the left margin.  You may specify a colon after
+the variable name if you wish; the first example above could have
+started @{b}eg:@{ub} with the same effect.
+
+
+@endnode
+
+@node "Macros" "gasp.guide/Macros"
+@next "Data"
+@prev "Variables"
+@toc "Commands"
+
+Defining your own directives
+============================
+
+   The commands @{b}.MACRO@{ub} and @{b}.ENDM@{ub} allow you to define macros that
+generate assembly output.  You can use these macros with a syntax
+similar to built-in GASP or assembler directives.  For example, this
+definition specifies a macro @{b}SUM@{ub} that adds together a range of
+consecutive registers:
+
+             .MACRO  SUM FROM=0, TO=9
+             ! \\FROM \\TO
+             mov     r\\FROM,r10
+     COUNT   .ASSIGNA        \\FROM+1
+             .AWHILE \\&COUNT LE \\TO
+             add     r\\&COUNT,r10
+     COUNT   .ASSIGNA        \\&COUNT+1
+             .AENDW
+             .ENDM
+
+With that definition, @{b}SUM 0,5@{ub} generates this assembly output:
+
+             ! 0 5
+             mov     r0,r10
+             add     r1,r10
+             add     r2,r10
+             add     r3,r10
+             add     r4,r10
+             add     r5,r10
+
+@{b}.MACRO MACNAME@{ub}
+@{b}.MACRO MACNAME MACARGS ...@{ub}
+     Begin the definition of a macro called MACNAME.  If your macro
+     definition requires arguments, specify their names after the macro
+     name, separated by commas or spaces.  You can supply a default
+     value for any macro argument by following the name with @{b}=DEFLT@{ub}.
+     For example, these are all valid @{b}.MACRO@{ub} statements:
+
+    @{b}.MACRO COMM@{ub}
+          Begin the definition of a macro called @{b}COMM@{ub}, which takes no
+          arguments.
+
+    @{b}.MACRO PLUS1 P, P1@{ub}
+    @{b}.MACRO PLUS1 P P1@{ub}
+          Either statement begins the definition of a macro called
+          @{b}PLUS1@{ub}, which takes two arguments; within the macro
+          definition, write @{b}\\P@{ub} or @{b}\\P1@{ub} to evaluate the arguments.
+
+    @{b}.MACRO RESERVE_STR P1=0 P2@{ub}
+          Begin the definition of a macro called @{b}RESERVE_STR@{ub}, with two
+          arguments.  The first argument has a default value, but not
+          the second.  After the definition is complete, you can call
+          the macro either as @{b}RESERVE_STR A,B@{ub} (with @{b}\\P1@{ub} evaluating to
+          A and @{b}\\P2@{ub} evaluating to B), or as @{b}RESERVE_STR ,B@{ub} (with @{b}\\P1@{ub}
+          evaluating as the default, in this case @{b}0@{ub}, and @{b}\\P2@{ub}
+          evaluating to B).
+
+     When you call a macro, you can specify the argument values either
+     by position, or by keyword.  For example, @{b}SUM 9,17@{ub} is equivalent to
+     @{b}SUM TO=17, FROM=9@{ub}.  Macro arguments are preprocessor variables
+     similar to the variables you define with @{b}.ASSIGNA@{ub} or @{b}.ASSIGNC@{ub}; in
+     particular, you can use them in conditionals or for loop control.
+     (The only difference is the prefix you write to evaluate the
+     variable: for a macro argument, write @{b}\\ARGNAME@{ub}, but for a
+     preprocessor variable, write @{b}\\&VARNAME@{ub}.)
+
+@{b}NAME .MACRO@{ub}
+@{b}NAME .MACRO ( MACARGS ... )@{ub}
+     An alternative form of introducing a macro definition: specify the
+     macro name in the label position, and the arguments (if any)
+     between parentheses after the name.  Defaulting rules and usage
+     work the same way as for the other macro definition syntax.
+
+@{b}.ENDM@{ub}
+     Mark the end of a macro definition.
+
+@{b}.EXITM@{ub}
+     Exit early from the current macro definition, @{b}.AREPEAT@{ub} loop, or
+     @{b}.AWHILE@{ub} loop.
+
+@{b}\\@@{ub}
+     GASP maintains a counter of how many macros it has executed in
+     this pseudo-variable; you can copy that number to your output with
+     @{b}\\@@{ub}, but @{i}only within a macro definition@{ui}.
+
+@{b}LOCAL NAME [ , ... ]@{ub}
+@{i}     Warning: @{b}LOCAL@{ub} is only available if you select "alternate macro
+     syntax" with @{b}-a@{ub} or @{b}--alternate@{ub}.@{ui}  See @{"Alternate macro syntax" link "Alternate"}.
+
+     Generate a string replacement for each of the NAME arguments, and
+     replace any instances of NAME in each macro expansion.  The
+     replacement string is unique in the assembly, and different for
+     each separate macro expansion.  @{b}LOCAL@{ub} allows you to write macros
+     that define symbols, without fear of conflict between separate
+     macro expansions.
+
+
+@endnode
+
+@node "Data" "gasp.guide/Data"
+@next "Listings"
+@prev "Macros"
+@toc "Commands"
+
+Data output
+===========
+
+   In assembly code, you often need to specify working areas of memory;
+depending on the application, you may want to initialize such memory or
+not.  GASP provides preprocessor directives to help you avoid
+repetitive coding for both purposes.
+
+   You can use labels as usual to mark the data areas.
+
+
+ @{" Initialized " link "Initialized"}  
+ @{" Uninitialized " link "Uninitialized"}
+
+
+@endnode
+
+@node "Initialized" "gasp.guide/Initialized"
+@next "Uninitialized"
+@toc "Data"
+
+Initialized data
+----------------
+
+   These are the GASP directives for initialized data, and the standard
+GNU assembler directives they expand to:
+
+@{b}.DATA EXPR, EXPR, ...@{ub}
+@{b}.DATA.B EXPR, EXPR, ...@{ub}
+@{b}.DATA.W EXPR, EXPR, ...@{ub}
+@{b}.DATA.L EXPR, EXPR, ...@{ub}
+     Evaluate arithmetic expressions EXPR, and emit the corresponding
+     @{b}as@{ub} directive (labelled with LAB).  The unqualified @{b}.DATA@{ub} emits
+     @{b}.long@{ub}; @{b}.DATA.B@{ub} emits @{b}.byte@{ub}; @{b}.DATA.W@{ub} emits @{b}.short@{ub}; and @{b}.DATA.L@{ub} emits
+     @{b}.long@{ub}.
+
+     For example, @{b}foo .DATA 1,2,3@{ub} emits @{b}foo: .long 1,2,3@{ub}.
+
+@{b}.DATAB REPEAT, EXPR@{ub}
+@{b}.DATAB.B REPEAT, EXPR@{ub}
+@{b}.DATAB.W REPEAT, EXPR@{ub}
+@{b}.DATAB.L REPEAT, EXPR@{ub}
+     Make @{b}as@{ub} emit REPEAT copies of the value of the expression EXPR
+     (using the @{b}as@{ub} directive @{b}.fill@{ub}).  @{b}.DATAB.B@{ub} repeats one-byte values;
+     @{b}.DATAB.W@{ub} repeats two-byte values; and @{b}.DATAB.L@{ub} repeats four-byte
+     values.  @{b}.DATAB@{ub} without a suffix repeats four-byte values, just
+     like @{b}.DATAB.L@{ub}.
+
+     REPEAT must be an absolute expression with a positive value.
+
+@{b}.SDATA "STR" ...@{ub}
+     String data.  Emits a concatenation of bytes, precisely as you
+     specify them (in particular, @{i}nothing is added to mark the end@{ui} of
+     the string).  See @{"String and numeric constants" link "Constants"}, for details about
+     how to write strings.  @{b}.SDATA@{ub} concatenates multiple arguments,
+     making it easy to switch between string representations.  You can
+     use commas to separate the individual arguments for clarity, if you
+     choose.
+
+@{b}.SDATAB REPEAT, "STR" ...@{ub}
+     Repeated string data.  The first argument specifies how many
+     copies of the string to emit; the remaining arguments specify the
+     string, in the same way as the arguments to @{b}.SDATA@{ub}.
+
+@{b}.SDATAZ "STR" ...@{ub}
+     Zero-terminated string data.  Just like @{b}.SDATA@{ub}, except that
+     @{b}.SDATAZ@{ub} writes a zero byte at the end of the string.
+
+@{b}.SDATAC "STR" ...@{ub}
+     Count-prefixed string data.  Just like @{b}.SDATA@{ub}, except that GASP
+     precedes the string with a leading one-byte count.  For example,
+     @{b}.SDATAC "HI"@{ub} generates @{b}.byte 2,72,73@{ub}.  Since the count field is
+     only one byte, you can only use @{b}.SDATAC@{ub} for strings less than 256
+     bytes in length.
+
+
+@endnode
+
+@node "Uninitialized" "gasp.guide/Uninitialized"
+@prev "Initialized"
+@toc "Data"
+
+Uninitialized data
+------------------
+
+   Use the @{b}.RES@{ub}, @{b}.SRES@{ub}, @{b}.SRESC@{ub}, and @{b}.SRESZ@{ub} directives to reserve memory
+and leave it uninitialized.  GASP resolves these directives to
+appropriate calls of the GNU @{b}as@{ub} @{b}.space@{ub} directive.
+
+@{b}.RES COUNT@{ub}
+@{b}.RES.B COUNT@{ub}
+@{b}.RES.W COUNT@{ub}
+@{b}.RES.L COUNT@{ub}
+     Reserve room for COUNT uninitialized elements of data.  The suffix
+     specifies the size of each element: @{b}.RES.B@{ub} reserves COUNT bytes,
+     @{b}.RES.W@{ub} reserves COUNT pairs of bytes, and @{b}.RES.L@{ub} reserves COUNT
+     quartets.  @{b}.RES@{ub} without a suffix is equivalent to @{b}.RES.L@{ub}.
+
+@{b}.SRES COUNT@{ub}
+@{b}.SRES.B COUNT@{ub}
+@{b}.SRES.W COUNT@{ub}
+@{b}.SRES.L COUNT@{ub}
+@{b}     .SRES@{ub} is a synonym for @{b}.RES@{ub}.
+
+@{b}.SRESC COUNT@{ub}
+@{b}.SRESC.B COUNT@{ub}
+@{b}.SRESC.W COUNT@{ub}
+@{b}.SRESC.L COUNT@{ub}
+     Like @{b}.SRES@{ub}, but reserves space for @{b}COUNT+1@{ub} elements.
+
+@{b}.SRESZ COUNT@{ub}
+@{b}.SRESZ.B COUNT@{ub}
+@{b}.SRESZ.W COUNT@{ub}
+@{b}.SRESZ.L COUNT@{ub}
+     Like @{b}.SRES@{ub}, but reserves space for @{b}COUNT+1@{ub} elements.
+
+
+@endnode
+
+@node "Listings" "gasp.guide/Listings"
+@next "Other Commands"
+@prev "Data"
+@toc "Commands"
+
+Assembly listing control
+========================
+
+   The GASP listing-control directives correspond to related GNU @{b}as@{ub}
+directives.
+
+@{b}.PRINT LIST@{ub}
+@{b}.PRINT NOLIST@{ub}
+     Print control.  This directive emits the GNU @{b}as@{ub} directive @{b}.list@{ub} or
+     @{b}.nolist@{ub}, according to its argument.  See @{".list" link "as.guide/List"}, for details on
+     how these directives interact.
+
+@{b}.FORM LIN=LN@{ub}
+@{b}.FORM COL=COLS@{ub}
+@{b}.FORM LIN=LN COL=COLS@{ub}
+     Specify the page size for assembly listings: LN represents the
+     number of lines, and COLS the number of columns.  You may specify
+     either page dimension independently, or both together.  If you do
+     not specify the number of lines, GASP assumes 60 lines; if you do
+     not specify the number of columns, GASP assumes 132 columns.  (Any
+     values you may have specified in previous instances of @{b}.FORM@{ub} do
+     @{i}not@{ui} carry over as defaults.)  Emits the @{b}.psize@{ub} assembler directive.
+
+@{b}.HEADING STRING@{ub}
+     Specify STRING as the title of your assembly listings.  Emits
+     @{b}.title "STRING"@{ub}.
+
+@{b}.PAGE@{ub}
+     Force a new page in assembly listings.  Emits @{b}.eject@{ub}.
+
+
+@endnode
+
+@node "Other Commands" "gasp.guide/Other Commands"
+@next "Syntax Details"
+@prev "Listings"
+@toc "Commands"
+
+Miscellaneous commands
+======================
+
+@{b}.ALTERNATE@{ub}
+     Use the alternate macro syntax henceforth in the assembly.  See
+     @{"Alternate macro syntax" link "Alternate"}.
+
+@{b}.ORG@{ub}
+     This command is recognized, but not yet implemented.  GASP
+     generates an error message for programs that use @{b}.ORG@{ub}.
+
+@{b}.RADIX S@{ub}
+     GASP understands numbers in any of base two, eight, ten, or
+     sixteen.  You can encode the base explicitly in any numeric
+     constant (see @{"String and numeric constants" link "Constants"}).  If you write
+     numbers without an explicit indication of the base, the most recent
+     @{b}.RADIX S@{ub} command determines how they are interpreted.  S is a
+     single letter, one of the following:
+
+    @{b}.RADIX B@{ub}
+          Base 2.
+
+    @{b}.RADIX Q@{ub}
+          Base 8.
+
+    @{b}.RADIX D@{ub}
+          Base 10.  This is the original default radix.
+
+    @{b}.RADIX H@{ub}
+          Base 16.
+
+     You may specify the argument S in lower case (any of @{b}bqdh@{ub}) with
+     the same effects.
+
+@{b}.EXPORT NAME@{ub}
+@{b}.GLOBAL NAME@{ub}
+     Declare NAME global (emits @{b}.global NAME@{ub}).  The two directives are
+     synonymous.
+
+@{b}.PROGRAM@{ub}
+     No effect: GASP accepts this directive, and silently ignores it.
+
+@{b}.END@{ub}
+     Mark end of each preprocessor file.  GASP issues a warning if it
+     reaches end of file without seeing this command.
+
+@{b}.INCLUDE "STR"@{ub}
+     Preprocess the file named by STR, as if its contents appeared
+     where the @{b}.INCLUDE@{ub} directive does.  GASP imposes a maximum limit
+     of 30 stacked include files, as a sanity check.
+
+@{b}.ALIGN SIZE@{ub}
+     Evaluate the absolute expression SIZE, and emit the assembly
+     instruction @{b}.align SIZE@{ub} using the result.
+
+
+@endnode
+
+@node "Syntax Details" "gasp.guide/Syntax Details"
+@next "Alternate"
+@prev "Other Commands"
+@toc "Commands"
+
+Details of the GASP syntax
+==========================
+
+   Since GASP is meant to work with assembly code, its statement syntax
+has no surprises for the assembly programmer.
+
+@{i}   Whitespace@{ui} (blanks or tabs; @{i}not@{ui} newline) is partially significant,
+in that it delimits up to three fields in a line.  The amount of
+whitespace does not matter; you may line up fields in separate lines if
+you wish, but GASP does not require that.
+
+   The @{i}first field@{ui}, an optional @{i}label@{ui}, must be flush left in a line
+(with no leading whitespace) if it appears at all.  You may use a colon
+after the label if you wish; GASP neither requires the colon nor
+objects to it (but will not include it as part of the label name).
+
+   The @{i}second field@{ui}, which must appear after some whitespace, contains
+a GASP or assembly @{i}directive@{ui}.
+
+   Any @{i}further fields@{ui} on a line are @{i}arguments@{ui} to the directive; you can
+separate them from one another using either commas or whitespace.
+
+
+ @{" Markers " link "Markers"}  
+ @{" Constants " link "Constants"}  
+ @{" Symbols " link "Symbols"}  
+ @{" Expressions " link "Expressions"}  
+ @{" String Builtins " link "String Builtins"}
+
+
+@endnode
+
+@node "Markers" "gasp.guide/Markers"
+@next "Constants"
+@toc "Syntax Details"
+
+Special syntactic markers
+-------------------------
+
+   GASP recognizes a few special markers: to delimit comments, to
+continue a statement on the next line, to separate symbols from other
+characters, and to copy text to the output literally.  (One other
+special marker, @{b}\\@@{ub}, works only within macro definitions; see
+@{"Defining your own directives" link "Macros"}.)
+
+   The trailing part of any GASP source line may be a @{i}comment@{ui}.  A
+comment begins with the first unquoted comment character (@{b}!@{ub} by
+default), or an escaped or doubled comment character (@{b}\\!@{ub} or @{b}!!@{ub} by
+default), and extends to the end of a line.  You can specify what
+comment character to use with the @{b}-c@{ub} option (see
+@{"Command Line Options" link "Invoking GASP"}).  The two kinds of comment markers lead to
+slightly different treatment:
+
+@{b}!@{ub}
+     A single, un-escaped comment character generates an assembly
+     comment in the GASP output.  GASP evaluates any preprocessor
+     variables (macro arguments, or variables defined with @{b}.ASSIGNA@{ub} or
+     @{b}.ASSIGNC@{ub}) present.  For example, a macro that begins like this
+
+                  .MACRO  SUM FROM=0, TO=9
+                  ! \\FROM \\TO
+
+     issues as the first line of output a comment that records the
+     values you used to call the macro.
+
+@{b}\\!@{ub}
+@{b}!!@{ub}
+     Either an escaped comment character, or a double comment character,
+     marks a GASP source comment.  GASP does not copy such comments to
+     the assembly output.
+
+   To @{i}continue a statement@{ui} on the next line of the file, begin the
+second line with the character @{b}+@{ub}.
+
+   Occasionally you may want to prevent GASP from preprocessing some
+particular bit of text.  To @{i}copy literally@{ui} from the GASP source to its
+output, place @{b}\\(@{ub} before the string to copy, and @{b})@{ub} at the end.  For
+example, write @{b}\\(\\!)@{ub} if you need the characters @{b}\\!@{ub} in your assembly
+output.
+
+   To @{i}separate a preprocessor variable@{ui} from text to appear immediately
+after its value, write a single quote (@{b}'@{ub}).  For example, @{b}.SDATA "\\P'1"@{ub}
+writes a string built by concatenating the value of @{b}P@{ub} and the digit @{b}1@{ub}.
+(You cannot achieve this by writing just @{b}\\P1@{ub}, since @{b}P1@{ub} is itself a
+valid name for a preprocessor variable.)
+
+
+@endnode
+
+@node "Constants" "gasp.guide/Constants"
+@next "Symbols"
+@prev "Markers"
+@toc "Syntax Details"
+
+String and numeric constants
+----------------------------
+
+   There are two ways of writing @{i}string constants@{ui} in GASP: as literal
+text, and by numeric byte value.  Specify a string literal between
+double quotes (@{b}"STR"@{ub}).  Specify an individual numeric byte value as an
+absolute expression between angle brackets (@{b}<EXPR>@{ub}.  Directives that
+output strings allow you to specify any number of either kind of value,
+in whatever order is convenient, and concatenate the result.
+(Alternate syntax mode introduces a number of alternative string
+notations; see @{"Alternate macro syntax" link "Alternate"}.)
+
+   You can write @{i}numeric constants@{ui} either in a specific base, or in
+whatever base is currently selected (either 10, or selected by the most
+recent @{b}.RADIX@{ub}).
+
+   To write a number in a @{i}specific base@{ui}, use the pattern @{b}S'DDD@{ub}: a base
+specifier character S, followed by a single quote followed by digits
+DDD.  The base specifier character matches those you can specify with
+@{b}.RADIX@{ub}: @{b}B@{ub} for base 2, @{b}Q@{ub} for base 8, @{b}D@{ub} for base 10, and @{b}H@{ub} for base 16.
+(You can write this character in lower case if you prefer.)
+
+
+@endnode
+
+@node "Symbols" "gasp.guide/Symbols"
+@next "Expressions"
+@prev "Constants"
+@toc "Syntax Details"
+
+Symbols
+-------
+
+   GASP recognizes symbol names that start with any alphabetic
+character, @{b}_@{ub}, or @{b}$@{ub}, and continue with any of the same characters or
+with digits.  Label names follow the same rules.
+
+
+@endnode
+
+@node "Expressions" "gasp.guide/Expressions"
+@next "String Builtins"
+@prev "Symbols"
+@toc "Syntax Details"
+
+Arithmetic expressions in GASP
+------------------------------
+
+   There are two kinds of expressions, depending on their result:
+@{i}absolute@{ui} expressions, which resolve to a constant (that is, they do not
+involve any values unknown to GASP), and @{i}relocatable@{ui} expressions, which
+must reduce to the form
+
+     ADDSYM+CONST-SUBSYM
+
+where ADDSYM and SUBSYM are assembly symbols of unknown value, and
+CONST is a constant.
+
+   Arithmetic for GASP expressions follows very similar rules to C.
+You can use parentheses to change precedence; otherwise, arithmetic
+primitives have decreasing precedence in the order of the following
+list.
+
+  1. Single-argument @{b}+@{ub} (identity), @{b}-@{ub} (arithmetic opposite), or @{b}~@{ub}
+     (bitwise negation).  @{i}The argument must be an absolute expression.@{ui}
+
+  2. @{b}*@{ub} (multiplication) and @{b}/@{ub} (division).  @{i}Both arguments must be
+     absolute expressions.@{ui}
+
+  3. @{b}+@{ub} (addition) and @{b}-@{ub} (subtraction).  @{i}At least one argument must be
+     absolute.@{ui}
+
+  4. @{b}&@{ub} (bitwise and).  @{i}Both arguments must be absolute.@{ui}
+
+  5. @{b}|@{ub} (bitwise or) and @{b}~@{ub} (bitwise exclusive or; @{b}^@{ub} in C).  @{i}Both
+     arguments must be absolute.@{ui}
+
+
+@endnode
+
+@node "String Builtins" "gasp.guide/String Builtins"
+@prev "Expressions"
+@toc "Syntax Details"
+
+String primitives
+-----------------
+
+   You can use these primitives to manipulate strings (in the argument
+field of GASP statements):
+
+@{b}.LEN("STR")@{ub}
+     Calculate the length of string @{b}"STR"@{ub}, as an absolute expression.
+     For example, @{b}.RES.B .LEN("sample")@{ub} reserves six bytes of memory.
+
+@{b}.INSTR("STRING", "SEG", IX)@{ub}
+     Search for the first occurrence of SEG after position IX of
+     STRING.  For example, @{b}.INSTR("ABCDEFG", "CDE", 0)@{ub} evaluates to the
+     absolute result @{b}2@{ub}.
+
+     The result is @{b}-1@{ub} if SEG does not occur in STRING after position IX.
+
+@{b}.SUBSTR("STRING",START,LEN)@{ub}
+     The substring of STRING beginning at byte number START and
+     extending for LEN bytes.
+
+
+@endnode
+
+@node "Alternate" "gasp.guide/Alternate"
+@prev "Syntax Details"
+@toc "Commands"
+
+Alternate macro syntax
+======================
+
+   If you specify @{b}-a@{ub} or @{b}--alternate@{ub} on the GASP command line, the
+preprocessor uses somewhat different syntax.  This syntax is
+reminiscent of the syntax of Phar Lap macro assembler, but it is @{i}not@{ui}
+meant to be a full emulation of Phar Lap or similar assemblers.  In
+particular, GASP does not support directives such as @{b}DB@{ub} and @{b}IRP@{ub}, even
+in alternate syntax mode.
+
+   In particular, @{b}-a@{ub} (or @{b}--alternate@{ub}) elicits these differences:
+
+@{i}Preprocessor directives@{ui}
+     You can use GASP preprocessor directives without a leading @{b}.@{ub} dot.
+     For example, you can write @{b}SDATA@{ub} with the same effect as @{b}.SDATA@{ub}.
+
+@{i}LOCAL@{ui}
+     One additional directive, @{b}LOCAL@{ub}, is available.  See
+     @{"Defining your own directives" link "Macros"}, for an explanation of how to use
+     @{b}LOCAL@{ub}.
+
+@{i}String delimiters@{ui}
+     You can write strings delimited in these other ways besides
+     @{b}"STRING"@{ub}:
+
+    @{b}'STRING'@{ub}
+          You can delimit strings with single-quote charaters.
+
+    @{b}<STRING>@{ub}
+          You can delimit strings with matching angle brackets.
+
+@{i}single-character string escape@{ui}
+     To include any single character literally in a string (even if the
+     character would otherwise have some special meaning), you can
+     prefix the character with @{b}!@{ub} (an exclamation mark).  For example,
+     you can write @{b}<4.3 !> 5.4!!>@{ub} to get the literal text @{b}4.3 > 5.4!@{ub}.
+
+@{i}Expression results as strings@{ui}
+     You can write @{b}%EXPR@{ub} to evaluate the expression EXPR and use the
+     result as a string.
+
+
+@endnode
+
+@node "Index" "gasp.guide/Index"
+@prev "Commands"
+@toc "Main"
+
+Index
+*****
+
+@index "Index"
+
+
+
+ @{" ! default comment char                   " link "Invoking GASP"}   Invoking GASP
+ @{" +                                        " link "Markers"}   Markers
+ @{" -a                                       " link "Invoking GASP"}   Invoking GASP
+ @{" -alternate                               " link "Invoking GASP"}   Invoking GASP
+ @{" -c 'CHAR'                                " link "Invoking GASP"}   Invoking GASP
+ @{" -commentchar 'CHAR'                      " link "Invoking GASP"}   Invoking GASP
+ @{" -copysource                              " link "Invoking GASP"}   Invoking GASP
+ @{" -d                                       " link "Invoking GASP"}   Invoking GASP
+ @{" -debug                                   " link "Invoking GASP"}   Invoking GASP
+ @{" -h                                       " link "Invoking GASP"}   Invoking GASP
+ @{" -help                                    " link "Invoking GASP"}   Invoking GASP
+ @{" -M                                       " link "Invoking GASP"}   Invoking GASP
+ @{" -mri                                     " link "Invoking GASP"}   Invoking GASP
+ @{" -o OUTFILE                               " link "Invoking GASP"}   Invoking GASP
+ @{" -output OUTFILE                          " link "Invoking GASP"}   Invoking GASP
+ @{" -p                                       " link "Invoking GASP"}   Invoking GASP
+ @{" -print                                   " link "Invoking GASP"}   Invoking GASP
+ @{" -s                                       " link "Invoking GASP"}   Invoking GASP
+ @{" -u                                       " link "Invoking GASP"}   Invoking GASP
+ @{" -unreasonable                            " link "Invoking GASP"}   Invoking GASP
+ @{" -v                                       " link "Invoking GASP"}   Invoking GASP
+ @{" -version                                 " link "Invoking GASP"}   Invoking GASP
+ @{" .AELSE                                   " link "Conditionals"}   Conditionals
+ @{" .AENDI                                   " link "Conditionals"}   Conditionals
+ @{" .AENDR                                   " link "Loops"}   Loops
+ @{" .AENDW                                   " link "Loops"}   Loops
+ @{" .AIF `STRA` CMP `STRB`                   " link "Conditionals"}   Conditionals
+ @{" .AIF EXPRA CMP EXPRB                     " link "Conditionals"}   Conditionals
+ @{" .ALIGN SIZE                              " link "Other Commands"}   Other Commands
+ @{" .ALTERNATE                               " link "Other Commands"}   Other Commands
+ @{" .AREPEAT AEXP                            " link "Loops"}   Loops
+ @{" .AWHILE EXPRA CMP EXPRB                  " link "Loops"}   Loops
+ @{" .AWHILE STRA CMP STRB                    " link "Loops"}   Loops
+ @{" .DATA EXPR, EXPR, ...                    " link "Initialized"}   Initialized
+ @{" .DATA.B EXPR, EXPR, ...                  " link "Initialized"}   Initialized
+ @{" .DATA.L EXPR, EXPR, ...                  " link "Initialized"}   Initialized
+ @{" .DATA.W EXPR, EXPR, ...                  " link "Initialized"}   Initialized
+ @{" .DATAB REPEAT, EXPR                      " link "Initialized"}   Initialized
+ @{" .DATAB.B REPEAT, EXPR                    " link "Initialized"}   Initialized
+ @{" .DATAB.L REPEAT, EXPR                    " link "Initialized"}   Initialized
+ @{" .DATAB.W REPEAT, EXPR                    " link "Initialized"}   Initialized
+ @{" .END                                     " link "Other Commands"}   Other Commands
+ @{" .ENDM                                    " link "Macros"}   Macros
+ @{" .EXITM                                   " link "Macros"}   Macros
+ @{" .EXPORT NAME                             " link "Other Commands"}   Other Commands
+ @{" .FORM COL=COLS                           " link "Listings"}   Listings
+ @{" .FORM LIN=LN                             " link "Listings"}   Listings
+ @{" .FORM LIN=LN COL=COLS                    " link "Listings"}   Listings
+ @{" .GLOBAL NAME                             " link "Other Commands"}   Other Commands
+ @{" .HEADING STRING                          " link "Listings"}   Listings
+ @{" .INCLUDE `STR`                           " link "Other Commands"}   Other Commands
+ @{" .INSTR(`STRING`, `SEG`, IX)              " link "String Builtins"}   String Builtins
+ @{" .LEN(`STR`)                              " link "String Builtins"}   String Builtins
+ @{" .MACRO MACNAME                           " link "Macros"}   Macros
+ @{" .MACRO MACNAME MACARGS ...               " link "Macros"}   Macros
+ @{" .ORG                                     " link "Other Commands"}   Other Commands
+ @{" .PAGE                                    " link "Listings"}   Listings
+ @{" .PRINT LIST                              " link "Listings"}   Listings
+ @{" .PRINT NOLIST                            " link "Listings"}   Listings
+ @{" .PROGRAM                                 " link "Other Commands"}   Other Commands
+ @{" .RADIX S                                 " link "Other Commands"}   Other Commands
+ @{" .RES COUNT                               " link "Uninitialized"}   Uninitialized
+ @{" .RES.B COUNT                             " link "Uninitialized"}   Uninitialized
+ @{" .RES.L COUNT                             " link "Uninitialized"}   Uninitialized
+ @{" .RES.W COUNT                             " link "Uninitialized"}   Uninitialized
+ @{" .SDATA `STR` ...                         " link "Initialized"}   Initialized
+ @{" .SDATAB REPEAT, `STR` ...                " link "Initialized"}   Initialized
+ @{" .SDATAC `STR` ...                        " link "Initialized"}   Initialized
+ @{" .SDATAZ `STR` ...                        " link "Initialized"}   Initialized
+ @{" .SRES COUNT                              " link "Uninitialized"}   Uninitialized
+ @{" .SRES.B COUNT                            " link "Uninitialized"}   Uninitialized
+ @{" .SRES.L COUNT                            " link "Uninitialized"}   Uninitialized
+ @{" .SRES.W COUNT                            " link "Uninitialized"}   Uninitialized
+ @{" .SRESC COUNT                             " link "Uninitialized"}   Uninitialized
+ @{" .SRESC.B COUNT                           " link "Uninitialized"}   Uninitialized
+ @{" .SRESC.L COUNT                           " link "Uninitialized"}   Uninitialized
+ @{" .SRESC.W COUNT                           " link "Uninitialized"}   Uninitialized
+ @{" .SRESZ COUNT                             " link "Uninitialized"}   Uninitialized
+ @{" .SRESZ.B COUNT                           " link "Uninitialized"}   Uninitialized
+ @{" .SRESZ.L COUNT                           " link "Uninitialized"}   Uninitialized
+ @{" .SRESZ.W COUNT                           " link "Uninitialized"}   Uninitialized
+ @{" .SUBSTR(`STRING`,START,LEN)              " link "String Builtins"}   String Builtins
+ @{" ; as comment char                        " link "Invoking GASP"}   Invoking GASP
+ @{" \\@                                      " link "Macros"}   Macros
+ @{" absolute expressions                     " link "Expressions"}   Expressions
+ @{" argument fields                          " link "Syntax Details"}   Syntax Details
+ @{" avoiding preprocessing                   " link "Markers"}   Markers
+ @{" bang, as comment                         " link "Invoking GASP"}   Invoking GASP
+ @{" breaking out of loops                    " link "Loops"}   Loops
+ @{" comment character, changing              " link "Invoking GASP"}   Invoking GASP
+ @{" comments                                 " link "Markers"}   Markers
+ @{" continuation character                   " link "Markers"}   Markers
+ @{" copying literally to output              " link "Markers"}   Markers
+ @{" directive field                          " link "Syntax Details"}   Syntax Details
+ @{" EQ                                       " link "Conditionals"}   Conditionals
+ @{" exclamation mark, as comment             " link "Invoking GASP"}   Invoking GASP
+ @{" fields of GASP source line               " link "Syntax Details"}   Syntax Details
+ @{" GE                                       " link "Conditionals"}   Conditionals
+ @{" GT                                       " link "Conditionals"}   Conditionals
+ @{" INFILE ...                               " link "Invoking GASP"}   Invoking GASP
+ @{" label field                              " link "Syntax Details"}   Syntax Details
+ @{" LE                                       " link "Conditionals"}   Conditionals
+ @{" literal copy to output                   " link "Markers"}   Markers
+ @{" LOCAL NAME [ , ... ]                     " link "Macros"}   Macros
+ @{" loops, breaking out of                   " link "Loops"}   Loops
+ @{" LT                                       " link "Conditionals"}   Conditionals
+ @{" macros, count executed                   " link "Macros"}   Macros
+ @{" NAME .MACRO                              " link "Macros"}   Macros
+ @{" NAME .MACRO ( MACARGS ... )              " link "Macros"}   Macros
+ @{" NE                                       " link "Conditionals"}   Conditionals
+ @{" number of macros executed                " link "Macros"}   Macros
+ @{" preprocessing, avoiding                  " link "Markers"}   Markers
+ @{" PVAR .ASSIGN EXPR                        " link "Variables"}   Variables
+ @{" PVAR .ASSIGNA AEXPR                      " link "Variables"}   Variables
+ @{" PVAR .ASSIGNC `STR`                      " link "Variables"}   Variables
+ @{" PVAR .EQU EXPR                           " link "Variables"}   Variables
+ @{" PVAR .REG (REGISTER)                     " link "Variables"}   Variables
+ @{" relocatable expressions                  " link "Expressions"}   Expressions
+ @{" semicolon, as comment                    " link "Invoking GASP"}   Invoking GASP
+ @{" shriek, as comment                       " link "Invoking GASP"}   Invoking GASP
+ @{" symbol separator                         " link "Markers"}   Markers
+ @{" symbols, separating from text            " link "Markers"}   Markers
+ @{" text, separating from symbols            " link "Markers"}   Markers
+ @{" whitespace                               " link "Syntax Details"}   Syntax Details
+
+@endnode
+
