@@ -1,0 +1,107 @@
+   NAME
+	Clipboard - Universal clipboard and file converter for AmigaOS
+
+   FORMAT
+	Clipboard [COPY=<file>] [PASTE=<file>] [CLIPUNIT=<n>|FORMUNIT=<type>] [LIST] [FLUSH] [FORCE]
+
+   TEMPLATE
+	COPY/K,PASTE/K,CLIPUNIT/K/N,FORMUNIT/K,LIST/S,FLUSH/S,FORCE/S
+
+   PATH
+	SDK:C/Clipboard
+
+   FUNCTION
+	Clipboard provides universal clipboard operations for AmigaOS, allowing
+	you to copy files to the clipboard and paste clipboard contents to files.
+	It uses the datatypes.library to convert files to IFF format when copying,
+	and extracts text from FTXT clipboard data when pasting.
+
+	The command can enumerate all clipboard units (0-255) to show which
+	contain data, and can clear specific clipboard units. Clipboard unit 0
+	is the default working copy clipboard, while units 1-255 can be used
+	for storing different types of data based on IFF FORM type.
+
+   OPTIONS
+	COPY=<file>
+	Copy the specified file to the clipboard. The file is automatically
+	converted to IFF format using datatypes.library. The clipboard unit
+	used is determined by the CLIPUNIT option, or unit 0 by default.
+
+	PASTE=<file>
+	Paste clipboard contents to the specified file. Text is extracted from
+	FTXT clipboard data. If the file already exists, use FORCE to overwrite.
+	
+	Special case: If PASTE=CONSOLE: (case-insensitive), the output is written
+	to stdout (console). In this case, FORCE is not required as CONSOLE: can
+	always be written to.
+
+	CLIPUNIT=<n>
+	Specify the clipboard unit number to use (0-255). Default is 0, which
+	is reserved for the working copy clipboard. Units 1-255 can be used
+	for storing different data types based on IFF FORM type mapping.
+	CLIPUNIT and FORMUNIT are mutually exclusive - use only one.
+
+	FORMUNIT=<type>
+	Specify the IFF FORM type (3-4 characters, e.g., FTXT, ILBM, ANIM).
+	The clipboard unit is automatically calculated using a deterministic
+	hash algorithm that maps FORM types to unit numbers (1-255). This
+	ensures the same FORM type always maps to the same unit.
+	
+	Special case: If FORMUNIT=FORM (case-insensitive), the FORM type is
+	automatically detected from the source file specified in COPY=<file>.
+	For example, if COPY=image.jpg and FORMUNIT=FORM, it will detect
+	that the file becomes ILBM and use the unit mapped for ILBM.
+	
+	CLIPUNIT and FORMUNIT are mutually exclusive - use only one.
+
+	LIST
+	Enumerate all clipboard units from 0 to 255 and display information
+	about units that contain data. For each unit with content, shows:
+	- Unit number
+	- IFF FORM type (e.g., FTXT, ILBM)
+	- Size in bytes
+	- Text preview (from CHRS, NAME, or TEXT chunks, if available)
+
+	FLUSH
+	Clear the contents of the specified clipboard unit. If CLIPUNIT is
+	not specified, clears unit 0.
+
+	FORCE
+	Overwrite existing files when pasting. Without this option, the paste
+	operation will fail if the target file already exists.
+
+   EXAMPLES
+	Clipboard COPY=image.jpg
+	Copy an image file to the clipboard (unit 0).
+
+	Clipboard PASTE=output.txt
+	Paste clipboard contents to a text file.
+
+	Clipboard COPY=file.txt PASTE=out.txt
+	Copy a file to clipboard, then immediately paste it to another file.
+	This can be used to convert files to IFF format.
+
+	Clipboard COPY=file.txt CLIPUNIT=1
+	Copy a file to clipboard unit 1.
+
+	Clipboard LIST
+	List all clipboard units that contain data.
+
+	Clipboard FLUSH
+	Clear clipboard unit 0.
+
+	Clipboard FLUSH CLIPUNIT=5
+	Clear clipboard unit 5.
+
+	Clipboard COPY=image.jpg FORMUNIT=ILBM
+	Copy an image to the clipboard unit mapped for ILBM FORM type.
+
+	Clipboard COPY=image.jpg FORMUNIT=FORM
+	Copy an image and automatically detect its FORM type (ILBM), then
+	use the unit mapped for that FORM type.
+
+	Clipboard FLUSH FORMUNIT=FTXT
+	Clear the clipboard unit mapped for FTXT FORM type.
+
+	Clipboard PASTE=CONSOLE:
+	Paste clipboard contents to stdout (console). FORCE is not required.
